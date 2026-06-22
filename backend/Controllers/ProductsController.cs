@@ -74,5 +74,51 @@ namespace backend.Controllers
 
             return Ok(new { message = "Category එක සාර්ථකව ඇතුලත් කලා!", category });
         }
+
+        // 6. UPDATE PRODUCT (ඇඳුමක විස්තර වෙනස් කිරීම)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateProduct(int id, Product product)
+        {
+            if (id != product.Id)
+            {
+                return BadRequest("ID එක ගැලපෙන්නේ නැත.");
+            }
+
+            _context.Entry(product).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.Products.Any(e => e.Id == id))
+                {
+                    return NotFound("සමාවන්න, එවැනි භාණ්ඩයක් සොයාගත නොහැක.");
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return Ok(new { message = "Product එක සාර්ථකව යාවත්කාලීන කලා!", product });
+        }
+
+        // 7. DELETE PRODUCT (ඇඳුමක් අයින් කර දැමීම)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteProduct(int id)
+        {
+            var product = await _context.Products.FindAsync(id);
+            if (product == null)
+            {
+                return NotFound("සමාවන්න, එවැනි භාණ්ඩයක් සොයාගත නොහැක.");
+            }
+
+            _context.Products.Remove(product);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Product එක සාර්ථකව ඉවත් කලා!" });
+        }
     }
 }
