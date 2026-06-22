@@ -1,3 +1,4 @@
+using backend.Services; // <-- මෙන්න මේ පේලිය අලුතින්ම උඩටම එකතු කරන්න
 using backend.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,7 +17,8 @@ builder.Services.AddCors(options =>
               .WithOrigins("http://localhost:3000") // Frontend Local URL එක
               .AllowCredentials();
     }));
-
+// TokenService එක ඇප් එකට හඳුන්වා දීම
+builder.Services.AddScoped<TokenService>();
 builder.Services.AddControllers();
 
 var app = builder.Build();

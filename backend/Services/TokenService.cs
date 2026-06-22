@@ -26,8 +26,8 @@ namespace backend.Services
                 new Claim("FullName", user.FullName)
             };
 
-            // appsettings.json එකෙන් Secret Key එක කියවීම
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"] ?? "super_secret_luxury_key_1234567890"));
+          // කලින් තිබ්බ පේලිය වෙනුවට මේක දාන්න (Fallback එක අකුරු 64කට වඩා දික් කරලා තියෙන්නේ)
+var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"] ?? "super_secret_luxury_fashion_brand_key_2026_this_is_very_long_key_64_characters"));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
 
             var tokenDescriptor = new SecurityTokenDescriptor
