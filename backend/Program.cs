@@ -19,7 +19,12 @@ builder.Services.AddCors(options =>
     }));
 // TokenService එක ඇප් එකට හඳුන්වා දීම
 builder.Services.AddScoped<TokenService>();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // JSON සාදද්දී එකිනෙකට කැරකෙන ලූප් (Object Cycles) නොදැක්කා වගේ අයින් කරලා දාන්න කියලා .NET එකට කියනවා
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
 
 var app = builder.Build();
 
