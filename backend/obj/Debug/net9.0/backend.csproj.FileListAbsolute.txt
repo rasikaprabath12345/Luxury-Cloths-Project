@@ -154,3 +154,4 @@ C:\Users\ASUS\Desktop\New folder (2)\Luxury-Cloths-Project\backend\obj\Debug\net
 C:\Users\ASUS\Desktop\New folder (2)\Luxury-Cloths-Project\backend\obj\Debug\net9.0\backend.pdb
 C:\Users\ASUS\Desktop\New folder (2)\Luxury-Cloths-Project\backend\obj\Debug\net9.0\backend.genruntimeconfig.cache
 C:\Users\ASUS\Desktop\New folder (2)\Luxury-Cloths-Project\backend\obj\Debug\net9.0\ref\backend.dll
+C:\Users\ASUS\Desktop\New folder (2)\Luxury-Cloths-Project\backend\bin\Debug\net9.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
