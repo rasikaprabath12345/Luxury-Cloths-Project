@@ -5,31 +5,19 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import CartDrawer from "./CartDrawer";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 
 export default function Navbar() {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const { cartItems } = useCart(); // Cart එකේ බඩු ගණන පෙන්වීමට
+    const { cartItems } = useCart();
+    const { user, logout, isAdmin } = useAuth();
     const pathname = usePathname();
     const router = useRouter();
 
-    // 🔄 හැම පේජ් එකක්ම මාරු වෙද්දීම යූසර් ලොග් වෙලාද නැද්ද කියලා චෙක් කර ස්ටේට් එක අප්ඩේට් කිරීම
-    useEffect(() => {
-        const token = localStorage.getItem("luxury_token");
-        setIsLoggedIn(!!token);
-    }, [pathname]);
-
-    // 🚪 පද්ධතියෙන් ඉවත් වීමේ ෆන්ක්ෂන් එක (Logout Logic)
     const handleLogout = () => {
-        // LocalStorage එකේ තියෙන දත්ත මකා දැමීම
-        localStorage.removeItem("luxury_token");
-        localStorage.removeItem("luxury_userId");
-        setIsLoggedIn(false);
-        
-        alert("👋 සාර්ථකව පද්ධතියෙන් ඉවත් වුණා (Logged Out)!");
-        
-        // මුල් පිටුවටම රීඩිරෙක්ට් කරලා පේජ් එක සම්පූර්ණයෙන්ම රිෆ්‍රෙෂ් කිරීම
-        window.location.href = "/";
+        logout();
+        alert("Successfully logged out!");
+        router.push("/");
     };
 
     return (
@@ -49,12 +37,19 @@ export default function Navbar() {
                         <Link href="/storefront/product" className="text-gray-700 hover:text-blue-600">නිෂ්පාදන</Link>
                         <Link href="/about" className="text-gray-700 hover:text-blue-600">අප ගැන</Link>
                         
-                        {/* 🔒 ලොග් වී ඇත්නම් පමණක් 'මගේ ඇණවුම්' ලින්ක් එක මැදින් පෙන්වයි */}
-                        {isLoggedIn && (
-                            <Link href="/orders" className="text-blue-600 font-semibold hover:underline">
-                                මගේ ඇණවුම්
-                            </Link>
-                        )}
+                    {/* 🔒 Show My Orders for logged in users */}
+                    {user && (
+                        <Link href="/orders" className="text-blue-600 font-semibold hover:underline">
+                            My Orders
+                        </Link>
+                    )}
+                    
+                    {/* 👨‍💼 Show Admin Dashboard for admin users */}
+                    {isAdmin && (
+                        <Link href="/admin/products" className="text-red-600 font-semibold hover:underline">
+                            Admin Panel
+                        </Link>
+                    )}
                     </div>
 
                     {/* Right Side Icons */}
@@ -72,13 +67,13 @@ export default function Navbar() {
                             )}
                         </button>
 
-                        {/* 🔑 Auth Button: ලොග් වී ඇති තත්ත්වය අනුව බටන් එක වෙනස් වේ */}
-                        {isLoggedIn ? (
+                        {/* 🔑 Auth Button */}
+                        {user ? (
                             <button 
                                 onClick={handleLogout}
                                 className="bg-red-600 text-white px-4 py-2 rounded-full hover:bg-red-700 text-sm font-medium transition shadow-sm"
                             >
-                                Logout
+                                Logout ({user.email})
                             </button>
                         ) : (
                             <Link href="/auth" className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 text-sm font-medium transition shadow-sm">

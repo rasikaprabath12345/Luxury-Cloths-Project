@@ -1,7 +1,10 @@
 using backend.Services;
 using backend.Data;
 using Microsoft.EntityFrameworkCore;
-using Scalar.AspNetCore; // නවතම Scalar UI සඳහා
+using Scalar.AspNetCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer; // අනිවාර්යයෙන්ම එකතු කරන්න
+using Microsoft.IdentityModel.Tokens; // අනිවාර්යයෙන්ම එකතු කරන්න
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,7 +12,20 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 2. CORS Policy (Frontend සඳහා)
+// --- JWT Authentication එක මෙතන සෙට් කරන්න ---
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+            ValidateIssuer = false,
+            ValidateAudience = false
+        };
+    });
+
+// 2. CORS Policy
 builder.Services.AddCors(options =>
     options.AddPolicy("CorsPolicy", policy =>
     {
@@ -19,10 +35,8 @@ builder.Services.AddCors(options =>
               .AllowCredentials();
     }));
 
-// 3. .NET 9 නිල Native OpenAPI සේවාව සක්‍රිය කිරීම (Swashbuckle වෙනුවට)
+// 3. OpenAPI සහ Controllers
 builder.Services.AddOpenApi();
-
-// 4. TokenService සහ Controllers
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -32,16 +46,20 @@ builder.Services.AddControllers()
 
 var app = builder.Build();
 
-// 5. Middleware Pipeline (Development පරිසරයේදී පමණක්)
+// 4. Middleware Pipeline
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi(); // OpenAPI JSON Document එක සාදයි
-    app.MapScalarApiReference(); // ඉතාමත් ආකර්ෂණීය Scalar UI එක ලබා දෙයි
+    app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();
 app.UseCors("CorsPolicy"); 
-app.UseAuthorization();
+
+// !!! මේ පේළි දෙක ඉතා වැදගත් (මෙම අනුපිළිවෙලටම තිබිය යුතුය)
+app.UseAuthentication(); // 1. මුලින්ම Token එක Check කරන්න
+app.UseAuthorization();  // 2. ඊට පස්සේ Admin ද කියලා Check කරන්න
+
 app.MapControllers();
 
 app.Run();

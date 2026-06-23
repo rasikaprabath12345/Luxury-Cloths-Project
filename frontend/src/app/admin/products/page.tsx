@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import axios from "axios"; 
+import axios from "axios";
+import { AdminOnly } from "../../../components/AdminOnly"; 
 
 interface Category {
   id: number;
@@ -142,7 +143,8 @@ export default function AdminProductsPage() {
   };
 
   return (
-    <div className="bg-zinc-950 text-white min-h-screen flex">
+    <AdminOnly>
+      <div className="bg-zinc-950 text-white min-h-screen flex">
       {/* SIDEBAR */}
       <div className="w-64 bg-black border-r border-zinc-900 p-6 hidden md:block shrink-0">
         <h2 className="text-xl font-black text-blue-500 tracking-wider">LUXURY ADMIN</h2>
@@ -258,6 +260,7 @@ export default function AdminProductsPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </AdminOnly>
   );
 }

@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-// Context Provider එක
+// Context Providers
 import { CartProvider } from "../context/CartContext"; 
-// Navbar එක - මෙය ඔබේ src/components/Navbar.tsx වෙත පෙන්වයි
+import { AuthProvider } from "../context/AuthContext";
+// Navbar component
 import Navbar from "../components/Navbar"; 
 
 const geistSans = Geist({
@@ -33,16 +34,17 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        {/* මුළු ඇප් එකටම Cart එකේ දත්ත බෙදාහරින Provider එක */}
-        <CartProvider>
-          {/* සියලුම පේජ් වලට පොදු Navbar එක */}
-          <Navbar />
-          
-          {/* සෑම පේජ් එකක්ම මෙතනින් ඇතුළත් වේ */}
-          <main className="flex-grow">
-            {children}
-          </main>
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            {/* Navbar shared across all pages */}
+            <Navbar />
+            
+            {/* Each page renders here */}
+            <main className="flex-grow">
+              {children}
+            </main>
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );
