@@ -22,13 +22,13 @@ export default function CartPage() {
   const [isOrdering, setIsOrdering] = useState<boolean>(false);
   const router = useRouter();
 
-  // 1. පිටුව Load වන විට LocalStorage එකෙන් Cart දත්ත ලබා ගැනීම (Hydration Error මඟහරවා ගැනීමට)
+  // 1. පිටුව Load වන විට LocalStorage එකෙන් Cart දත්ත ලබා ගැනීම
   useEffect(() => {
     const savedCart = localStorage.getItem("luxury_cart");
     if (savedCart) {
       setCartItems(JSON.parse(savedCart));
     } else {
-      // --- ටෙස්ට් කිරීමට පමණක් Dummy Data කිහිපයක් (පසුව මෙය අයින් කරන්න පුළුවන්) ---
+      // --- ටෙස්ට් කිරීමට පමණක් Dummy Data කිහිපයක් ---
       const dummyItems: CartItem[] = [
         { id: 1, variantId: 1, name: "Premium Luxury Silk Dress", price: 12500, quantity: 1, size: "M", color: "Black" },
         { id: 2, variantId: 2, name: "Classic Slim Fit Designer Shirt", price: 8500, quantity: 2, size: "L", color: "White" }
@@ -36,8 +36,12 @@ export default function CartPage() {
       setCartItems(dummyItems);
       localStorage.setItem("luxury_cart", JSON.stringify(dummyItems));
     }
-    setLoading(false);
+    loadingFormCheck();
   }, []);
+
+  const loadingFormCheck = () => {
+    setLoading(false);
+  };
 
   // 2. භාණ්ඩ ප්‍රමාණයන් වෙනස් කිරීම (Update Quantity)
   const updateQuantity = (variantId: number, newQty: number) => {
@@ -56,18 +60,28 @@ export default function CartPage() {
 
   // 4. මුළු එකතුව ගණනය කිරීම
   const subTotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-  const shippingFee = cartItems.length > 0 ? 500 : 0; // ස්ථිර Delivery ගාස්තුවක්
+  const shippingFee = cartItems.length > 0 ? 500 : 0; // સ્ථිර Delivery ගාස්තුවක්
   const totalAmount = subTotal + shippingFee;
 
-  // 5. බැකෙන්ඩ් එකට ඕඩර් එක යැවීම (Place Order)
+  // 5. බැකෙන්ඩ් එකට ඕඩර් එක යැවීම (Place Order) - Auth සම්බන්ධ කර යාවත්කාලීන කරන ලදී 🚀
   const handlePlaceOrder = async () => {
     if (cartItems.length === 0) return;
     
+    // 💡 LocalStorage එකෙන් දැනට ලොග් වී සිටින යූසර්ගේ ID එක කියවීම
+    const savedUserId = localStorage.getItem("luxury_userId");
+
+    // 🔒 යූසර් ලොග් වෙලා නැත්නම් ඕඩර් එක දාන්න නොදී Login පේජ් එකට හරවා යැවීම
+    if (!savedUserId) {
+      alert("🔒 ඇණවුම සිදු කිරීමට ප්‍රථම කරුණාකර පද්ධතියට ලොග් වන්න (Login).");
+      router.push("/auth"); // ඔයාගේ ලොගින් පේජ් එක තියෙන පාත් එක
+      return;
+    }
+
     setIsOrdering(true);
     try {
       // බැකෙන්ඩ් එක බලාපොරොත්තු වන CreateOrderDto හැඩයට දත්ත සකස් කිරීම
       const orderData = {
-        userId: 1, // දැනට ටෙස්ට් කිරීමට ස්ථිර User ID 1 ලෙස යවයි
+        userId: parseInt(savedUserId), // ස්ථිර 1 වෙනුවට ලොග් වුනු කෙනාගේ ඇත්තම ID එක දානවා
         paymentMethod: paymentMethod,
         items: cartItems.map(item => ({
           productVariantId: item.variantId,
