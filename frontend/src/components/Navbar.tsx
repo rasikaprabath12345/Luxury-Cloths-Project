@@ -181,8 +181,8 @@ export default function Navbar() {
       <nav
         style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif" }}
         className="fixed top-0 inset-x-0 z-50
-                   bg-[rgba(245,245,247,0.75)] backdrop-blur-2xl
-                   border-b border-white/50 shadow-sm"
+                   bg-white backdrop-blur-2xl
+                   border-b border-gray-200 shadow-sm"
       >
         {/* ── Main row ── */}
         <div className="max-w-6xl mx-auto px-4 sm:px-5 h-14 flex items-center justify-between gap-4">
@@ -194,7 +194,7 @@ export default function Navbar() {
 
           {/* iOS segmented pill tabs — desktop */}
           <div className="hidden lg:flex items-center gap-0.5
-                          bg-black/[0.04] border border-black/[0.06]
+                          bg-gray-100 border border-gray-200
                           rounded-full px-1 py-1">
             {NAV_TABS.map((tab) => (
               <Link
@@ -260,7 +260,7 @@ export default function Navbar() {
             {/* Hamburger menu — mobile */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 text-[#1D1D1F] hover:bg-black/5 rounded-lg transition-colors"
+              className="lg:hidden p-2 text-[#1D1D1F] hover:bg-gray-100 rounded-lg transition-colors"
               aria-label="Toggle menu"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -272,7 +272,7 @@ export default function Navbar() {
 
         {/* ── Mobile pill tab strip ── */}
         <div className="hidden md:flex lg:hidden px-3 pb-2 overflow-x-auto scrollbar-none">
-          <div className="flex items-center gap-0.5 bg-black/[0.04] border border-black/[0.06]
+          <div className="flex items-center gap-0.5 bg-gray-100 border border-gray-200
                           rounded-full px-1 py-1 min-w-max">
             {NAV_TABS.map((tab) => (
               <Link
@@ -298,7 +298,7 @@ export default function Navbar() {
       {mobileMenuOpen && (
         <div
           ref={mobileMenuRef}
-          className="fixed inset-0 top-14 z-40 bg-black/30 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 top-14 z-40 bg-black/10 backdrop-blur-sm lg:hidden"
           onClick={() => setMobileMenuOpen(false)}
         >
           <div
