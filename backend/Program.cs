@@ -1,6 +1,7 @@
-using backend.Services; // <-- මෙන්න මේ පේලිය අලුතින්ම උඩටම එකතු කරන්න
+using backend.Services;
 using backend.Data;
 using Microsoft.EntityFrameworkCore;
+using Scalar.AspNetCore; // නවතම Scalar UI සඳහා
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,34 +9,39 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 2. Next.js Frontend එකට (Port 3000) දත්ත ගන්න අවසර දීම (CORS Policy)
+// 2. CORS Policy (Frontend සඳහා)
 builder.Services.AddCors(options =>
     options.AddPolicy("CorsPolicy", policy =>
     {
         policy.AllowAnyHeader()
               .AllowAnyMethod()
-              .WithOrigins("http://localhost:3000") // Frontend Local URL එක
+              .WithOrigins("http://localhost:3000")
               .AllowCredentials();
     }));
-// TokenService එක ඇප් එකට හඳුන්වා දීම
+
+// 3. .NET 9 නිල Native OpenAPI සේවාව සක්‍රිය කිරීම (Swashbuckle වෙනුවට)
+builder.Services.AddOpenApi();
+
+// 4. TokenService සහ Controllers
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        // JSON සාදද්දී එකිනෙකට කැරකෙන ලූප් (Object Cycles) නොදැක්කා වගේ අයින් කරලා දාන්න කියලා .NET එකට කියනවා
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
 
 var app = builder.Build();
 
-// Middleware ටික පිළිවෙලට සෙට් කිරීම
+// 5. Middleware Pipeline (Development පරිසරයේදී පමණක්)
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi(); // OpenAPI JSON Document එක සාදයි
+    app.MapScalarApiReference(); // ඉතාමත් ආකර්ෂණීය Scalar UI එක ලබා දෙයි
+}
+
 app.UseHttpsRedirection();
-
-// CORS එක UseAuthorization වලට කලින් අනිවාර්යයෙන්ම තියෙන්න ඕනේ
 app.UseCors("CorsPolicy"); 
-
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
