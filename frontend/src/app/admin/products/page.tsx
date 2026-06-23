@@ -15,15 +15,19 @@ interface Product {
   imageUrl?: string;
   image?: string;
   description?: string;
+  categoryId?: number; // 💡 Category Id එකත් මෙතනට එකතු කරා
 }
 
-// 💡 මෙන්න මෙතන "public" වෙනුවට "export" ලෙස නිවැරදි කරා 🎯
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]); 
   const [loading, setLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   
+  // 💡 EDIT MODE STATES
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  const [editingProductId, setEditingProductId] = useState<number | null>(null);
+
   // Form States
   const [newName, setNewName] = useState<string>("");
   const [newPrice, setNewPrice] = useState<string>("");
@@ -59,6 +63,26 @@ export default function AdminProductsPage() {
     fetchCategories();
   }, []);
 
+  // 💡 EDIT BUTTON LOGIC (බටන් එක එබුවම Form එකට ඩේටා ලෝඩ් කිරීම)
+  const openEditModal = (product: Product) => {
+    setIsEditMode(true);
+    setEditingProductId(product.id);
+    setNewName(product.name);
+    setNewPrice(product.price.toString());
+    setNewImageUrl(product.imageUrl || product.image || "");
+    setNewDescription(product.description || "");
+    setSelectedCategoryId(product.categoryId ? product.categoryId.toString() : "");
+    setIsModalOpen(true);
+  };
+
+  // 💡 CLOSE MODAL LOGIC (Form එක වහද්දී States Reset කිරීම)
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setIsEditMode(false);
+    setEditingProductId(null);
+    setNewName(""); setNewPrice(""); setNewImageUrl(""); setNewDescription(""); setSelectedCategoryId("");
+  };
+
   // DELETE PRODUCT LOGIC
   const handleDelete = async (id: number) => {
     if (!window.confirm("⚠️ ඔබට විශ්වාසද මෙම නිෂ්පාදනය පද්ධතියෙන් ඉවත් කිරීමට අවශ්‍ය බව?")) return;
@@ -74,32 +98,44 @@ export default function AdminProductsPage() {
     }
   };
 
-  // ADD PRODUCT LOGIC
-  const handleAddProduct = async (e: React.FormEvent) => {
+  // ADD OR UPDATE PRODUCT LOGIC
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName || !newPrice || !selectedCategoryId) {
       return alert("⚠️ කරුණාකර නම, මිල සහ කැටගරි එක ඇතුළත් කරන්න.");
     }
     setIsSubmitting(true);
 
-    try {
-      const productPayload = {
-        name: newName,
-        price: parseFloat(newPrice),
-        imageUrl: newImageUrl.trim() || "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=600&auto=format&fit=crop",
-        description: newDescription,
-        categoryId: parseInt(selectedCategoryId) 
-      };
+    const productPayload = {
+      id: isEditMode ? editingProductId : undefined, // Edit කරද්දී විතරක් ID එක යවනවා
+      name: newName,
+      price: parseFloat(newPrice),
+      imageUrl: newImageUrl.trim() || "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=600&auto=format&fit=crop",
+      description: newDescription,
+      categoryId: parseInt(selectedCategoryId) 
+    };
 
-      const response = await axios.post("http://localhost:5226/api/Products", productPayload);
-      if (response.status === 200 || response.status === 201) {
-        alert("🎉 නව නිෂ්පාදනය සාර්ථකව පද්ධතියට එක් කළා!");
-        fetchProducts();
-        setIsModalOpen(false);
-        setNewName(""); setNewPrice(""); setNewImageUrl(""); setNewDescription(""); setSelectedCategoryId("");
+    try {
+      if (isEditMode && editingProductId) {
+        // 💡 UPDATE (PUT) REQUEST
+        const response = await axios.put(`http://localhost:5226/api/Products/${editingProductId}`, productPayload);
+        if (response.status === 200 || response.status === 204) {
+          alert("✏️ නිෂ්පාදනයේ විස්තර සාර්ථකව වෙනස් කළා!");
+          fetchProducts();
+          closeModal();
+        }
+      } else {
+        // ➕ INSERT (POST) REQUEST
+        const response = await axios.post("http://localhost:5226/api/Products", productPayload);
+        if (response.status === 200 || response.status === 201) {
+          alert("🎉 නව නිෂ්පාදනය සාර්ථකව පද්ධතියට එක් කළා!");
+          fetchProducts();
+          closeModal();
+        }
       }
     } catch (error) {
-      alert("⚠️ නිෂ්පාදනය ඇතුළත් කිරීම අසාර්ථකයි. බැකෙන්ඩ් එක පරීක්ෂා කරන්න.");
+      console.error("Error saving product:", error);
+      alert("⚠️ ක්‍රියාවලිය අසාර්ථකයි. බැකෙන්ඩ් එක පරීක්ෂා කරන්න.");
     } finally {
       setIsSubmitting(false);
     }
@@ -121,15 +157,15 @@ export default function AdminProductsPage() {
           <div>
             <h1 className="text-2xl font-black">සියලුම නිෂ්පාදන පාලක පැනලය</h1>
           </div>
-          <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-3 rounded-xl transition text-xs uppercase tracking-wider">
+          <button onClick={() => { setIsEditMode(false); setIsModalOpen(true); }} className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-3 rounded-xl transition text-xs uppercase tracking-wider">
             ➕ අලුත් නිෂ්පාදනයක් එක් කරන්න
           </button>
         </div>
 
         {/* TABLE */}
         <div className="mt-8 bg-black border border-zinc-900 rounded-2xl overflow-hidden">
-          <div className="p-4 bg-zinc-900/50 font-bold text-xs text-zinc-500 grid grid-cols-4 gap-4 border-b border-zinc-900">
-            <div>Product</div>
+          <div className="p-4 bg-zinc-900/50 font-bold text-xs text-zinc-500 grid grid-cols-5 gap-4 border-b border-zinc-900">
+            <div className="col-span-2">Product</div>
             <div>Description</div>
             <div>Price</div>
             <div className="text-right">Action</div>
@@ -140,16 +176,21 @@ export default function AdminProductsPage() {
           ) : (
             <div className="divide-y divide-zinc-900">
               {products.map((product) => (
-                <div key={product.id} className="p-4 grid grid-cols-4 gap-4 items-center text-sm hover:bg-zinc-900/20 transition">
-                  <div className="flex items-center gap-3">
+                <div key={product.id} className="p-4 grid grid-cols-5 gap-4 items-center text-sm hover:bg-zinc-900/20 transition">
+                  <div className="flex items-center gap-3 col-span-2">
                     <img src={product.imageUrl || product.image || "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=600&auto=format&fit=crop"} className="w-10 h-10 object-cover rounded-lg bg-zinc-900" alt="" />
                     <span className="font-bold truncate">{product.name}</span>
                   </div>
                   <div className="text-zinc-500 text-xs truncate">{product.description || "No description"}</div>
                   <div className="font-mono text-zinc-300">${product.price.toFixed(2)}</div>
-                  <div className="text-right">
+                  <div className="text-right flex items-center justify-end gap-2">
+                    {/* 💡 EDIT BUTTON */}
+                    <button onClick={() => openEditModal(product)} className="text-xs text-blue-500 hover:bg-blue-500 hover:text-white border border-blue-500/20 px-3 py-1.5 rounded-lg transition">
+                      ✏️ වෙනස් කරන්න
+                    </button>
+                    {/* DELETE BUTTON */}
                     <button onClick={() => handleDelete(product.id)} className="text-xs text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 px-3 py-1.5 rounded-lg transition">
-                      මකන්න 🗑️
+                      🗑️ මකන්න
                     </button>
                   </div>
                 </div>
@@ -159,16 +200,18 @@ export default function AdminProductsPage() {
         </div>
       </div>
 
-      {/* POPUP MODAL */}
+      {/* POPUP MODAL (USED FOR BOTH ADD & EDIT) */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
           <div className="bg-zinc-950 border border-zinc-800 p-6 rounded-2xl w-full max-w-md space-y-4 shadow-2xl">
             <div className="flex justify-between items-center border-b border-zinc-900 pb-3">
-              <h3 className="text-lg font-bold text-blue-500">අලුත් නිෂ්පාදනයක් ඇතුළත් කරන්න</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-zinc-400 hover:text-white text-lg">✕</button>
+              <h3 className="text-lg font-bold text-blue-500">
+                {isEditMode ? "නිෂ්පාදනයේ විස්තර වෙනස් කරන්න" : "අලුත් නිෂ්පාදනයක් ඇතුළත් කරන්න"}
+              </h3>
+              <button onClick={closeModal} className="text-zinc-400 hover:text-white text-lg">✕</button>
             </div>
             
-            <form onSubmit={handleAddProduct} className="space-y-4 text-sm">
+            <form onSubmit={handleFormSubmit} className="space-y-4 text-sm">
               <div>
                 <label className="block text-zinc-400 mb-1">Product Name *</label>
                 <input type="text" required value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-white outline-none focus:border-blue-500" placeholder="eg: Luxury Silk Shirt" />
@@ -206,9 +249,9 @@ export default function AdminProductsPage() {
               </div>
               
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="w-1/2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 py-3 rounded-xl text-white transition">Cancel</button>
+                <button type="button" onClick={closeModal} className="w-1/2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 py-3 rounded-xl text-white transition">Cancel</button>
                 <button type="submit" disabled={isSubmitting} className="w-1/2 bg-blue-600 hover:bg-blue-700 font-bold py-3 rounded-xl text-white transition disabled:opacity-50">
-                  {isSubmitting ? "සුරකිමින් පවතී... ⏳" : "Save Product 🚀"}
+                  {isSubmitting ? "සුරකිමින් පවතී... ⏳" : isEditMode ? "Update Product ✏️" : "Save Product 🚀"}
                 </button>
               </div>
             </form>

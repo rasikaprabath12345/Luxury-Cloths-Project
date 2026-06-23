@@ -1,41 +1,39 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import axios from "axios";
 import Link from "next/link";
 
-// 👗 Realistic පෙනුමක් ලබා දීමට Mock Products ටිකක් (Unsplash Premium Images සමඟ)
-const featuredProducts = [
-  {
-    id: 1,
-    name: "Classic Premium Oversized Hoodie",
-    price: "රු 4,500.00",
-    oldPrice: "රු 5,200.00",
-    image: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?q=80&w=600&auto=format&fit=crop",
-    tag: "Trending"
-  },
-  {
-    id: 2,
-    name: "Luxury Minimalist Leather Jacket",
-    price: "රු 12,500.00",
-    oldPrice: "රු 14,000.00",
-    image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?q=80&w=600&auto=format&fit=crop",
-    tag: "Hot Release"
-  },
-  {
-    id: 3,
-    name: "Streetwear Cargo Pants Black",
-    price: "රු 3,800.00",
-    image: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?q=80&w=600&auto=format&fit=crop",
-    tag: "Popular"
-  },
-  {
-    id: 4,
-    name: "Minimalist Cotton Crewneck Tee",
-    price: "රු 1,950.00",
-    oldPrice: "රු 2,400.00",
-    image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=600&auto=format&fit=crop",
-    tag: "Sale"
-  }
-];
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  imageUrl?: string;
+  image?: string;
+  description?: string;
+}
+
+// ✨ SKELETON LOADER COMPONENT (ලෝඩ් වෙද්දී පෙන්වන Premium ඇනිමේෂන් එක)
+function ProductSkeleton() {
+  return (
+    <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 p-4 space-y-4 animate-pulse flex flex-col justify-between h-[420px]">
+      <div className="space-y-4">
+        {/* Image Placehoder */}
+        <div className="h-72 bg-gray-200 rounded-xl w-full" />
+        {/* Title & Description Placeholder */}
+        <div className="space-y-2">
+          <div className="h-4 bg-gray-200 rounded-md w-3/4" />
+          <div className="h-3 bg-gray-100 rounded-md w-full" />
+        </div>
+      </div>
+      {/* Price & Button Placeholder */}
+      <div className="pt-2 flex items-center justify-between border-t border-gray-50">
+        <div className="h-5 bg-gray-200 rounded-md w-1/3" />
+        <div className="h-9 bg-gray-200 rounded-xl w-1/3" />
+      </div>
+    </div>
+  );
+}
 
 const categories = [
   { name: "පිරිමි (Menswear)", count: "120+ Items", image: "https://images.unsplash.com/photo-1488161628813-04466f872be2?q=80&w=500&auto=format&fit=crop" },
@@ -44,12 +42,30 @@ const categories = [
 ];
 
 export default function HomePage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  // 📡 ඩේටාබේස් එකෙන් සැබෑ නිෂ්පාදන ලබා ගැනීම
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get("http://localhost:5226/api/Products");
+        setProducts(response.data);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
   return (
     <div className="bg-white text-black min-h-screen font-sans">
       
-      {/* 🌟 1. HERO SECTION (ප්‍රධාන බැනරය) */}
+      {/* 🌟 1. HERO SECTION */}
       <section className="relative h-[85vh] flex items-center justify-center bg-zinc-900 text-white overflow-hidden">
-        {/* Background Image Overlay */}
         <div 
           className="absolute inset-0 bg-cover bg-center opacity-40 scale-105 transition-transform duration-1000"
           style={{ backgroundImage: `url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1600&auto=format&fit=crop')` }}
@@ -72,23 +88,23 @@ export default function HomePage() {
               දැන්ම මිලදී ගන්න 🛒
             </Link>
             <Link 
-              href="/about" 
+              href="/admin/products" 
               className="w-full sm:w-auto bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white font-semibold px-8 py-4 rounded-full transition text-center"
             >
-              වැඩිදුර විස්තර 🔍
+              ⚙️ Admin Panel එකට යන්න
             </Link>
           </div>
         </div>
       </section>
 
-      {/* 🚚 2. TRUST BADGES SECTION (විශ්වාසනීය සේවා) */}
+      {/* 🚚 2. TRUST BADGES SECTION */}
       <section className="max-w-7xl mx-auto px-4 py-12 border-b border-gray-100">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {[
             { icon: "🚚", title: "දිවයින පුරා බෙදාහැරීම", desc: "දින 2-4ක් ඇතුළත නිවසටම" },
             { icon: "🛡️", title: "සුරක්ෂිත ගෙවීම්", desc: "100% ආරක්ෂිත පද්ධතියක්" },
             { icon: "🔄", title: "දින 7ක හුවමාරු කාලය", desc: "පහසුවෙන්ම මාරු කරගත හැක" },
-            { icon: "⭐", title: "වාරික තත්ත්වය (Premium)", desc: "ඉහළම ප්‍රමිතියේ රෙදිපිළි" },
+            { icon: "⭐", title: "වාරික තත්ත්වය (Premium)", desc: "ඉහළම ප්‍රමිතියේ ਰෙදිපිළි" },
           ].map((badge, idx) => (
             <div key={idx} className="flex items-center space-x-4 bg-gray-50 p-5 rounded-2xl">
               <span className="text-3xl bg-white p-3 rounded-xl shadow-sm">{badge.icon}</span>
@@ -101,7 +117,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 📁 3. CATEGORIES SECTION (ප්‍රධාන කාණ්ඩ) */}
+      {/* 📁 3. CATEGORIES SECTION */}
       <section className="max-w-7xl mx-auto px-4 py-16">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-10">
           <div>
@@ -128,7 +144,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 🛍️ 4. TRENDING PRODUCTS SECTION (ජනප්‍රිය නිෂ්පාදන) */}
+      {/* 🛍️ 4. TRENDING PRODUCTS SECTION */}
       <section className="max-w-7xl mx-auto px-4 py-8 bg-zinc-50 rounded-3xl my-8">
         <div className="p-6 md:p-10">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8">
@@ -141,42 +157,56 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProducts.map((product) => (
-              <div key={product.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition border border-gray-100 group relative">
-                
-                {/* Badge Tag */}
-                <span className="absolute top-3 left-3 z-10 bg-black text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md">
-                  {product.tag}
-                </span>
+          {loading ? (
+            /* ✨ මෙන්න මෙතනට අලුත් Skeleton Cards 4ක් දාලා අප්ඩේට් කරා */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[1, 2, 3, 4].map((n) => (
+                <ProductSkeleton key={n} />
+              ))}
+            </div>
+          ) : products.length === 0 ? (
+            <div className="text-center text-gray-500 py-12 font-medium">
+              ⚠️ තවමත් ඩේටාබේස් එකට කිසිදු නිෂ්පාදනයක් ඇතුළත් කර නැත.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {products.map((product) => (
+                <div key={product.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition border border-gray-100 group relative flex flex-col justify-between h-[420px]">
+                  <span className="absolute top-3 left-3 z-10 bg-black text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md">
+                    New
+                  </span>
 
-                {/* Product Image */}
-                <div className="h-72 bg-gray-100 overflow-hidden relative">
-                  <img 
-                    src={product.image} 
-                    alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-
-                {/* Product Info */}
-                <div className="p-4 space-y-2">
-                  <h3 className="font-semibold text-gray-800 text-sm line-clamp-1 group-hover:text-blue-600 transition">
-                    {product.name}
-                  </h3>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-base font-bold text-gray-900">{product.price}</span>
-                    {product.oldPrice && (
-                      <span className="text-xs text-gray-400 line-through">{product.oldPrice}</span>
-                    )}
+                  <div className="h-72 bg-gray-100 overflow-hidden relative">
+                    <img 
+                      src={product.imageUrl || product.image || "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=600&auto=format&fit=crop"} 
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
                   </div>
-                  <button className="w-full bg-zinc-900 hover:bg-blue-600 text-white text-xs font-bold py-2.5 rounded-xl transition mt-2">
-                    Add to Cart 🛒
-                  </button>
+
+                  <div className="p-4 space-y-2 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="font-semibold text-gray-800 text-sm line-clamp-1 group-hover:text-blue-600 transition">
+                        {product.name}
+                      </h3>
+                      <p className="text-gray-400 text-xs line-clamp-1 mt-0.5">
+                        {product.description || "Premium quality luxury clothing item."}
+                      </p>
+                    </div>
+                    
+                    <div className="pt-2">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-base font-bold text-gray-900">රු {product.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                      </div>
+                      <button className="w-full bg-zinc-900 hover:bg-blue-600 text-white text-xs font-bold py-2.5 rounded-xl transition mt-2">
+                        Add to Cart 🛒
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -204,7 +234,7 @@ export default function HomePage() {
           <div className="space-y-4">
             <h3 className="text-white text-xl font-black tracking-tighter">LUXURY<span className="text-blue-500">.</span></h3>
             <p className="text-xs leading-relaxed text-gray-500">
-              ශ්‍රී ලංකාවේ වාරිකතම සහ උසස්ම තත්ත්වයේ විලාසිතා අත්දැකීමක් ලබා දෙන එකම තැන.
+              | ශ්‍රී ලංකාවේ වාරිකතම සහ උසස්ම තත්ත්වයේ විලාසිතා අත්දැකීමක් ලබා දෙන එකම තැන.
             </p>
           </div>
           <div>
@@ -228,7 +258,7 @@ export default function HomePage() {
             <p className="text-xs text-gray-500 leading-relaxed">
               📍 Luxury Cloths HQ, Colombo, Sri Lanka.<br />
               📞 +94 11 234 5678<br />
-              ✉️ support@luxurycloths.com
+              ✉ support@luxurycloths.com
             </p>
           </div>
         </div>
