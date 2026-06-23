@@ -161,14 +161,6 @@ function UserMenu({ user, onLogout }: { user: User; onLogout: () => void }) {
   );
 }
 
-// ─── NAV TABS ─────────────────────────────────────────────────────────────────
-const NAV_TABS = [
-  { label: "Home", href: "/" },
-  { label: "Shop", href: "/storefront/product" },
-  { label: "Collections", href: "/collections" },
-  { label: "About", href: "/about" },
-];
-
 // ─── DATA ─────────────────────────────────────────────────────────────────────
 const categories = [
   {
@@ -204,7 +196,6 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
   const [user, setUser] = useState<User | null>(null); // null = logged out
-  const [activeTab, setActiveTab] = useState("/");
   const heroRef = useRef<HTMLDivElement>(null);
 
   // Simulate checking auth on mount — replace with real session check
@@ -255,115 +246,6 @@ export default function HomePage() {
       style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif" }}
       className="bg-[#F5F5F7] text-[#1D1D1F] min-h-screen antialiased"
     >
-
-      {/* ── NAV ──────────────────────────────────────────────────────────────── */}
-      <nav
-        className="fixed top-0 inset-x-0 z-50
-                   bg-[rgba(245,245,247,0.75)] backdrop-blur-2xl
-                   border-b border-white/50 shadow-sm"
-      >
-        <div className="max-w-6xl mx-auto px-5 h-14 flex items-center justify-between gap-4">
-
-          {/* Logo */}
-          <Link href="/" className="text-[15px] font-black tracking-tight text-[#1D1D1F] flex-shrink-0">
-            LUXURY<span className="text-blue-500">.</span>lk
-          </Link>
-
-          {/* ── iOS pill tab bar (desktop) ── */}
-          <div
-            className="hidden md:flex items-center gap-0.5
-                        bg-black/[0.04] border border-black/[0.06]
-                        rounded-full px-1 py-1"
-          >
-            {NAV_TABS.map((tab) => (
-              <Link
-                key={tab.href}
-                href={tab.href}
-                onClick={() => setActiveTab(tab.href)}
-                className={`
-                  relative px-4 py-1.5 rounded-full text-[13px] font-medium transition-all duration-200
-                  ${activeTab === tab.href
-                    ? "bg-white text-[#1D1D1F] shadow-sm shadow-black/10 font-semibold"
-                    : "text-[#424245] hover:text-[#1D1D1F]"
-                  }
-                `}
-              >
-                {tab.label}
-              </Link>
-            ))}
-          </div>
-
-          {/* Right side — auth */}
-          <div className="flex items-center gap-2.5 flex-shrink-0">
-            {user ? (
-              <>
-                {/* Dashboard shortcut (only for admins, visible at a glance) */}
-                {user.role === "admin" && (
-                  <Link
-                    href="/admin/products"
-                    className="hidden sm:flex items-center gap-1.5 text-[12px] font-semibold text-blue-600
-                               bg-blue-50 hover:bg-blue-100 border border-blue-100
-                               px-3.5 py-1.5 rounded-full transition-all duration-150 active:scale-95"
-                  >
-                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round"
-                        d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z
-                           M14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z
-                           M4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2z
-                           M14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                    </svg>
-                    Dashboard
-                  </Link>
-                )}
-                <UserMenu user={user} onLogout={handleLogout} />
-              </>
-            ) : (
-              <>
-                {/* Sign In */}
-                <button
-                  onClick={handleDemoLogin}   // ← replace with router.push('/login')
-                  className="text-[13px] font-semibold text-[#1D1D1F]
-                             hover:text-blue-600 transition-colors hidden sm:block"
-                >
-                  Sign In
-                </button>
-                {/* Sign Up */}
-                <Link
-                  href="/register"
-                  className="bg-[#1D1D1F] hover:bg-blue-600 active:scale-95 text-white
-                             text-[12px] font-semibold px-5 py-2 rounded-full
-                             transition-all duration-150 shadow-sm"
-                >
-                  Get Started
-                </Link>
-              </>
-            )}
-          </div>
-
-        </div>
-
-        {/* Mobile tab strip */}
-        <div className="md:hidden flex items-center gap-0.5 px-3 pb-2 overflow-x-auto scrollbar-none">
-          <div className="flex items-center gap-0.5 bg-black/[0.04] border border-black/[0.06] rounded-full px-1 py-1 min-w-max">
-            {NAV_TABS.map((tab) => (
-              <Link
-                key={tab.href}
-                href={tab.href}
-                onClick={() => setActiveTab(tab.href)}
-                className={`
-                  px-3.5 py-1 rounded-full text-[12px] font-medium transition-all duration-200 whitespace-nowrap
-                  ${activeTab === tab.href
-                    ? "bg-white text-[#1D1D1F] shadow-sm font-semibold"
-                    : "text-[#6E6E73] hover:text-[#1D1D1F]"
-                  }
-                `}
-              >
-                {tab.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </nav>
 
       {/* ── HERO ─────────────────────────────────────────────────────────────── */}
       <section
@@ -561,40 +443,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* ── FOOTER ───────────────────────────────────────────────────────────── */}
-      <footer className="bg-[#1D1D1F] text-[#6E6E73] text-sm">
-        <div className="max-w-6xl mx-auto px-6 py-14 grid grid-cols-1 md:grid-cols-4 gap-10">
-          <div className="space-y-3">
-            <h3 className="text-white text-lg font-black tracking-tight">
-              LUXURY<span className="text-blue-500">.</span>lk
-            </h3>
-            <p className="text-xs text-[#6E6E73] leading-relaxed max-w-[200px]">
-              Sri Lanka's premiere fashion destination. Quality first, always.
-            </p>
-          </div>
-          {[
-            { title: "Shop", links: [{ label: "All Products", href: "/storefront/product" }, { label: "Menswear", href: "#" }, { label: "Womenswear", href: "#" }, { label: "Accessories", href: "#" }] },
-            { title: "Company", links: [{ label: "About Us", href: "/about" }, { label: "Contact", href: "#" }, { label: "Careers", href: "#" }] },
-            { title: "Support", links: [{ label: "FAQs", href: "#" }, { label: "Shipping Info", href: "#" }, { label: "Returns & Exchanges", href: "#" }] },
-          ].map((col, i) => (
-            <div key={i}>
-              <h4 className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-500 mb-4">{col.title}</h4>
-              <ul className="space-y-3">
-                {col.links.map((l, j) => (
-                  <li key={j}><Link href={l.href} className="text-xs hover:text-white transition">{l.label}</Link></li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-        <div className="border-t border-white/5">
-          <div className="max-w-6xl mx-auto px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <p className="text-[11px] text-[#424245]">© 2026 Luxury Cloths Pvt Ltd. All rights reserved.</p>
-            <p className="text-[11px] text-[#424245]">Made in Sri Lanka · Built with Next.js</p>
-          </div>
-        </div>
-      </footer>
 
     </div>
   );

@@ -21,8 +21,8 @@ const MOCK_USER: User = {
 const NAV_TABS = [
   { label: "Home",        href: "/" },
   { label: "Shop",        href: "/storefront/product" },
-  { label: "Collections", href: "/collections" },
-  { label: "About",       href: "/about" },
+  { label: "Collections", href: "/storefront/collections" },
+  { label: "Blog",        href: "/storefront/blog" },
 ];
 
 // ─── USER DROPDOWN ────────────────────────────────────────────────────────────
@@ -104,6 +104,14 @@ function UserMenu({ user, onLogout }: { user: User; onLogout: () => void }) {
             >
               <span className="w-6 h-6 bg-gray-100 rounded-lg flex items-center justify-center text-[12px]">📦</span>
               My Orders
+            </Link>
+            <Link
+              href="/account/wishlist"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-4 py-2.5 text-[13px] text-[#1D1D1F] hover:bg-gray-50 transition-colors"
+            >
+              <span className="w-6 h-6 bg-gray-100 rounded-lg flex items-center justify-center text-[12px]">❤️</span>
+              My Wishlist
             </Link>
             {user.role === "admin" && (
               <Link

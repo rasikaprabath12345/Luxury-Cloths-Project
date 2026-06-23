@@ -5,7 +5,9 @@ import "./globals.css";
 import { CartProvider } from "../context/CartContext"; 
 import { AuthProvider } from "../context/AuthContext";
 // Navbar component
-import Navbar from "../components/Navbar"; 
+import Navbar from "../components/Navbar";
+// Footer component
+import Footer from "../components/Footer"; 
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,6 +45,9 @@ export default function RootLayout({
             <main className="flex-grow">
               {children}
             </main>
+
+            {/* Footer shared across all pages */}
+            <Footer />
           </CartProvider>
         </AuthProvider>
       </body>

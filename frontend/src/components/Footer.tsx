@@ -6,25 +6,34 @@ const FOOTER_COLS = [
     title: "Shop",
     links: [
       { label: "All Products",  href: "/storefront/product" },
-      { label: "Menswear",      href: "#" },
-      { label: "Womenswear",    href: "#" },
-      { label: "Accessories",   href: "#" },
-    ],
-  },
-  {
-    title: "Company",
-    links: [
-      { label: "About Us", href: "/about" },
-      { label: "Contact",  href: "#" },
-      { label: "Careers",  href: "#" },
+      { label: "Collections",   href: "/storefront/collections" },
+      { label: "New Arrivals",  href: "/storefront/product?sort=new" },
+      { label: "Sale",          href: "/storefront/product?filter=sale" },
     ],
   },
   {
     title: "Support",
     links: [
-      { label: "FAQs",               href: "#" },
-      { label: "Shipping Info",      href: "#" },
-      { label: "Returns & Exchanges", href: "#" },
+      { label: "FAQs",               href: "/storefront/faq" },
+      { label: "Size Guide",         href: "/storefront/size-guide" },
+      { label: "Shipping Info",      href: "/storefront/shipping" },
+      { label: "Returns & Exchanges", href: "/storefront/returns" },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      { label: "About Us",    href: "/storefront/about" },
+      { label: "Blog",        href: "/storefront/blog" },
+      { label: "Testimonials", href: "/storefront/testimonials" },
+      { label: "Contact",     href: "/storefront/contact" },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { label: "Privacy Policy", href: "/storefront/privacy" },
+      { label: "Terms of Use",   href: "/storefront/terms" },
     ],
   },
 ];
@@ -68,8 +77,8 @@ export default function Footer() {
       className="bg-[#1D1D1F] text-[#6E6E73]"
     >
       {/* Main grid */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-12 sm:pt-16 pb-6 sm:pb-10 
-                      grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 sm:gap-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-12 sm:pt-16 pb-6 sm:pb-10 
+                      grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 sm:gap-6 md:gap-8">
 
         {/* Brand col — takes full width on mobile, 2 of 5 on desktop */}
         <div className="sm:col-span-2 space-y-4">
@@ -109,19 +118,19 @@ export default function Footer() {
 
         {/* Link columns */}
         {FOOTER_COLS.map((col) => (
-          <div key={col.title}>
+          <div key={col.title} className="lg:col-span-1">
             <h4 className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.18em] text-blue-500 mb-3 sm:mb-4">
               {col.title}
             </h4>
             <ul className="space-y-2.5 sm:space-y-3">
               {col.links.map((l) => (
                 <li key={l.label}>
-                  <a
+                  <Link
                     href={l.href}
                     className="text-xs text-[#6E6E73] hover:text-white transition-colors duration-150"
                   >
                     {l.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -130,7 +139,7 @@ export default function Footer() {
       </div>
 
       {/* Newsletter mini strip */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6 border-t border-white/[0.06]
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 border-t border-white/[0.06]
                       flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div className="w-full sm:w-auto">
           <p className="text-xs sm:text-sm font-semibold text-white">Stay in the loop</p>
@@ -156,18 +165,18 @@ export default function Footer() {
 
       {/* Bottom bar */}
       <div className="border-t border-white/[0.06]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-5
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-5
                         flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-2">
           <p className="text-xs text-[#424245]">
             © 2026 Luxury Cloths Pvt Ltd. All rights reserved.
           </p>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-            <a href="#" className="text-xs text-[#424245] hover:text-white transition-colors">
+            <Link href="/storefront/privacy" className="text-xs text-[#424245] hover:text-white transition-colors">
               Privacy Policy
-            </a>
-            <a href="#" className="text-xs text-[#424245] hover:text-white transition-colors">
+            </Link>
+            <Link href="/storefront/terms" className="text-xs text-[#424245] hover:text-white transition-colors">
               Terms of Use
-            </a>
+            </Link>
             <p className="text-xs text-[#424245]">Made in Sri Lanka</p>
           </div>
         </div>
