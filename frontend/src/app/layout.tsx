@@ -33,13 +33,13 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col bg-white">
         <AuthProvider>
           <CartProvider>
             {/* Navbar shared across all pages */}
             <Navbar />
             
-            {/* Each page renders here */}
+            {/* Each page renders here with top padding for fixed navbar */}
             <main className="flex-grow">
               {children}
             </main>
