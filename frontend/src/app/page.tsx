@@ -1,65 +1,242 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import Link from "next/link";
+
+// 👗 Realistic පෙනුමක් ලබා දීමට Mock Products ටිකක් (Unsplash Premium Images සමඟ)
+const featuredProducts = [
+  {
+    id: 1,
+    name: "Classic Premium Oversized Hoodie",
+    price: "රු 4,500.00",
+    oldPrice: "රු 5,200.00",
+    image: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?q=80&w=600&auto=format&fit=crop",
+    tag: "Trending"
+  },
+  {
+    id: 2,
+    name: "Luxury Minimalist Leather Jacket",
+    price: "රු 12,500.00",
+    oldPrice: "රු 14,000.00",
+    image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?q=80&w=600&auto=format&fit=crop",
+    tag: "Hot Release"
+  },
+  {
+    id: 3,
+    name: "Streetwear Cargo Pants Black",
+    price: "රු 3,800.00",
+    image: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?q=80&w=600&auto=format&fit=crop",
+    tag: "Popular"
+  },
+  {
+    id: 4,
+    name: "Minimalist Cotton Crewneck Tee",
+    price: "රු 1,950.00",
+    oldPrice: "රු 2,400.00",
+    image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=600&auto=format&fit=crop",
+    tag: "Sale"
+  }
+];
+
+const categories = [
+  { name: "පිරිමි (Menswear)", count: "120+ Items", image: "https://images.unsplash.com/photo-1488161628813-04466f872be2?q=80&w=500&auto=format&fit=crop" },
+  { name: "කාන්තා (Womenswear)", count: "85+ Items", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=500&auto=format&fit=crop" },
+  { name: "መለዋවර්ග (Accessories)", count: "40+ Items", image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=500&auto=format&fit=crop" },
+];
+
+export default function HomePage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="bg-white text-black min-h-screen font-sans">
+      
+      {/* 🌟 1. HERO SECTION (ප්‍රධාන බැනරය) */}
+      <section className="relative h-[85vh] flex items-center justify-center bg-zinc-900 text-white overflow-hidden">
+        {/* Background Image Overlay */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-40 scale-105 transition-transform duration-1000"
+          style={{ backgroundImage: `url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1600&auto=format&fit=crop')` }}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+        <div className="relative z-10 text-center max-w-3xl px-4 space-y-6">
+          <span className="text-xs font-bold tracking-widest text-blue-500 uppercase bg-blue-500/10 px-3 py-1.5 rounded-full">
+            New Summer Collection 2026
+          </span>
+          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter leading-none">
+            DEFINE YOUR <span className="text-blue-500">LUXURY</span> STYLE.
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-gray-300 text-base md:text-lg max-w-xl mx-auto font-light leading-relaxed">
+            සුවපහසුව සහ නවීන විලාසිතා එකම තැනකින්. ශ්‍රී ලංකාවේ අංක 1 වාරික ඇඟලුම් එකතුව දැන්ම අත්විඳින්න.
           </p>
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-4">
+            <Link 
+              href="/storefront/product" 
+              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-full transition shadow-lg shadow-blue-600/30 text-center"
+            >
+              දැන්ම මිලදී ගන්න 🛒
+            </Link>
+            <Link 
+              href="/about" 
+              className="w-full sm:w-auto bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white font-semibold px-8 py-4 rounded-full transition text-center"
+            >
+              වැඩිදුර විස්තර 🔍
+            </Link>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* 🚚 2. TRUST BADGES SECTION (විශ්වාසනීය සේවා) */}
+      <section className="max-w-7xl mx-auto px-4 py-12 border-b border-gray-100">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {[
+            { icon: "🚚", title: "දිවයින පුරා බෙදාහැරීම", desc: "දින 2-4ක් ඇතුළත නිවසටම" },
+            { icon: "🛡️", title: "සුරක්ෂිත ගෙවීම්", desc: "100% ආරක්ෂිත පද්ධතියක්" },
+            { icon: "🔄", title: "දින 7ක හුවමාරු කාලය", desc: "පහසුවෙන්ම මාරු කරගත හැක" },
+            { icon: "⭐", title: "වාරික තත්ත්වය (Premium)", desc: "ඉහළම ප්‍රමිතියේ රෙදිපිළි" },
+          ].map((badge, idx) => (
+            <div key={idx} className="flex items-center space-x-4 bg-gray-50 p-5 rounded-2xl">
+              <span className="text-3xl bg-white p-3 rounded-xl shadow-sm">{badge.icon}</span>
+              <div>
+                <h4 className="font-bold text-sm text-gray-900">{badge.title}</h4>
+                <p className="text-xs text-gray-500 mt-0.5">{badge.desc}</p>
+              </div>
+            </div>
+          ))}
         </div>
-      </main>
+      </section>
+
+      {/* 📁 3. CATEGORIES SECTION (ප්‍රධාන කාණ්ඩ) */}
+      <section className="max-w-7xl mx-auto px-4 py-16">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10">
+          <div>
+            <span className="text-blue-600 text-sm font-bold uppercase tracking-wider">Categories</span>
+            <h2 className="text-3xl font-black tracking-tight mt-1">ඔබට ගැළපෙන කාණ්ඩය තෝරන්න</h2>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {categories.map((cat, idx) => (
+            <div key={idx} className="group relative h-80 rounded-3xl overflow-hidden shadow-md cursor-pointer">
+              <img 
+                src={cat.image} 
+                alt={cat.name}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+              <div className="absolute bottom-6 left-6 text-white">
+                <h3 className="text-xl font-bold">{cat.name}</h3>
+                <p className="text-xs text-gray-300 mt-1 font-light">{cat.count}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 🛍️ 4. TRENDING PRODUCTS SECTION (ජනප්‍රිය නිෂ්පාදන) */}
+      <section className="max-w-7xl mx-auto px-4 py-8 bg-zinc-50 rounded-3xl my-8">
+        <div className="p-6 md:p-10">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8">
+            <div>
+              <span className="text-blue-600 text-sm font-bold uppercase tracking-wider">Top Picks</span>
+              <h2 className="text-3xl font-black tracking-tight mt-1">දැනට වැඩියෙන්ම අලෙවි වන ඇඳුම්</h2>
+            </div>
+            <Link href="/storefront/product" className="text-blue-600 hover:underline font-semibold text-sm mt-2 sm:mt-0 inline-flex items-center">
+              සියලුම නිෂ්පාදන බලන්න →
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {featuredProducts.map((product) => (
+              <div key={product.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition border border-gray-100 group relative">
+                
+                {/* Badge Tag */}
+                <span className="absolute top-3 left-3 z-10 bg-black text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md">
+                  {product.tag}
+                </span>
+
+                {/* Product Image */}
+                <div className="h-72 bg-gray-100 overflow-hidden relative">
+                  <img 
+                    src={product.image} 
+                    alt={product.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
+
+                {/* Product Info */}
+                <div className="p-4 space-y-2">
+                  <h3 className="font-semibold text-gray-800 text-sm line-clamp-1 group-hover:text-blue-600 transition">
+                    {product.name}
+                  </h3>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-base font-bold text-gray-900">{product.price}</span>
+                    {product.oldPrice && (
+                      <span className="text-xs text-gray-400 line-through">{product.oldPrice}</span>
+                    )}
+                  </div>
+                  <button className="w-full bg-zinc-900 hover:bg-blue-600 text-white text-xs font-bold py-2.5 rounded-xl transition mt-2">
+                    Add to Cart 🛒
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ✉️ 5. NEWSLETTER SECTION */}
+      <section className="bg-blue-600 text-white max-w-7xl mx-auto my-12 rounded-3xl p-8 md:p-16 text-center space-y-4 shadow-xl">
+        <h2 className="text-3xl md:text-4xl font-black">10% ක සුවිශේෂී වට්ටමක් ලබාගන්න</h2>
+        <p className="text-blue-100 text-sm max-w-md mx-auto">
+          අපගේ නවතම ඇඳුම් එකතුන් සහ විශේෂ දීමනා පිළිබඳ විස්තර මුලින්ම ඔබගේ ඊමේල් ලිපිනයටම ලබාගන්න.
+        </p>
+        <div className="max-w-md mx-auto flex flex-col sm:flex-row gap-2 pt-2">
+          <input 
+            type="email" 
+            placeholder="ඔබේ ඊමේල් ලිපිනය" 
+            className="w-full px-5 py-3.5 rounded-xl text-black focus:outline-none text-sm"
+          />
+          <button className="bg-black hover:bg-zinc-900 text-white font-bold px-6 py-3.5 rounded-xl transition text-sm shrink-0">
+            එකතු වන්න📩
+          </button>
+        </div>
+      </section>
+
+      {/* 📜 6. PREMIUM FOOTER */}
+      <footer className="bg-zinc-950 text-gray-400 text-sm py-12 border-t border-zinc-900">
+        <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="space-y-4">
+            <h3 className="text-white text-xl font-black tracking-tighter">LUXURY<span className="text-blue-500">.</span></h3>
+            <p className="text-xs leading-relaxed text-gray-500">
+              ශ්‍රී ලංකාවේ වාරිකතම සහ උසස්ම තත්ත්වයේ විලාසිතා අත්දැකීමක් ලබා දෙන එකම තැන.
+            </p>
+          </div>
+          <div>
+            <h4 className="text-white font-bold mb-3 text-xs uppercase tracking-widest text-blue-500">Quick Links</h4>
+            <ul className="space-y-2 text-xs">
+              <li><Link href="/" className="hover:text-white transition">මුල් පිටුව</Link></li>
+              <li><Link href="/storefront/product" className="hover:text-white transition">නිෂ්පාදන</Link></li>
+              <li><Link href="/about" className="hover:text-white transition">අප ගැන</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="text-white font-bold mb-3 text-xs uppercase tracking-widest text-blue-500">Customer Care</h4>
+            <ul className="space-y-2 text-xs">
+              <li className="hover:text-white cursor-pointer transition">Contact Us</li>
+              <li className="hover:text-white cursor-pointer transition">FAQs & Help</li>
+              <li className="hover:text-white cursor-pointer transition">Shipping & Returns</li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="text-white font-bold mb-3 text-xs uppercase tracking-widest text-blue-500">Contact</h4>
+            <p className="text-xs text-gray-500 leading-relaxed">
+              📍 Luxury Cloths HQ, Colombo, Sri Lanka.<br />
+              📞 +94 11 234 5678<br />
+              ✉️ support@luxurycloths.com
+            </p>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-4 mt-8 pt-6 border-t border-zinc-900 text-center text-xs text-gray-600">
+          © 2026 LUXURY CLOTHS. All Rights Reserved. Built with Next.js & Tailwind CSS.
+        </div>
+      </footer>
+
     </div>
   );
 }
