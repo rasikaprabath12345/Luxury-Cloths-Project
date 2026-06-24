@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { productsAPI, categoriesAPI } from "@/lib/api";
+import { productsAPI, categoriesAPI, uploadAPI } from "@/lib/api";
 import { showToast, showConfirm } from "@/lib/adminUtils";
 
 interface Category { id: number; name: string; }
@@ -23,6 +23,7 @@ export default function AdminProductsPage() {
   const [newImageUrl, setNewImageUrl] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
@@ -60,6 +61,29 @@ export default function AdminProductsPage() {
   const closeModal = () => {
     setIsModalOpen(false); setIsEditMode(false); setEditingProductId(null);
     setNewName(""); setNewPrice(""); setNewImageUrl(""); setNewDescription(""); setSelectedCategoryId("");
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      showToast("Please select an image file.", "warning");
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const response = await uploadAPI.uploadImage(file);
+      const uploadedUrl = response.data.url;
+      setNewImageUrl(uploadedUrl);
+      showToast("Image uploaded successfully!", "success");
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      showToast("Failed to upload image.", "error");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleDelete = (id: number, name: string) => {
@@ -251,8 +275,29 @@ export default function AdminProductsPage() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Image URL</label>
-                <input type="url" value={newImageUrl} onChange={(e) => setNewImageUrl(e.target.value)} className="form-input" placeholder="https://images.unsplash.com/..." />
+                <label className="form-label">Product Image</label>
+                <div style={{ display: "flex", gap: "10px", flexDirection: "column" }}>
+                  <label className="btn-upload">
+                    {isUploading ? (
+                      <><span className="spinner-dark" /> Uploading...</>
+                    ) : (
+                      <>📷 Select & Upload Image File</>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      disabled={isUploading}
+                      style={{ display: "none" }}
+                    />
+                  </label>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <div style={{ flex: 1, height: "1px", background: "#e2e8f0" }}></div>
+                    <span style={{ fontSize: "11px", color: "#94a3b8", textTransform: "uppercase", fontWeight: 600 }}>or</span>
+                    <div style={{ flex: 1, height: "1px", background: "#e2e8f0" }}></div>
+                  </div>
+                  <input type="url" value={newImageUrl} onChange={(e) => setNewImageUrl(e.target.value)} className="form-input" placeholder="Paste image URL (e.g. https://images.unsplash.com/...)" />
+                </div>
               </div>
 
               <div className="form-actions">
@@ -396,6 +441,36 @@ export default function AdminProductsPage() {
         .spinner {
           width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
           border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block;
+        }
+        .btn-upload {
+          cursor: pointer;
+          padding: 12px;
+          border-radius: 10px;
+          border: 1px dashed #cbd5e1;
+          background: #f8fafc;
+          font-size: 13px;
+          font-weight: 600;
+          color: #475569;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          transition: all 0.2s;
+          width: 100%;
+        }
+        .btn-upload:hover {
+          background: #f1f5f9;
+          border-color: #94a3b8;
+          color: #334155;
+        }
+        .spinner-dark {
+          width: 14px;
+          height: 14px;
+          border: 2px solid rgba(0,0,0,0.1);
+          border-top-color: #475569;
+          border-radius: 50%;
+          animation: spin 0.6s linear infinite;
+          display: inline-block;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }

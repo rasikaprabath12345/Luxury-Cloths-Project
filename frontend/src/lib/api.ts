@@ -179,8 +179,11 @@ export const uploadAPI = {
   uploadImage: async (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
-    return apiClient.post('/Uploads/image', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+    const token = typeof window !== 'undefined' ? localStorage.getItem('luxury_token') : null;
+    return axios.post(`${API_BASE_URL}/Uploads/image`, formData, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
     });
   },
 };

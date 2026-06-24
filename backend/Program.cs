@@ -56,6 +56,18 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseCors("CorsPolicy"); 
 
+// Serve static files from the 'uploads' directory
+var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
+if (!Directory.Exists(uploadsPath))
+{
+    Directory.CreateDirectory(uploadsPath);
+}
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploadsPath),
+    RequestPath = "/uploads"
+});
+
 // !!! මේ පේළි දෙක ඉතා වැදගත් (මෙම අනුපිළිවෙලටම තිබිය යුතුය)
 app.UseAuthentication(); // 1. මුලින්ම Token එක Check කරන්න
 app.UseAuthorization();  // 2. ඊට පස්සේ Admin ද කියලා Check කරන්න
