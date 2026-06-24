@@ -16,6 +16,14 @@ interface Product {
   imageUrl?: string;
   image?: string;
   description?: string;
+  sizes?: string;
+  discount?: number;
+  category?: {
+    id: number;
+    name: string;
+    slug: string;
+  };
+  categoryId?: number;
 }
 
 interface User {
@@ -161,6 +169,118 @@ function UserMenu({ user, onLogout }: { user: User; onLogout: () => void }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── PRODUCT CARD COMPONENT ───────────────────────────────────────────────────
+function ProductCard({ product }: { product: Product }) {
+  const hasDiscount = product.discount && product.discount > 0;
+  const originalPrice = product.price;
+  const discountAmount = hasDiscount ? (originalPrice * (product.discount || 0)) / 100 : 0;
+  const finalPrice = originalPrice - discountAmount;
+
+  // Split sizes by comma
+  const sizesList = product.sizes ? product.sizes.split(",").map(s => s.trim()) : [];
+
+  return (
+    <div style={{
+      ...glass.card, padding: 0, overflow: "hidden",
+      display: "flex", flexDirection: "column", height: 445,
+      transition: "transform 0.3s ease, box-shadow 0.3s ease", cursor: "pointer",
+    }}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLElement).style.transform = "translateY(-6px)";
+        (e.currentTarget as HTMLElement).style.boxShadow = "0 16px 48px rgba(0,0,0,0.12)";
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
+        (e.currentTarget as HTMLElement).style.boxShadow = glass.card.boxShadow as string;
+      }}>
+      <div style={{ position: "relative", height: 260, overflow: "hidden", flexShrink: 0 }}>
+        <img
+          src={product.imageUrl || product.image || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop"}
+          alt={product.name}
+          style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease" }}
+          onMouseEnter={e => ((e.currentTarget as HTMLImageElement).style.transform = "scale(1.06)")}
+          onMouseLeave={e => ((e.currentTarget as HTMLImageElement).style.transform = "scale(1)")}
+        />
+        {/* Discount Tag */}
+        {hasDiscount && (
+          <div style={{
+            position: "absolute", top: 12, left: 12,
+            background: "#FF3B30", backdropFilter: "blur(8px)",
+            borderRadius: 8, padding: "4px 10px",
+            boxShadow: "0 2px 8px rgba(255,59,48,0.4)",
+            zIndex: 5,
+          }}>
+            <span style={{ fontSize: 10, fontWeight: 800, color: "#fff" }}>
+              {product.discount}% OFF
+            </span>
+          </div>
+        )}
+      </div>
+
+      <div style={{ padding: "14px 16px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+        <div>
+          <span style={{ fontSize: 9, fontWeight: 700, color: "#007AFF", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+            {product.category?.name || "Premium Collection"}
+          </span>
+          <h3 style={{ margin: "4px 0 0", fontSize: 13.5, fontWeight: 700, color: "#1C1C1E",
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {product.name}
+          </h3>
+          <p style={{ margin: "2px 0 0", fontSize: 11, color: "#8E8E93",
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {product.description || "Ceylon luxury fabrics and modern fit."}
+          </p>
+
+          {/* Sizes */}
+          {sizesList.length > 0 && (
+            <div style={{ display: "flex", gap: "4px", marginTop: "8px", flexWrap: "wrap" }}>
+              {sizesList.map((size, idx) => (
+                <span key={idx} style={{
+                  fontSize: 9, fontWeight: 700, background: "rgba(120,120,128,0.08)",
+                  color: "#48484A", padding: "2px 6px", borderRadius: 4
+                }}>
+                  {size}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
+          paddingTop: 10, borderTop: "0.5px solid rgba(0,0,0,0.06)", marginTop: "6px" }}>
+          <div>
+            {hasDiscount ? (
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <span style={{ fontSize: 11, textDecoration: "line-through", color: "#8E8E93", lineHeight: 1 }}>
+                  Rs. {originalPrice.toLocaleString()}
+                </span>
+                <span style={{ fontSize: 15, fontWeight: 800, color: "#FF3B30", marginTop: 2 }}>
+                  Rs. {finalPrice.toLocaleString()}
+                </span>
+              </div>
+            ) : (
+              <span style={{ fontSize: 15, fontWeight: 800, color: "#1C1C1E" }}>
+                Rs. {originalPrice.toLocaleString()}
+              </span>
+            )}
+          </div>
+          <button style={{
+            background: "linear-gradient(135deg, #1C1C1E, #3C3C43)",
+            border: "none", borderRadius: 12, padding: "8px 14px",
+            fontSize: 11, fontWeight: 600, color: "#fff", cursor: "pointer",
+            transition: "background 0.2s, transform 0.1s",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+          }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, #007AFF, #5856D6)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 12px rgba(0,122,255,0.3)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, #1C1C1E, #3C3C43)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 8px rgba(0,0,0,0.15)"; }}>
+            Add to Bag
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -444,129 +564,94 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── NEW ARRIVALS ────────────────────────────────────────────────────── */}
+      {/* ─── WOMEN'S LUXURY COLLECTION ──────────────────────────────────────── */}
       <section style={{ maxWidth: 1200, margin: "0 auto", padding: "8px 24px 40px", position: "relative", zIndex: 1 }}>
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 24 }}>
           <div>
             <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
-              textTransform: "uppercase", color: "#007AFF" }}>Just In</p>
-            <h2 style={{ margin: 0, fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em" }}>New Arrivals</h2>
+              textTransform: "uppercase", color: "#007AFF" }}>Sophisticated Styles</p>
+            <h2 style={{ margin: 0, fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em" }}>Women's Collection 👚</h2>
           </div>
-          <div style={{ display: "flex", gap: 6 }}>
-            {(["Women", "Men", "Kids"] as const).map(cat => (
-              <button key={cat} onClick={() => setActiveCategory(cat)}
-                style={{
-                  padding: "6px 16px", borderRadius: 12, border: "none", cursor: "pointer",
-                  fontSize: 13, fontWeight: 600, transition: "all 0.2s",
-                  background: activeCategory === cat
-                    ? "linear-gradient(135deg, #007AFF, #5856D6)"
-                    : "rgba(255,255,255,0.7)",
-                  color: activeCategory === cat ? "#fff" : "#3C3C43",
-                  boxShadow: activeCategory === cat
-                    ? "0 2px 12px rgba(0,122,255,0.3)"
-                    : "0 1px 4px rgba(0,0,0,0.06)",
-                  backdropFilter: "blur(12px)",
-                }}>
-                {cat}
-              </button>
-            ))}
-          </div>
+          <Link href="/storefront/product" style={{ fontSize: 13, fontWeight: 600, color: "#007AFF", textDecoration: "none" }}>
+            View All Women's Wear →
+          </Link>
         </div>
 
-        {/* Product grid (API products or skeleton) */}
         {loading ? (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 16 }}>
             {[1, 2, 3, 4].map(n => <ProductSkeleton key={n} />)}
           </div>
-        ) : products.length === 0 ? (
-          <div style={{ ...glass.card, padding: 60, textAlign: "center", color: "#8E8E93", fontSize: 14 }}>
-            No products yet. Check back soon.
+        ) : products.filter(p => p.category?.name?.toLowerCase().includes("women") || p.category?.name?.toLowerCase().includes("girl") || p.categoryId === 2).length === 0 ? (
+          <div style={{ ...glass.card, padding: 40, textAlign: "center", color: "#8E8E93", fontSize: 14 }}>
+            No women's products yet. Check back soon.
           </div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 16 }}>
-            {products.slice(0, 8).map(product => (
-              <div key={product.id} style={{
-                ...glass.card, padding: 0, overflow: "hidden",
-                display: "flex", flexDirection: "column", height: 420,
-                transition: "transform 0.3s ease, box-shadow 0.3s ease", cursor: "pointer",
-              }}
-                onMouseEnter={e => {
-                  (e.currentTarget as HTMLElement).style.transform = "translateY(-6px)";
-                  (e.currentTarget as HTMLElement).style.boxShadow = "0 16px 48px rgba(0,0,0,0.12)";
-                }}
-                onMouseLeave={e => {
-                  (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
-                  (e.currentTarget as HTMLElement).style.boxShadow = glass.card.boxShadow as string;
-                }}>
-                <div style={{ position: "relative", height: 260, overflow: "hidden", flexShrink: 0 }}>
-                  <img
-                    src={product.imageUrl || product.image || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop"}
-                    alt={product.name}
-                    style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease" }}
-                    onMouseEnter={e => ((e.currentTarget as HTMLImageElement).style.transform = "scale(1.06)")}
-                    onMouseLeave={e => ((e.currentTarget as HTMLImageElement).style.transform = "scale(1)")}
-                  />
-                  <div style={{
-                    position: "absolute", top: 10, left: 10,
-                    background: "rgba(28,28,30,0.82)", backdropFilter: "blur(8px)",
-                    borderRadius: 8, padding: "3px 9px",
-                  }}>
-                    <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em",
-                      textTransform: "uppercase", color: "#fff" }}>NEW</span>
-                  </div>
-                </div>
-
-                <div style={{ padding: "14px 16px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                  <div>
-                    <h3 style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#1C1C1E",
-                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {product.name}
-                    </h3>
-                    <p style={{ margin: "4px 0 0", fontSize: 11, color: "#8E8E93",
-                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {product.description || "Premium luxury clothing"}
-                    </p>
-                  </div>
-
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
-                    paddingTop: 12, borderTop: "0.5px solid rgba(0,0,0,0.06)" }}>
-                    <div>
-                      <span style={{ fontSize: 15, fontWeight: 700, color: "#1C1C1E" }}>
-                        Rs. {product.price.toLocaleString()}
-                      </span>
-                    </div>
-                    <button style={{
-                      background: "linear-gradient(135deg, #1C1C1E, #3C3C43)",
-                      border: "none", borderRadius: 12, padding: "8px 16px",
-                      fontSize: 11, fontWeight: 600, color: "#fff", cursor: "pointer",
-                      transition: "background 0.2s, transform 0.1s",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                    }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, #007AFF, #5856D6)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 12px rgba(0,122,255,0.3)"; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, #1C1C1E, #3C3C43)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 8px rgba(0,0,0,0.15)"; }}>
-                      Add to Bag
-                    </button>
-                  </div>
-                </div>
-              </div>
+            {products.filter(p => p.category?.name?.toLowerCase().includes("women") || p.category?.name?.toLowerCase().includes("girl") || p.categoryId === 2).slice(0, 4).map(product => (
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
         )}
+      </section>
 
-        <div style={{ textAlign: "center", marginTop: 28 }}>
-          <Link href="/storefront/product"
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 6,
-              ...glass.card,
-              padding: "12px 28px", textDecoration: "none",
-              fontSize: 13, fontWeight: 600, color: "#007AFF",
-            }}>
-            View All Products
-            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-              <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+      {/* ─── MEN'S PREMIUM COLLECTION ───────────────────────────────────────── */}
+      <section style={{ maxWidth: 1200, margin: "0 auto", padding: "16px 24px 40px", position: "relative", zIndex: 1 }}>
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 24 }}>
+          <div>
+            <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
+              textTransform: "uppercase", color: "#007AFF" }}>Tailored Precision</p>
+            <h2 style={{ margin: 0, fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em" }}>Men's Collection 👕</h2>
+          </div>
+          <Link href="/storefront/product" style={{ fontSize: 13, fontWeight: 600, color: "#007AFF", textDecoration: "none" }}>
+            View All Men's Wear →
           </Link>
         </div>
+
+        {loading ? (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 16 }}>
+            {[1, 2, 3, 4].map(n => <ProductSkeleton key={n} />)}
+          </div>
+        ) : products.filter(p => (p.category?.name?.toLowerCase().includes("men") || p.category?.name?.toLowerCase().includes("boy") || p.categoryId === 1) && !p.category?.name?.toLowerCase().includes("women")).length === 0 ? (
+          <div style={{ ...glass.card, padding: 40, textAlign: "center", color: "#8E8E93", fontSize: 14 }}>
+            No men's products yet. Check back soon.
+          </div>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 16 }}>
+            {products.filter(p => (p.category?.name?.toLowerCase().includes("men") || p.category?.name?.toLowerCase().includes("boy") || p.categoryId === 1) && !p.category?.name?.toLowerCase().includes("women")).slice(0, 4).map(product => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* ─── CHILDREN'S COLLECTION ─────────────────────────────────────────── */}
+      <section style={{ maxWidth: 1200, margin: "0 auto", padding: "16px 24px 40px", position: "relative", zIndex: 1 }}>
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 24 }}>
+          <div>
+            <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
+              textTransform: "uppercase", color: "#007AFF" }}>Playful & Durable</p>
+            <h2 style={{ margin: 0, fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em" }}>Children's Collection 🧸</h2>
+          </div>
+          <Link href="/storefront/product" style={{ fontSize: 13, fontWeight: 600, color: "#007AFF", textDecoration: "none" }}>
+            View All Children's Wear →
+          </Link>
+        </div>
+
+        {loading ? (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 16 }}>
+            {[1, 2, 3, 4].map(n => <ProductSkeleton key={n} />)}
+          </div>
+        ) : products.filter(p => p.category?.name?.toLowerCase().includes("child") || p.category?.name?.toLowerCase().includes("kids") || p.category?.name?.toLowerCase().includes("children") || p.categoryId === 3).length === 0 ? (
+          <div style={{ ...glass.card, padding: 40, textAlign: "center", color: "#8E8E93", fontSize: 14 }}>
+            No children's products yet. Check back soon.
+          </div>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 16 }}>
+            {products.filter(p => p.category?.name?.toLowerCase().includes("child") || p.category?.name?.toLowerCase().includes("kids") || p.category?.name?.toLowerCase().includes("children") || p.categoryId === 3).slice(0, 4).map(product => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* ─── BEST SELLERS FEATURE BANNER ────────────────────────────────────── */}

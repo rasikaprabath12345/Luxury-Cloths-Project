@@ -118,6 +118,8 @@ namespace backend.Controllers
             existingProduct.Price = product.Price;
             existingProduct.Description = product.Description;
             existingProduct.CategoryId = product.CategoryId;
+            existingProduct.Sizes = product.Sizes;
+            existingProduct.Discount = product.Discount;
 
             if (!string.IsNullOrEmpty(product.Slug))
             {

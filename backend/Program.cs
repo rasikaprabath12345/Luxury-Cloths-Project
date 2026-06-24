@@ -74,4 +74,33 @@ app.UseAuthorization();  // 2. ඊට පස්සේ Admin ද කියලා 
 
 app.MapControllers();
 
+// Seed categories: Women, Men, Children
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    try
+    {
+        context.Database.Migrate();
+        var defaultCategories = new List<backend.Models.Category>
+        {
+            new backend.Models.Category { Name = "Women", Slug = "women" },
+            new backend.Models.Category { Name = "Men", Slug = "men" },
+            new backend.Models.Category { Name = "Children", Slug = "children" }
+        };
+
+        foreach (var cat in defaultCategories)
+        {
+            if (!context.Categories.Any(c => c.Slug == cat.Slug))
+            {
+                context.Categories.Add(cat);
+            }
+        }
+        context.SaveChanges();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error seeding categories: {ex.Message}");
+    }
+}
+
 app.Run();

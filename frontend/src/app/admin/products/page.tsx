@@ -9,6 +9,8 @@ interface Product {
   id: number; name: string; price: number;
   imageUrl?: string; image?: string; description?: string; categoryId?: number;
   category?: { name: string };
+  sizes?: string;
+  discount?: number;
 }
 
 export default function AdminProductsPage() {
@@ -24,6 +26,8 @@ export default function AdminProductsPage() {
   const [newDescription, setNewDescription] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [newDiscount, setNewDiscount] = useState("0");
+  const [newSizes, setNewSizes] = useState("S,M,L,XL");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
@@ -55,12 +59,15 @@ export default function AdminProductsPage() {
     setNewImageUrl(product.imageUrl || product.image || "");
     setNewDescription(product.description || "");
     setSelectedCategoryId(product.categoryId ? product.categoryId.toString() : "");
+    setNewDiscount(product.discount !== undefined ? product.discount.toString() : "0");
+    setNewSizes(product.sizes || "S,M,L,XL");
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
     setIsModalOpen(false); setIsEditMode(false); setEditingProductId(null);
     setNewName(""); setNewPrice(""); setNewImageUrl(""); setNewDescription(""); setSelectedCategoryId("");
+    setNewDiscount("0"); setNewSizes("S,M,L,XL");
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -113,6 +120,8 @@ export default function AdminProductsPage() {
       name: newName, price: parseFloat(newPrice),
       imageUrl: newImageUrl.trim() || "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=600&auto=format&fit=crop",
       description: newDescription, categoryId: parseInt(selectedCategoryId),
+      sizes: newSizes.trim() || "S,M,L,XL",
+      discount: parseInt(newDiscount) || 0,
     };
     try {
       if (isEditMode && editingProductId) {
@@ -272,6 +281,17 @@ export default function AdminProductsPage() {
               <div className="form-group">
                 <label className="form-label">Description</label>
                 <textarea value={newDescription} onChange={(e) => setNewDescription(e.target.value)} className="form-textarea" placeholder="Premium quality fabric with a modern cut..." />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">Available Sizes (comma separated)</label>
+                  <input type="text" value={newSizes} onChange={(e) => setNewSizes(e.target.value)} className="form-input" placeholder="e.g. S,M,L,XL" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Discount Percentage (%)</label>
+                  <input type="number" min="0" max="100" value={newDiscount} onChange={(e) => setNewDiscount(e.target.value)} className="form-input" placeholder="0" />
+                </div>
               </div>
 
               <div className="form-group">

@@ -11,6 +11,9 @@ namespace backend.Models
         public string Description { get; set; } = string.Empty;
         public decimal Price { get; set; }
         
+        public string Sizes { get; set; } = "S,M,L,XL"; // comma separated sizes
+        public int Discount { get; set; } = 0; // discount percentage
+        
         // Category එකට ලින්ක් කිරීම (Foreign Key)
         public int CategoryId { get; set; }
         public Category? Category { get; set; }
