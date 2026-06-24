@@ -2,72 +2,247 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import CartDrawer from "@/components/CartDrawer";
 import { useAuth } from "@/context/AuthContext";
 
-// ─── NAV TABS ─────────────────────────────────────────────────────────────────
+// ─── TYPES ────────────────────────────────────────────────────────────────────
 const NAV_TABS = [
-  { label: "Home", href: "/" },
-  { label: "Shop", href: "/storefront/product" },
-  { label: "Collections", href: "/collections" },
-  { label: "About", href: "/about" },
+  { label: "Women", href: "/storefront/women" },
+  { label: "Men", href: "/storefront/men" },
+  { label: "Kids", href: "/storefront/kids" },
+  { label: "Home & Living", href: "/storefront/home-living" },
+  { label: "Gift Cards", href: "/storefront/gift-cards" },
+  { label: "Offers", href: "/storefront/offers" },
+  { label: "New Arrival", href: "/storefront/new-arrivals" },
 ];
 
-// ─── CART ICON BUTTON ─────────────────────────────────────────────────────────
-function CartButton({
-  count,
-  onClick,
+// ─── GLASS STYLES ─────────────────────────────────────────────────────────────
+const glass = {
+  pill: {
+    background: "rgba(255,255,255,0.72)",
+    backdropFilter: "blur(20px) saturate(180%)",
+    WebkitBackdropFilter: "blur(20px) saturate(180%)",
+    border: "0.5px solid rgba(255,255,255,0.88)",
+    borderRadius: "100px",
+    boxShadow: "0 1px 8px rgba(0,0,0,0.07)",
+  } as React.CSSProperties,
+  dropdown: {
+    background: "rgba(250,250,252,0.94)",
+    backdropFilter: "blur(40px) saturate(200%)",
+    WebkitBackdropFilter: "blur(40px) saturate(200%)",
+    border: "0.5px solid rgba(255,255,255,0.85)",
+    borderRadius: 20,
+    boxShadow: "0 8px 40px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.9)",
+  } as React.CSSProperties,
+};
+
+// ─── ICON: SEARCH ─────────────────────────────────────────────────────────────
+function SearchIcon() {
+  return (
+    <svg width={16} height={16} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.35-4.35" />
+    </svg>
+  );
+}
+
+// ─── ICON: CART ───────────────────────────────────────────────────────────────
+function CartIcon() {
+  return (
+    <svg width={17} height={17} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <path d="M16 10a4 4 0 0 1-8 0" />
+    </svg>
+  );
+}
+
+// ─── ICON: WISHLIST ───────────────────────────────────────────────────────────
+function WishlistIcon() {
+  return (
+    <svg width={17} height={17} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
+  );
+}
+
+// ─── ICON: TRACK ──────────────────────────────────────────────────────────────
+function TrackIcon() {
+  return (
+    <svg width={17} height={17} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
+  );
+}
+
+// ─── ICON: USER ───────────────────────────────────────────────────────────────
+function UserIcon() {
+  return (
+    <svg width={17} height={17} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  );
+}
+
+// ─── ICON BUTTON ──────────────────────────────────────────────────────────────
+function IconBtn({
+  onClick, badge, label, children,
 }: {
-  count: number;
-  onClick: () => void;
+  onClick?: () => void;
+  badge?: number;
+  label: string;
+  children: React.ReactNode;
 }) {
   return (
     <button
       onClick={onClick}
-      className="relative flex items-center justify-center w-9 h-9
-                 bg-white/80 backdrop-blur-xl border border-white/90
-                 rounded-full shadow-sm hover:shadow-md
-                 transition-all duration-200 active:scale-95 flex-shrink-0"
-      aria-label={`Cart, ${count} item${count !== 1 ? "s" : ""}`}
+      aria-label={label}
+      style={{
+        ...glass.pill,
+        width: 38, height: 38, padding: 0,
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        border: "none", cursor: "pointer",
+        color: "#1C1C1E", position: "relative",
+        transition: "transform 0.15s, box-shadow 0.15s",
+        gap: 1,
+      }}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLElement).style.transform = "scale(1.06)";
+        (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 16px rgba(0,0,0,0.12)";
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLElement).style.transform = "scale(1)";
+        (e.currentTarget as HTMLElement).style.boxShadow = "0 1px 8px rgba(0,0,0,0.07)";
+      }}
     >
-      {/* Cart SVG */}
-      <svg
-        className="w-[17px] h-[17px] text-[#1D1D1F]"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-1.5 6h11"
-        />
-        <circle cx="9" cy="21" r="1" fill="currentColor" stroke="none" />
-        <circle cx="18" cy="21" r="1" fill="currentColor" stroke="none" />
-      </svg>
-
-      {/* Badge */}
-      {count > 0 && (
-        <span
-          className="absolute -top-1 -right-1 min-w-[17px] h-[17px] px-[3px]
-                     bg-blue-500 text-white text-[9px] font-bold
-                     rounded-full flex items-center justify-center
-                     border-[1.5px] border-white leading-none
-                     shadow-sm"
-        >
-          {count > 99 ? "99+" : count}
+      {children}
+      {badge !== undefined && badge > 0 && (
+        <span style={{
+          position: "absolute", top: 1, right: 1,
+          minWidth: 16, height: 16, padding: "0 4px",
+          background: "#007AFF", color: "#fff",
+          fontSize: 9, fontWeight: 800, borderRadius: 100,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          border: "1.5px solid rgba(242,242,247,0.9)",
+          lineHeight: 1,
+        }}>
+          {badge > 99 ? "99+" : badge}
         </span>
       )}
     </button>
   );
 }
 
+// ─── ICON BUTTON WITH LABEL ───────────────────────────────────────────────────
+function IconBtnLabeled({
+  onClick, badge, label, icon,
+}: {
+  onClick?: () => void;
+  badge?: number;
+  label: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label={label}
+      style={{
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        gap: 3, background: "none", border: "none",
+        cursor: "pointer", padding: "6px 10px",
+        borderRadius: 14, position: "relative",
+        color: "#3C3C43", transition: "background 0.15s",
+      }}
+      onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "rgba(0,0,0,0.05)")}
+      onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "none")}
+    >
+      <span style={{ position: "relative", display: "flex" }}>
+        {icon}
+        {badge !== undefined && badge > 0 && (
+          <span style={{
+            position: "absolute", top: -5, right: -6,
+            minWidth: 16, height: 16, padding: "0 3px",
+            background: "#007AFF", color: "#fff",
+            fontSize: 9, fontWeight: 800, borderRadius: 100,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            border: "1.5px solid rgba(242,242,247,0.9)",
+          }}>
+            {badge > 99 ? "99+" : badge}
+          </span>
+        )}
+      </span>
+      <span style={{ fontSize: 10, fontWeight: 500, color: "#3C3C43", whiteSpace: "nowrap" }}>
+        {label}
+      </span>
+    </button>
+  );
+}
+
+// ─── SEARCH BAR ───────────────────────────────────────────────────────────────
+function SearchBar() {
+  const [focused, setFocused] = useState(false);
+  const [query, setQuery] = useState("");
+
+  return (
+    <div style={{
+      ...glass.pill,
+      display: "flex", alignItems: "center", gap: 8,
+      padding: "0 14px", height: 38,
+      width: focused ? 280 : 220,
+      transition: "width 0.3s ease, box-shadow 0.2s",
+      boxShadow: focused
+        ? "0 0 0 2px rgba(0,122,255,0.25), 0 2px 16px rgba(0,0,0,0.08)"
+        : "0 1px 8px rgba(0,0,0,0.07)",
+      flex: "0 0 auto",
+    }}>
+      <span style={{ color: "#8E8E93", flexShrink: 0, display: "flex" }}>
+        <SearchIcon />
+      </span>
+      <input
+        type="text"
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        placeholder="Search products, categories…"
+        style={{
+          background: "none", border: "none", outline: "none",
+          fontSize: 12, color: "#1C1C1E", width: "100%",
+          fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
+        }}
+      />
+      {query && (
+        <button
+          onClick={() => setQuery("")}
+          style={{
+            background: "rgba(120,120,128,0.18)", border: "none",
+            borderRadius: "50%", width: 16, height: 16, cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            flexShrink: 0, padding: 0,
+          }}>
+          <svg width={8} height={8} viewBox="0 0 24 24" fill="none"
+            stroke="#6C6C70" strokeWidth={3} strokeLinecap="round">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ─── USER DROPDOWN ────────────────────────────────────────────────────────────
 function UserMenu({
-  user,
-  onLogout,
+  user, onLogout,
 }: {
   user: { fullName: string; email: string; role: "admin" | "customer" };
   onLogout: () => void;
@@ -76,146 +251,100 @@ function UserMenu({
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    function handleOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-
-    document.addEventListener("mousedown", handleOutside);
-
-    return () => {
-      document.removeEventListener("mousedown", handleOutside);
+    const h = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
   }, []);
 
-  const initials = user.fullName
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+  const initials = user.fullName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
 
   return (
-    <div ref={ref} className="relative">
-      {/* Trigger */}
+    <div ref={ref} style={{ position: "relative" }}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2.5 bg-white/80 backdrop-blur-xl
-                   border border-white/90 rounded-full pl-1 pr-3.5 py-1
-                   shadow-sm hover:shadow-md transition-all duration-200 active:scale-95"
+        style={{
+          display: "flex", flexDirection: "column",
+          alignItems: "center", gap: 3,
+          background: "none", border: "none", cursor: "pointer",
+          padding: "4px 8px", borderRadius: 12,
+          transition: "background 0.15s",
+        }}
+        onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "rgba(0,0,0,0.05)")}
+        onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "none")}
       >
-        <span
-          className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600
-                         text-white text-[11px] font-bold flex items-center justify-center flex-shrink-0"
-        >
-          {initials}
-        </span>
-
-        <span className="text-[13px] font-semibold text-[#1D1D1F] hidden sm:block">
+        <span style={{
+          width: 24, height: 24, borderRadius: "50%",
+          background: "linear-gradient(135deg, #007AFF, #5856D6)",
+          color: "#fff", fontSize: 9, fontWeight: 800,
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>{initials}</span>
+        <span style={{ fontSize: 10, fontWeight: 500, color: "#3C3C43" }}>
           {user.fullName.split(" ")[0]}
         </span>
-
-        <svg
-          className={`w-3.5 h-3.5 text-[#86868B] transition-transform duration-200 ${
-            open ? "rotate-180" : ""
-          }`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2.5}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
       </button>
 
-      {/* Dropdown panel */}
       {open && (
-        <div
-          className="absolute right-0 top-[calc(100%+8px)] w-64
-                        bg-white/90 backdrop-blur-2xl border border-white/80
-                        rounded-2xl shadow-2xl shadow-black/10 overflow-hidden z-50"
-        >
-          {/* User header */}
-          <div className="px-4 py-3.5 border-b border-gray-100/80">
-            <p className="text-[13px] font-semibold text-[#1D1D1F]">
-              {user.fullName}
-            </p>
-
-            <p className="text-[11px] text-[#86868B] mt-0.5">
-              {user.email}
-            </p>
-
+        <div style={{
+          ...glass.dropdown,
+          position: "absolute", right: 0, top: "calc(100% + 8px)",
+          width: 240, zIndex: 100, overflow: "hidden",
+        }}>
+          <div style={{ padding: "14px 16px", borderBottom: "0.5px solid rgba(0,0,0,0.07)" }}>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#1C1C1E" }}>{user.fullName}</p>
+            <p style={{ margin: "2px 0 0", fontSize: 11, color: "#8E8E93" }}>{user.email}</p>
             {user.role === "admin" && (
-              <span
-                className="inline-block mt-1.5 text-[9px] font-bold uppercase tracking-widest
-                               text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md"
-              >
-                Admin
-              </span>
+              <span style={{
+                display: "inline-block", marginTop: 6,
+                fontSize: 9, fontWeight: 700, letterSpacing: "0.12em",
+                textTransform: "uppercase" as const, color: "#007AFF",
+                background: "rgba(0,122,255,0.08)", border: "0.5px solid rgba(0,122,255,0.2)",
+                padding: "2px 8px", borderRadius: 6,
+              }}>Admin</span>
             )}
           </div>
-
-          {/* Links */}
-          <div className="py-1.5">
-            <Link
-              href="/profile"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-4 py-2.5 text-[13px] text-[#1D1D1F] hover:bg-gray-50 transition-colors"
-            >
-              <span className="w-6 h-6 bg-gray-100 rounded-lg flex items-center justify-center text-[12px]">
-                👤
-              </span>
-              My Profile
-            </Link>
-
-            <Link
-              href="/orders"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-4 py-2.5 text-[13px] text-[#1D1D1F] hover:bg-gray-50 transition-colors"
-            >
-              <span className="w-6 h-6 bg-gray-100 rounded-lg flex items-center justify-center text-[12px]">
-                📦
-              </span>
-              My Orders
-            </Link>
-
-            {user.role === "admin" && (
-              <Link
-                href="/admin/products"
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 px-4 py-2.5 text-[13px] text-[#1D1D1F] hover:bg-gray-50 transition-colors"
-              >
-                <span className="w-6 h-6 bg-blue-50 rounded-lg flex items-center justify-center text-[12px]">
-                  ⚙️
-                </span>
-
-                Dashboard
-
-                <span className="ml-auto text-[9px] font-bold uppercase tracking-wider text-blue-500">
-                  Admin
-                </span>
+          <div style={{ padding: "6px 0" }}>
+            {[
+              { href: "/profile", icon: "👤", label: "My Profile" },
+              { href: "/orders", icon: "📦", label: "My Orders" },
+              ...(user.role === "admin"
+                ? [{ href: "/admin/products", icon: "⚙️", label: "Dashboard" }]
+                : []),
+            ].map(item => (
+              <Link key={item.href} href={item.href} onClick={() => setOpen(false)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 10,
+                  padding: "10px 16px", fontSize: 13, color: "#1C1C1E",
+                  textDecoration: "none", transition: "background 0.12s",
+                }}
+                onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "rgba(0,0,0,0.04)")}
+                onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "transparent")}>
+                <span style={{
+                  width: 26, height: 26, background: "rgba(120,120,128,0.1)",
+                  borderRadius: 8, display: "flex", alignItems: "center",
+                  justifyContent: "center", fontSize: 13,
+                }}>{item.icon}</span>
+                {item.label}
               </Link>
-            )}
+            ))}
           </div>
-
-          {/* Sign Out */}
-          <div className="px-2 pb-2 border-t border-gray-100/80 pt-1.5">
+          <div style={{ padding: "6px 8px 8px", borderTop: "0.5px solid rgba(0,0,0,0.06)" }}>
             <button
-              onClick={() => {
-                setOpen(false);
-                onLogout();
+              onClick={() => { setOpen(false); onLogout(); }}
+              style={{
+                width: "100%", display: "flex", alignItems: "center", gap: 10,
+                padding: "10px 12px", background: "none", border: "none",
+                cursor: "pointer", fontSize: 13, color: "#FF3B30", borderRadius: 12,
+                transition: "background 0.12s",
               }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] text-red-500
-                         hover:bg-red-50 rounded-xl transition-colors font-medium"
-            >
-              <span className="w-6 h-6 bg-red-50 rounded-lg flex items-center justify-center text-[12px]">
-                ↩
-              </span>
+              onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "rgba(255,59,48,0.06)")}
+              onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "none")}>
+              <span style={{
+                width: 26, height: 26, background: "rgba(255,59,48,0.08)",
+                borderRadius: 8, display: "flex", alignItems: "center",
+                justifyContent: "center", fontSize: 12,
+              }}>↩</span>
               Sign Out
             </button>
           </div>
@@ -228,162 +357,182 @@ function UserMenu({
 // ─── NAVBAR ───────────────────────────────────────────────────────────────────
 export default function Navbar() {
   const pathname = usePathname();
-  const [activeTab, setActiveTab] = useState("/");
   const { user, logout, isLoading } = useAuth();
-
-  // ✅ FIXED
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-
-  // 🛒 Cart count
   const [cartCount, setCartCount] = useState(0);
+  const [wishlistCount] = useState(0);
+  const [scrolled, setScrolled] = useState(false);
+  const [activeTab, setActiveTab] = useState("/");
 
-  // Sync activeTab with current pathname
   useEffect(() => {
-    const currentTab = NAV_TABS.find(tab => pathname === tab.href || pathname.startsWith(tab.href + '/'));
-    setActiveTab(currentTab?.href || pathname);
+    const current = NAV_TABS.find(
+      t => pathname === t.href || pathname.startsWith(t.href + "/")
+    );
+    setActiveTab(current?.href || pathname);
   }, [pathname]);
 
-  async function handleLogout() {
-    await logout();
-  }
+  useEffect(() => {
+    const h = () => setScrolled(window.scrollY > 8);
+    window.addEventListener("scroll", h, { passive: true });
+    return () => window.removeEventListener("scroll", h);
+  }, []);
 
   return (
     <>
       <nav
         style={{
-          fontFamily:
-            "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif",
+          fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', sans-serif",
+          position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
+          background: scrolled
+            ? "rgba(248,248,252,0.92)"
+            : "rgba(248,248,252,0.82)",
+          backdropFilter: "blur(40px) saturate(200%)",
+          WebkitBackdropFilter: "blur(40px) saturate(200%)",
+          borderBottom: "0.5px solid rgba(0,0,0,0.08)",
+          boxShadow: scrolled ? "0 1px 20px rgba(0,0,0,0.06)" : "none",
+          transition: "background 0.3s, box-shadow 0.3s",
         }}
-        className="fixed top-0 inset-x-0 z-50
-                   bg-white/95 backdrop-blur-sm
-                   border-b border-gray-200/50 shadow-sm"
       >
-        {/* ── Main row ── */}
-        <div className="max-w-6xl mx-auto px-5 h-14 flex items-center justify-between gap-4">
-          {/* Logo */}
-          <Link
-            href="/"
-            className="text-[15px] font-black tracking-tight text-[#1D1D1F] flex-shrink-0"
-          >
-            LUXURY<span className="text-blue-500">.</span>lk
+        {/* ── TOP ROW: Logo | Search | Icons ── */}
+        <div style={{
+          maxWidth: 1280, margin: "0 auto",
+          padding: "0 28px", height: 58,
+          display: "flex", alignItems: "center",
+          justifyContent: "space-between", gap: 20,
+        }}>
+
+          {/* ── LOGO ── */}
+          <Link href="/" style={{ textDecoration: "none", flexShrink: 0 }}>
+            <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
+              <span style={{
+                fontSize: 18, fontWeight: 900, letterSpacing: "-0.03em",
+                color: "#1C1C1E",
+                fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif",
+              }}>
+                LUXURY
+                <span style={{
+                  color: "#007AFF",
+                  fontStyle: "italic",
+                }}>.</span>
+                <span style={{ color: "#1C1C1E" }}>lk</span>
+              </span>
+              <span style={{
+                fontSize: 9, fontWeight: 600, letterSpacing: "0.18em",
+                textTransform: "uppercase" as const, color: "#8E8E93",
+                marginTop: 1,
+              }}>
+                Premium Fashion
+              </span>
+            </div>
           </Link>
 
-          {/* Desktop Tabs */}
-          <div
-            className="hidden md:flex items-center gap-0.5
-                          bg-black/[0.04] border border-black/[0.06]
-                          rounded-full px-1 py-1"
-          >
-            {NAV_TABS.map((tab) => (
-              <Link
-                key={tab.href}
-                href={tab.href}
-                onClick={() => setActiveTab(tab.href)}
-                className={`
-                  px-4 py-1.5 rounded-full text-[13px] font-medium transition-all duration-200
-                  ${
-                    activeTab === tab.href
-                      ? "bg-white text-[#1D1D1F] shadow-sm shadow-black/10 font-semibold"
-                      : "text-[#424245] hover:text-[#1D1D1F]"
-                  }
-                `}
-              >
-                {tab.label}
-              </Link>
-            ))}
+          {/* ── SEARCH ── */}
+          <div style={{ flex: 1, maxWidth: 480, display: "flex", justifyContent: "center" }}>
+            <SearchBar />
           </div>
 
-          {/* Right Side */}
-          <div className="flex items-center gap-2.5 flex-shrink-0">
-            {/* Cart */}
-            <CartButton
-              count={cartCount}
+          {/* ── RIGHT ICONS ── */}
+          <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+            <IconBtnLabeled
+              label="Track Order"
+              icon={<TrackIcon />}
+            />
+            <IconBtnLabeled
+              label="Wishlist"
+              badge={wishlistCount}
+              icon={<WishlistIcon />}
+            />
+            <IconBtnLabeled
+              label="Cart"
+              badge={cartCount}
               onClick={() => setIsDrawerOpen(true)}
+              icon={<CartIcon />}
             />
 
-            {user ? (
-              <>
-                {user.role === "admin" && (
-                  <Link
-                    href="/admin/products"
-                    className="hidden sm:flex items-center gap-1.5 text-[12px] font-semibold text-blue-600
-                               bg-blue-50 hover:bg-blue-100 border border-blue-100
-                               px-3.5 py-1.5 rounded-full transition-all duration-150 active:scale-95"
-                  >
-                    <svg
-                      className="w-3 h-3"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2.5}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z
-                           M14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z
-                           M4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2z
-                           M14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-                      />
-                    </svg>
-
-                    Dashboard
-                  </Link>
-                )}
-
-                <UserMenu user={user} onLogout={handleLogout} />
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/auth/login"
-                  className="text-[13px] font-semibold text-[#1D1D1F]
-                             hover:text-blue-600 transition-colors hidden sm:block"
-                >
-                  Sign In
-                </Link>
-
-                <Link
-                  href="/auth/signup"
-                  className="bg-[#1D1D1F] hover:bg-blue-600 active:scale-95 text-white
-                             text-[12px] font-semibold px-5 py-2 rounded-full
-                             transition-all duration-150 shadow-sm"
-                >
-                  Get Started
-                </Link>
-              </>
+            {!isLoading && (
+              user ? (
+                <UserMenu user={user} onLogout={logout} />
+              ) : (
+                <IconBtnLabeled
+                  label="Login / Register"
+                  icon={<UserIcon />}
+                  onClick={() => {
+                    window.location.href = "/auth/login";
+                  }}
+                />
+              )
             )}
           </div>
         </div>
 
-        {/* Mobile Tabs */}
-        <div className="md:hidden px-3 pb-2 overflow-x-auto scrollbar-none">
-          <div
-            className="flex items-center gap-0.5 bg-black/[0.04] border border-black/[0.06]
-                          rounded-full px-1 py-1 min-w-max"
-          >
-            {NAV_TABS.map((tab) => (
-              <Link
-                key={tab.href}
-                href={tab.href}
-                onClick={() => setActiveTab(tab.href)}
-                className={`
-                  px-3.5 py-1 rounded-full text-[12px] font-medium transition-all duration-200 whitespace-nowrap
-                  ${
-                    activeTab === tab.href
-                      ? "bg-white text-[#1D1D1F] shadow-sm font-semibold"
-                      : "text-[#6E6E73] hover:text-[#1D1D1F]"
-                  }
-                `}
-              >
-                {tab.label}
-              </Link>
-            ))}
+        {/* ── BOTTOM ROW: Category Tabs ── */}
+        <div style={{
+          borderTop: "0.5px solid rgba(0,0,0,0.06)",
+          background: "rgba(255,255,255,0.50)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+        }}>
+          <div style={{
+            maxWidth: 1280, margin: "0 auto",
+            padding: "0 28px",
+            display: "flex", alignItems: "center",
+            gap: 2, height: 40,
+            overflowX: "auto",
+          }}>
+            {NAV_TABS.map(tab => {
+              const isActive = activeTab === tab.href;
+              const isNew = tab.label === "New Arrival";
+              const isOffer = tab.label === "Offers";
+              return (
+                <Link
+                  key={tab.href}
+                  href={tab.href}
+                  onClick={() => setActiveTab(tab.href)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 5,
+                    padding: "5px 14px", borderRadius: 100,
+                    fontSize: 12.5, fontWeight: isActive ? 600 : 500,
+                    whiteSpace: "nowrap" as const, textDecoration: "none",
+                    transition: "all 0.18s ease",
+                    color: isActive
+                      ? "#fff"
+                      : isOffer
+                        ? "#FF3B30"
+                        : "#3C3C43",
+                    background: isActive
+                      ? "linear-gradient(135deg, #007AFF, #5856D6)"
+                      : "transparent",
+                    boxShadow: isActive
+                      ? "0 2px 10px rgba(0,122,255,0.28)"
+                      : "none",
+                    letterSpacing: "-0.01em",
+                  }}
+                  onMouseEnter={e => {
+                    if (!isActive) (e.currentTarget as HTMLElement).style.background = "rgba(0,0,0,0.05)";
+                  }}
+                  onMouseLeave={e => {
+                    if (!isActive) (e.currentTarget as HTMLElement).style.background = "transparent";
+                  }}
+                >
+                  {tab.label}
+                  {isNew && (
+                    <span style={{
+                      fontSize: 8, fontWeight: 800, letterSpacing: "0.06em",
+                      textTransform: "uppercase" as const,
+                      background: "linear-gradient(135deg, #FF9500, #FF6B00)",
+                      color: "#fff", padding: "1px 5px", borderRadius: 4,
+                    }}>NEW</span>
+                  )}
+                </Link>
+              );
+            })}
           </div>
         </div>
       </nav>
 
-      {/* Cart Drawer */}
+      {/* Spacer for fixed nav (top 58 + bottom 40 = 98px) */}
+      <div style={{ height: 98 }} />
+
       {isDrawerOpen && (
         <CartDrawer onClose={() => setIsDrawerOpen(false)} />
       )}
