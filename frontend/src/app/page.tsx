@@ -287,9 +287,9 @@ function ProductCard({ product }: { product: Product }) {
 
 // ─── DATA ─────────────────────────────────────────────────────────────────────
 const categories = [
-  { name: "Menswear", sub: "For Him", count: "120+", image: "https://images.unsplash.com/photo-1488161628813-04466f872be2?q=80&w=800&auto=format&fit=crop" },
   { name: "Womenswear", sub: "For Her", count: "85+", image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=800&auto=format&fit=crop" },
-  { name: "Accessories", sub: "Finish the Look", count: "40+", image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=800&auto=format&fit=crop" },
+  { name: "Menswear", sub: "For Him", count: "120+", image: "https://images.unsplash.com/photo-1488161628813-04466f872be2?q=80&w=800&auto=format&fit=crop" },
+  { name: "Children's Wear", sub: "For Kids", count: "35+", image: "https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?q=80&w=800&auto=format&fit=crop" },
 ];
 
 const trust = [

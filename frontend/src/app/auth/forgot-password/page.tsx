@@ -28,77 +28,245 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Reset your password
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Enter your email address and we'll send you a link to reset your password.
-          </p>
+    <div style={{
+      fontFamily: "var(--font-montserrat), sans-serif",
+      background: "linear-gradient(160deg, #F8F9FA 0%, #E9ECEF 50%, #DEE2E6 100%)",
+      minHeight: "100vh",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      position: "relative",
+      overflow: "hidden",
+      padding: "40px 16px",
+    }}>
+      {/* Ambient background blobs */}
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
+        <div style={{
+          position: "absolute", top: "-10%", right: "-5%",
+          width: 600, height: 600, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(0,122,255,0.05) 0%, transparent 70%)",
+          filter: "blur(50px)",
+        }} />
+        <div style={{
+          position: "absolute", bottom: "-10%", left: "-5%",
+          width: 600, height: 600, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(88,86,214,0.05) 0%, transparent 70%)",
+          filter: "blur(50px)",
+        }} />
+      </div>
+
+      {/* Reset Card */}
+      <div style={{
+        background: "rgba(255, 255, 255, 0.72)",
+        backdropFilter: "blur(30px) saturate(180%)",
+        WebkitBackdropFilter: "blur(30px) saturate(180%)",
+        border: "1px solid rgba(255, 255, 255, 0.85)",
+        borderRadius: "24px",
+        boxShadow: "0 20px 50px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)",
+        width: "100%",
+        maxWidth: "840px",
+        zIndex: 1,
+        display: "grid",
+        gridTemplateColumns: "1fr 1.2fr",
+        overflow: "hidden",
+        animation: "scaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+      }} className="auth-card">
+        
+        {/* Left Side: Visual Editorial Panel */}
+        <div style={{
+          position: "relative",
+          background: "url('https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=800&auto=format&fit=crop') center/cover no-repeat",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "flex-end",
+          padding: "36px",
+          color: "#fff",
+        }} className="auth-image-panel">
+          {/* Overlays */}
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "linear-gradient(to bottom, rgba(28,28,30,0.25) 0%, rgba(28,28,30,0.85) 100%)",
+            zIndex: 1,
+          }} />
+          <div style={{ position: "relative", zIndex: 2 }}>
+            <span style={{ fontSize: "28px", display: "block", marginBottom: "8px", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.2))" }}>💎</span>
+            <h2 style={{
+              fontFamily: "var(--font-playfair), serif",
+              fontSize: "22px", fontWeight: 800,
+              letterSpacing: "6px", margin: 0, textTransform: "uppercase",
+              color: "#fff",
+              textShadow: "0 2px 8px rgba(0,0,0,0.3)"
+            }}>LUXURY.lk</h2>
+            <p style={{ 
+              fontSize: "11px", 
+              color: "rgba(255,255,255,0.7)", 
+              marginTop: "6px", 
+              letterSpacing: "1.5px",
+              textTransform: "uppercase",
+              fontWeight: 500
+            }}>Secure & Verified Reset</p>
+          </div>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm font-medium text-red-800">{error}</div>
-            </div>
-          )}
-
-          {success && (
-            <div className="rounded-md bg-green-50 p-4">
-              <div className="text-sm font-medium text-green-800">{success}</div>
-            </div>
-          )}
-
-          <div>
-            <label htmlFor="email" className="sr-only">
-              Email address
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              placeholder="Enter your email address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+        {/* Right Side: Form Panel */}
+        <div style={{
+          padding: "36px 44px",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+        }} className="auth-form-panel">
+          <div style={{ marginBottom: "20px" }}>
+            <h3 style={{
+              fontFamily: "var(--font-playfair), serif",
+              fontSize: "20px", fontWeight: 700, color: "#1C1C1E",
+              margin: 0, letterSpacing: "1.5px"
+            }}>Reset Password</h3>
+            <p style={{ fontSize: "11.5px", color: "#8E8E93", marginTop: "4px", letterSpacing: "0.2px" }}>
+              Enter email to receive security reset instructions.
+            </p>
           </div>
 
-          <div>
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            {error && (
+              <div style={{
+                background: "rgba(255, 59, 48, 0.06)",
+                border: "1px solid rgba(255, 59, 48, 0.15)",
+                borderRadius: "8px",
+                padding: "8px 12px",
+                fontSize: "11.5px",
+                fontWeight: 500,
+                color: "#FF3B30",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px"
+              }}>
+                <span>⚠️</span>
+                <span>{error}</span>
+              </div>
+            )}
+
+            {success && (
+              <div style={{
+                background: "rgba(52, 199, 89, 0.06)",
+                border: "1px solid rgba(52, 199, 89, 0.15)",
+                borderRadius: "8px",
+                padding: "8px 12px",
+                fontSize: "11.5px",
+                fontWeight: 500,
+                color: "#34C759",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px"
+              }}>
+                <span>✓</span>
+                <span>{success}</span>
+              </div>
+            )}
+
+            {/* Email field */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              <label htmlFor="email" style={{ fontSize: "9px", fontWeight: 700, color: "#8E8E93", letterSpacing: "1px", textTransform: "uppercase" }}>Email Address</label>
+              <input
+                id="email"
+                type="email"
+                required
+                placeholder="your@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                style={{
+                  border: "none",
+                  borderBottom: "1px solid rgba(0,0,0,0.12)",
+                  borderRadius: "0px",
+                  background: "transparent",
+                  padding: "8px 0px",
+                  outline: "none",
+                  fontSize: "13.5px",
+                  color: "#1C1C1E",
+                  transition: "border-color 0.2s",
+                }}
+                className="luxury-input-line"
+              />
+            </div>
+
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+              style={{
+                background: "#1C1C1E",
+                border: "none",
+                borderRadius: "6px",
+                padding: "12px",
+                color: "#fff",
+                fontSize: "12px",
+                fontWeight: 700,
+                letterSpacing: "2.5px",
+                textTransform: "uppercase",
+                cursor: "pointer",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                transition: "all 0.2s ease",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+                marginTop: "6px"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#000";
+                e.currentTarget.style.boxShadow = "0 6px 16px rgba(0,0,0,0.25)";
+                e.currentTarget.style.transform = "translateY(-1px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "#1C1C1E";
+                e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+                e.currentTarget.style.transform = "translateY(0)";
+              }}
             >
               {isLoading ? "Sending..." : "Send reset link"}
             </button>
-          </div>
 
-          <div className="text-center space-y-2">
-            <div>
-              <span className="text-sm text-gray-600">
-                Remember your password?{" "}
-                <Link href="/auth/login" className="font-medium text-blue-600 hover:text-blue-500">
-                  Sign in
-                </Link>
-              </span>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px", textAlign: "center", marginTop: "12px", fontSize: "12px" }}>
+              <div>
+                <span style={{ color: "#8E8E93" }}>
+                  Remember your password?{" "}
+                  <Link href="/auth/login" style={{ color: "#1C1C1E", fontWeight: 700, textDecoration: "underline", textUnderlineOffset: "3px" }}>
+                    Sign In
+                  </Link>
+                </span>
+              </div>
+              <div>
+                <span style={{ color: "#8E8E93" }}>
+                  Don't have an account?{" "}
+                  <Link href="/auth/register" style={{ color: "#1C1C1E", fontWeight: 700, textDecoration: "underline", textUnderlineOffset: "3px" }}>
+                    Sign Up
+                  </Link>
+                </span>
+              </div>
             </div>
-            <div>
-              <span className="text-sm text-gray-600">
-                Don't have an account?{" "}
-                <Link href="/auth/register" className="font-medium text-blue-600 hover:text-blue-500">
-                  Sign up
-                </Link>
-              </span>
-            </div>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
+
+      <style jsx global>{`
+        .luxury-input-line:focus {
+          border-color: #1C1C1E !important;
+        }
+        @keyframes scaleIn {
+          from { opacity: 0; transform: scale(0.96); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        @media (max-width: 768px) {
+          .auth-card {
+            grid-template-columns: 1fr !important;
+            max-width: 440px !important;
+          }
+          .auth-image-panel {
+            display: none !important;
+          }
+          .auth-form-panel {
+            padding: 32px 24px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
