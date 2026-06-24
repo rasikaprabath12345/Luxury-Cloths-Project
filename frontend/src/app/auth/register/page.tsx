@@ -32,7 +32,7 @@ export default function RegisterPage() {
 
     try {
       await register(fullName, email, password);
-      router.push("/storefront");
+      router.push("/");
     } catch (err: any) {
       setError(err.message || "Registration failed");
     } finally {

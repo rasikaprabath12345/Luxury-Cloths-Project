@@ -255,7 +255,7 @@ export default function HomePage() {
 
       {/* ─── HERO ───────────────────────────────────────────────────────────── */}
       <section ref={heroRef} style={{
-        position: "relative", height: "100vh", minHeight: 600,
+        position: "relative", height: "60vh", minHeight: 400,
         display: "flex", alignItems: "center", justifyContent: "center",
         overflow: "hidden",
       }}>
@@ -279,16 +279,16 @@ export default function HomePage() {
 
         {/* Delivery pill */}
         <div style={{
-          position: "absolute", top: 80, left: "50%", transform: "translateX(-50%)",
+          position: "absolute", top: 24, left: "50%", transform: "translateX(-50%)",
           ...glass.pill,
           background: "rgba(255,255,255,0.16)",
           border: "0.5px solid rgba(255,255,255,0.35)",
-          padding: "8px 20px",
+          padding: "6px 16px",
           display: "flex", alignItems: "center", gap: 8,
           whiteSpace: "nowrap",
         }}>
-          <span style={{ fontSize: 14 }}>🚚</span>
-          <span style={{ fontSize: 12, fontWeight: 600, color: "#fff", letterSpacing: "0.01em" }}>
+          <span style={{ fontSize: 13 }}>🚚</span>
+          <span style={{ fontSize: 11, fontWeight: 600, color: "#fff", letterSpacing: "0.01em" }}>
             Free delivery on orders over Rs. 5,000
           </span>
         </div>
@@ -296,7 +296,7 @@ export default function HomePage() {
         {/* Hero content */}
         <div style={{
           position: "relative", zIndex: 2, textAlign: "center",
-          maxWidth: 720, padding: "0 24px", display: "flex", flexDirection: "column", alignItems: "center", gap: 20,
+          maxWidth: 720, padding: "0 24px", display: "flex", flexDirection: "column", alignItems: "center", gap: 12,
         }}>
           <div style={{
             ...glass.pill,
@@ -309,7 +309,7 @@ export default function HomePage() {
           </div>
 
           <h1 style={{
-            fontSize: "clamp(52px, 9vw, 96px)", fontWeight: 900, lineHeight: 0.92,
+            fontSize: "clamp(36px, 6.5vw, 64px)", fontWeight: 900, lineHeight: 0.92,
             letterSpacing: "-0.04em", color: "#fff", margin: 0,
           }}>
             Define Your<br />
@@ -318,17 +318,17 @@ export default function HomePage() {
             </span>
           </h1>
 
-          <p style={{ color: "rgba(255,255,255,0.72)", fontSize: 16, lineHeight: 1.6, margin: 0, fontWeight: 300 }}>
+          <p style={{ color: "rgba(255,255,255,0.72)", fontSize: 14.5, lineHeight: 1.4, margin: 0, fontWeight: 300 }}>
             Sri Lanka's finest premium fashion.<br />
-            <span style={{ fontSize: 14, color: "rgba(255,255,255,0.5)" }}>Comfort, style, and craftsmanship — delivered.</span>
+            <span style={{ fontSize: 12.5, color: "rgba(255,255,255,0.5)" }}>Comfort, style, and craftsmanship — delivered.</span>
           </p>
 
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
             <Link href="/storefront/product"
               style={{
                 background: "rgba(255,255,255,0.95)", color: "#1C1C1E",
-                fontWeight: 700, fontSize: 14, padding: "14px 32px",
-                borderRadius: 16, textDecoration: "none",
+                fontWeight: 700, fontSize: 13, padding: "10px 24px",
+                borderRadius: 14, textDecoration: "none",
                 boxShadow: "0 4px 24px rgba(0,0,0,0.2)",
                 transition: "transform 0.15s",
               }}
@@ -339,8 +339,8 @@ export default function HomePage() {
             <Link href="/storefront/new-arrivals"
               style={{
                 background: "rgba(255,255,255,0.12)", color: "#fff",
-                fontWeight: 600, fontSize: 14, padding: "14px 32px",
-                borderRadius: 16, textDecoration: "none",
+                fontWeight: 600, fontSize: 13, padding: "10px 24px",
+                borderRadius: 14, textDecoration: "none",
                 border: "0.5px solid rgba(255,255,255,0.3)",
                 backdropFilter: "blur(12px)",
                 transition: "background 0.15s",
@@ -354,10 +354,10 @@ export default function HomePage() {
 
         {/* Scroll indicator */}
         <div style={{
-          position: "absolute", bottom: 32, left: "50%", transform: "translateX(-50%)",
+          position: "absolute", bottom: 12, left: "50%", transform: "translateX(-50%)",
           display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
         }}>
-          <div style={{ width: 1, height: 48, background: "linear-gradient(to bottom, rgba(255,255,255,0.6), transparent)" }} />
+          <div style={{ width: 1, height: 20, background: "linear-gradient(to bottom, rgba(255,255,255,0.6), transparent)" }} />
         </div>
       </section>
 

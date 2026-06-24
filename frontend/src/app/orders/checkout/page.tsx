@@ -22,11 +22,13 @@ export default function CheckoutPage() {
   });
 
   const totalPrice = cartItems.reduce(
-    (acc, item: any) => acc + item.price * (item.quantity || 1),
+    (acc: number, item: any) => acc + item.price * (item.quantity || 1),
     0
   );
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -40,7 +42,7 @@ export default function CheckoutPage() {
     }
 
     if (!user) {
-      alert("Please sign in to place an order");
+      alert("Please sign in to place an order.");
       router.push("/auth/login");
       return;
     }
@@ -53,196 +55,386 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
-      // Prepare order data matching backend API
       const orderData = {
         userId: user.id,
         paymentMethod: "OnlinePayment",
         items: cartItems.map((item: any) => ({
-          productVariantId: item.id, // Assuming item.id is the productVariantId
+          productVariantId: item.id,
           quantity: item.quantity || 1,
         })),
       };
 
-      console.log("Submitting order with data:", orderData);
-
-      // Submit order to backend API
       const response = await axios.post(
         "http://localhost:5226/api/Orders",
         orderData
       );
 
-      console.log("Order response:", response);
-
-      if (response.status === 200) {
+      if (response.status === 200 || response.status === 201) {
         alert("Order placed successfully! 🎉");
         clearCart();
-        router.push("/orders");
+        router.push("/");
       }
     } catch (error: any) {
       console.error("Order submission error:", error);
-      console.error("Error URL:", error.config?.url);
-      console.error("Error status:", error.response?.status);
-      alert(error.response?.data?.message || "Failed to place order. Please try again.");
+      alert(
+        error.response?.data?.message ||
+          "Failed to place order. Please try again."
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  /* ── Empty cart state ────────────────────────────────────────────── */
   if (cartItems.length === 0) {
     return (
-      <div className="pt-20 bg-white text-gray-900 min-h-screen py-20">
-        <div className="max-w-6xl mx-auto px-4">
-          <h1 className="text-4xl font-bold mb-12">Checkout</h1>
-          <p className="text-lg text-gray-600 mb-8">Your cart is empty. Add items to proceed with checkout.</p>
-          <button
-            onClick={() => router.push("/storefront/product")}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl"
-          >
-            Continue Shopping
-          </button>
-        </div>
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "linear-gradient(135deg,#0a0a0a 0%,#111 100%)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "column",
+          gap: 24,
+          paddingTop: 100,
+        }}
+      >
+        <div style={{ fontSize: 64 }}>🛒</div>
+        <h2
+          style={{ color: "#fff", fontSize: 28, fontWeight: 700, margin: 0 }}
+        >
+          Your cart is empty
+        </h2>
+        <p style={{ color: "#888", margin: 0 }}>
+          Add items to your cart before checking out.
+        </p>
+        <button
+          onClick={() => router.push("/storefront/product")}
+          style={{
+            background: "linear-gradient(135deg,#6366f1,#8b5cf6)",
+            color: "#fff",
+            border: "none",
+            borderRadius: 14,
+            padding: "14px 36px",
+            fontWeight: 700,
+            fontSize: 15,
+            cursor: "pointer",
+            marginTop: 8,
+          }}
+        >
+          Continue Shopping
+        </button>
       </div>
     );
   }
 
+  /* ── Main checkout ───────────────────────────────────────────────── */
   return (
-    <div className="pt-20 bg-white text-gray-900 min-h-screen py-20">
-      <div className="max-w-6xl mx-auto px-4">
-        <h1 className="text-4xl font-bold mb-12">Checkout</h1>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "linear-gradient(135deg,#0a0a0a 0%,#111 100%)",
+        paddingTop: 100,
+        paddingBottom: 60,
+        fontFamily:
+          "'Inter','SF Pro Display',-apple-system,BlinkMacSystemFont,sans-serif",
+      }}
+    >
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px" }}>
+        {/* Header */}
+        <h1
+          style={{
+            color: "#fff",
+            fontSize: 36,
+            fontWeight: 800,
+            marginBottom: 40,
+            letterSpacing: "-0.5px",
+          }}
+        >
+          Checkout
+        </h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Order Summary */}
-          <div className="lg:col-span-2">
-            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-8 space-y-6">
-              <h2 className="text-2xl font-bold">Order Summary</h2>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 380px",
+            gap: 32,
+            alignItems: "start",
+          }}
+        >
+          {/* ── Left: order list + form ───────────────────────────── */}
+          <div
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 24,
+              padding: 36,
+              backdropFilter: "blur(20px)",
+            }}
+          >
+            <h2
+              style={{
+                color: "#fff",
+                fontSize: 20,
+                fontWeight: 700,
+                marginBottom: 20,
+              }}
+            >
+              Order Summary ({cartItems.length} item
+              {cartItems.length !== 1 ? "s" : ""})
+            </h2>
 
-              <div className="space-y-4 max-h-96 overflow-y-auto">
-                {cartItems.map((item: any) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center gap-4 pb-4 border-b border-gray-200"
-                  >
-                    <img
-                      src={item.imageUrl || item.image || "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=600"}
-                      alt={item.name}
-                      className="w-16 h-16 object-cover rounded-lg"
-                    />
-                    <div className="flex-1">
-                      <h3 className="font-bold">{item.name}</h3>
-                      <p className="text-sm text-gray-500">
-                        Quantity: {item.quantity || 1}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-blue-600">
-                        ${((item.price || 0) * (item.quantity || 1)).toFixed(2)}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        ${(item.price || 0).toFixed(2)} each
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <form onSubmit={handleSubmitOrder} className="space-y-6 mt-8">
-                <div>
-                  <h3 className="text-xl font-bold mb-4">Shipping Information</h3>
-                  <div className="space-y-4">
-                    <input
-                      type="text"
-                      name="fullName"
-                      value={formData.fullName}
-                      onChange={handleInputChange}
-                      placeholder="Full Name"
-                      required
-                      className="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-blue-600"
-                    />
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      placeholder="Email"
-                      required
-                      className="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-blue-600"
-                    />
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      placeholder="Phone Number"
-                      required
-                      className="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-blue-600"
-                    />
-                    <textarea
-                      name="address"
-                      value={formData.address}
-                      onChange={handleInputChange}
-                      placeholder="Street Address"
-                      required
-                      className="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-blue-600"
-                    />
-                    <input
-                      type="text"
-                      name="city"
-                      value={formData.city}
-                      onChange={handleInputChange}
-                      placeholder="City"
-                      required
-                      className="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-blue-600"
-                    />
-                    <input
-                      type="text"
-                      name="zipCode"
-                      value={formData.zipCode}
-                      onChange={handleInputChange}
-                      placeholder="Zip Code"
-                      required
-                      className="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-blue-600"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition"
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 16,
+                maxHeight: 280,
+                overflowY: "auto",
+                marginBottom: 36,
+                paddingRight: 4,
+              }}
+            >
+              {cartItems.map((item: any) => (
+                <div
+                  key={item.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 16,
+                    paddingBottom: 16,
+                    borderBottom: "1px solid rgba(255,255,255,0.06)",
+                  }}
                 >
-                  {loading ? "Processing..." : "Place Order 💳"}
-                </button>
-              </form>
+                  <img
+                    src={
+                      item.imageUrl ||
+                      item.image ||
+                      "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=600"
+                    }
+                    alt={item.name}
+                    style={{
+                      width: 64,
+                      height: 64,
+                      objectFit: "cover",
+                      borderRadius: 12,
+                    }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <p
+                      style={{
+                        color: "#fff",
+                        fontWeight: 600,
+                        margin: "0 0 4px",
+                        fontSize: 15,
+                      }}
+                    >
+                      {item.name}
+                    </p>
+                    <p style={{ color: "#888", fontSize: 13, margin: 0 }}>
+                      Qty: {item.quantity || 1}
+                    </p>
+                  </div>
+                  <p
+                    style={{
+                      color: "#f59e0b",
+                      fontWeight: 700,
+                      fontSize: 16,
+                      margin: 0,
+                    }}
+                  >
+                    Rs. {((item.price || 0) * (item.quantity || 1)).toLocaleString()}
+                  </p>
+                </div>
+              ))}
             </div>
+
+            {/* Shipping form */}
+            <h2
+              style={{
+                color: "#fff",
+                fontSize: 20,
+                fontWeight: 700,
+                marginBottom: 20,
+              }}
+            >
+              Shipping Information
+            </h2>
+
+            <form
+              onSubmit={handleSubmitOrder}
+              style={{ display: "flex", flexDirection: "column", gap: 16 }}
+            >
+              {[
+                { name: "fullName", placeholder: "Full Name", type: "text" },
+                { name: "email", placeholder: "Email Address", type: "email" },
+                { name: "phone", placeholder: "Phone Number", type: "tel" },
+                { name: "city", placeholder: "City", type: "text" },
+                { name: "zipCode", placeholder: "ZIP / Postal Code", type: "text" },
+              ].map((field) => (
+                <input
+                  key={field.name}
+                  type={field.type}
+                  name={field.name}
+                  value={(formData as any)[field.name]}
+                  onChange={handleInputChange}
+                  placeholder={field.placeholder}
+                  required
+                  style={{
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: 12,
+                    padding: "14px 18px",
+                    color: "#fff",
+                    fontSize: 14,
+                    outline: "none",
+                    width: "100%",
+                    boxSizing: "border-box",
+                  }}
+                />
+              ))}
+
+              <textarea
+                name="address"
+                value={formData.address}
+                onChange={handleInputChange}
+                placeholder="Street Address"
+                required
+                rows={3}
+                style={{
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: 12,
+                  padding: "14px 18px",
+                  color: "#fff",
+                  fontSize: 14,
+                  outline: "none",
+                  width: "100%",
+                  boxSizing: "border-box",
+                  resize: "vertical",
+                  fontFamily: "inherit",
+                }}
+              />
+
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  background: loading
+                    ? "rgba(255,255,255,0.1)"
+                    : "linear-gradient(135deg,#f59e0b,#d97706)",
+                  color: loading ? "#666" : "#000",
+                  border: "none",
+                  borderRadius: 14,
+                  padding: "16px 0",
+                  fontWeight: 800,
+                  fontSize: 16,
+                  cursor: loading ? "not-allowed" : "pointer",
+                  marginTop: 8,
+                  transition: "all 0.2s ease",
+                  letterSpacing: "0.3px",
+                }}
+              >
+                {loading ? "Processing…" : "CHECKOUT කරන්න 💳"}
+              </button>
+            </form>
           </div>
 
-          {/* Price Summary */}
-          <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 h-fit">
-            <h2 className="text-xl font-bold mb-6">Price Summary</h2>
-            <div className="space-y-4">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Subtotal</span>
-                <span>${totalPrice.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Shipping</span>
-                <span>$0.00</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Tax</span>
-                <span>$0.00</span>
-              </div>
-              <div className="border-t border-gray-300 pt-4 flex justify-between text-lg font-bold">
-                <span>Total</span>
-                <span className="text-blue-600">${totalPrice.toFixed(2)}</span>
-              </div>
+          {/* ── Right: price summary ──────────────────────────────── */}
+          <div
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 24,
+              padding: 28,
+              backdropFilter: "blur(20px)",
+              position: "sticky",
+              top: 110,
+            }}
+          >
+            <h2
+              style={{
+                color: "#fff",
+                fontSize: 18,
+                fontWeight: 700,
+                marginBottom: 24,
+              }}
+            >
+              Price Breakdown
+            </h2>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {[
+                { label: "Subtotal", value: `Rs. ${totalPrice.toLocaleString()}` },
+                { label: "Shipping", value: "Free" },
+                { label: "Tax", value: "Rs. 0" },
+              ].map((row) => (
+                <div
+                  key={row.label}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    fontSize: 14,
+                  }}
+                >
+                  <span style={{ color: "#999" }}>{row.label}</span>
+                  <span style={{ color: "#ccc", fontWeight: 600 }}>
+                    {row.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div
+              style={{
+                borderTop: "1px solid rgba(255,255,255,0.1)",
+                marginTop: 18,
+                paddingTop: 18,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <span style={{ color: "#fff", fontWeight: 700, fontSize: 16 }}>
+                Total
+              </span>
+              <span style={{ color: "#f59e0b", fontWeight: 800, fontSize: 22 }}>
+                Rs. {totalPrice.toLocaleString()}
+              </span>
+            </div>
+
+            <div
+              style={{
+                background: "rgba(245,158,11,0.1)",
+                border: "1px solid rgba(245,158,11,0.25)",
+                borderRadius: 12,
+                padding: "12px 16px",
+                marginTop: 24,
+                fontSize: 13,
+                color: "#f59e0b",
+                textAlign: "center",
+              }}
+            >
+              🔒 Secure &amp; Encrypted Checkout
             </div>
 
             <button
               onClick={() => router.push("/storefront/product")}
-              className="w-full mt-6 bg-gray-200 hover:bg-gray-300 text-gray-900 font-bold py-3 rounded-xl transition"
+              style={{
+                width: "100%",
+                marginTop: 16,
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: 12,
+                padding: "12px 0",
+                color: "#aaa",
+                fontWeight: 600,
+                fontSize: 14,
+                cursor: "pointer",
+              }}
             >
-              Continue Shopping
+              ← Continue Shopping
             </button>
           </div>
         </div>
