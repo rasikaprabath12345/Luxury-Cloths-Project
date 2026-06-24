@@ -110,7 +110,7 @@ export default function AdminSidebar() {
         {/* Storefront Link */}
         <div style={{ padding: "0 20px", marginBottom: 12 }}>
           <Link
-            href="/storefront"
+            href="/"
             className="admin-sidebar-link"
             style={{
               display: "flex",
@@ -127,7 +127,7 @@ export default function AdminSidebar() {
             onClick={() => setMobileOpen(false)}
           >
             <span className="admin-sidebar-link-icon" style={{ fontSize: "18px", width: "24px", textAlign: "center" }}>🏪</span>
-            <span>View Storefront</span>
+            <span>Home</span>
           </Link>
         </div>
 
