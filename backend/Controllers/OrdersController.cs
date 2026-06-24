@@ -53,6 +53,50 @@ namespace backend.Controllers
             }
         }
 
+        // GET: api/Orders/5
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetOrder(int id)
+        {
+            try
+            {
+                var order = await _context.Orders
+                    .Include(o => o.OrderItems)
+                        .ThenInclude(oi => oi.ProductVariant)
+                            .ThenInclude(pv => pv!.Product)
+                    .Select(o => new
+                    {
+                        id = o.Id,
+                        orderDate = o.CreatedAt,
+                        totalAmount = o.TotalAmount,
+                        status = o.Status,
+                        paymentMethod = o.PaymentMethod,
+                        paymentSlipUrl = o.PaymentSlipUrl,
+                        userId = o.UserId,
+                        items = o.OrderItems.Select(item => new
+                        {
+                            id = item.Id,
+                            productName = item.ProductVariant != null && item.ProductVariant.Product != null 
+                                ? item.ProductVariant.Product.Name 
+                                : "Unknown Product",
+                            quantity = item.Quantity,
+                            price = item.UnitPrice
+                        }).ToList()
+                    })
+                    .FirstOrDefaultAsync(o => o.id == id);
+
+                if (order == null)
+                {
+                    return NotFound($"Order ID {id} සොයාගත නොහැක.");
+                }
+
+                return Ok(order);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
         // 2. POST: api/Orders (අලුත් ඇණවුමක් සිදු කිරීම)
         [HttpPost]
         public async Task<IActionResult> PlaceOrder([FromBody] CreateOrderDto orderDto)
@@ -123,6 +167,30 @@ namespace backend.Controllers
                 return StatusCode(500, $"ඇණවුම සිදු කිරීමට නොහැකි විය: {ex.Message}");
             }
         }
+
+        // 3. PUT: api/Orders/{id}/status (Admin updates order status)
+        [HttpPut("{id}/status")]
+        public async Task<IActionResult> UpdateOrderStatus(int id, [FromBody] UpdateOrderStatusDto dto)
+        {
+            try
+            {
+                var order = await _context.Orders.FindAsync(id);
+                if (order == null)
+                {
+                    return NotFound($"Order ID {id} සොයාගත නොහැක.");
+                }
+
+                order.Status = dto.Status;
+                _context.Orders.Update(order);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "ඇණවුමේ තත්ත්වය සාර්ථකව වෙනස් කරන ලදී!", status = order.Status });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"ඇණවුමේ තත්ත්වය වෙනස් කිරීමට නොහැකි විය: {ex.Message}");
+            }
+        }
     }
 
     // --- Data Transfer Objects (DTOs) ---
@@ -137,5 +205,10 @@ namespace backend.Controllers
     {
         public int ProductVariantId { get; set; }
         public int Quantity { get; set; }
+    }
+
+    public class UpdateOrderStatusDto
+    {
+        public string Status { get; set; } = string.Empty;
     }
 }

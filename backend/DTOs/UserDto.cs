@@ -37,4 +37,9 @@ namespace backend.DTOs
         public string NewPassword { get; set; } = string.Empty;
         public string ConfirmPassword { get; set; } = string.Empty;
     }
+
+    public class UpdateRoleDto
+    {
+        public string Role { get; set; } = string.Empty;
+    }
 }

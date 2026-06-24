@@ -83,6 +83,14 @@ export const authAPI = {
   logout: async () => {
     return apiClient.post('/Auth/logout');
   },
+  
+  getAllUsers: async () => {
+    return apiClient.get('/Auth/users');
+  },
+
+  updateUserRole: async (id: number, role: string) => {
+    return apiClient.put(`/Auth/users/${id}/role`, { role });
+  },
 };
 
 // PRODUCTS ENDPOINTS
@@ -159,6 +167,10 @@ export const ordersAPI = {
 
   deleteOrder: async (id: number) => {
     return apiClient.delete(`/Orders/${id}`);
+  },
+
+  updateOrderStatus: async (id: number, status: string) => {
+    return apiClient.put(`/Orders/${id}/status`, { status });
   },
 };
 

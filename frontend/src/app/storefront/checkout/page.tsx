@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
+import Link from "next/link";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -88,131 +89,99 @@ export default function CheckoutPage() {
   /* ── Empty cart state ────────────────────────────────────────────── */
   if (cartItems.length === 0) {
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          background: "linear-gradient(135deg,#0a0a0a 0%,#111 100%)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexDirection: "column",
-          gap: 24,
-          paddingTop: 100,
-        }}
-      >
-        <div style={{ fontSize: 64 }}>🛒</div>
-        <h2
-          style={{
-            color: "#fff",
-            fontSize: 28,
-            fontWeight: 700,
-            margin: 0,
-          }}
-        >
-          Your cart is empty
-        </h2>
-        <p style={{ color: "#888", margin: 0 }}>
-          Add items to your cart before checking out.
-        </p>
+      <div className="ch-empty-page">
+        <div className="ch-empty-icon">🛒</div>
+        <h2 className="ch-empty-title">Your cart is empty</h2>
+        <p className="ch-empty-sub">Add items to your cart before checking out.</p>
         <button
           onClick={() => router.push("/storefront/product")}
-          style={{
-            background: "linear-gradient(135deg,#6366f1,#8b5cf6)",
-            color: "#fff",
-            border: "none",
-            borderRadius: 14,
-            padding: "14px 36px",
-            fontWeight: 700,
-            fontSize: 15,
-            cursor: "pointer",
-            marginTop: 8,
-          }}
+          className="ch-empty-btn"
         >
           Continue Shopping
         </button>
+
+        <style>{`
+          .ch-empty-page {
+            min-height: 100vh;
+            background: #f5f5f7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+            padding: 120px 24px 60px;
+            text-align: center;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+          }
+          .ch-empty-icon {
+            font-size: 64px;
+            margin-bottom: 8px;
+          }
+          .ch-empty-title {
+            color: #1d1d1f;
+            font-size: 26px;
+            font-weight: 800;
+            margin: 0;
+          }
+          .ch-empty-sub {
+            color: #666;
+            margin: 0;
+            font-size: 15px;
+          }
+          .ch-empty-btn {
+            background: linear-gradient(135deg, #d4af37, #aa841c);
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            padding: 14px 36px;
+            fontWeight: 800;
+            fontSize: 15px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
+            transition: all 0.25s ease;
+          }
+          .ch-empty-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.35);
+          }
+        `}</style>
       </div>
     );
   }
 
   /* ── Main checkout ───────────────────────────────────────────────── */
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "linear-gradient(135deg,#0a0a0a 0%,#111 100%)",
-        paddingTop: 100,
-        paddingBottom: 60,
-        fontFamily:
-          "'Inter','SF Pro Display',-apple-system,BlinkMacSystemFont,sans-serif",
-      }}
-    >
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px" }}>
-        {/* Header */}
-        <h1
-          style={{
-            color: "#fff",
-            fontSize: 36,
-            fontWeight: 800,
-            marginBottom: 40,
-            letterSpacing: "-0.5px",
-          }}
-        >
-          Checkout
-        </h1>
+    <div className="ch-page">
+      {/* ── HERO BANNER ── */}
+      <div className="ch-hero">
+        <div className="ch-hero-inner">
+          <p className="ch-hero-eyebrow">Secure Checkout</p>
+          <h1 className="ch-hero-title">Finalize Order</h1>
+          <div className="ch-breadcrumb">
+            <Link href="/" className="ch-breadcrumb-link">Home</Link>
+            <span className="ch-breadcrumb-sep">›</span>
+            <Link href="/storefront/cart" className="ch-breadcrumb-link">Cart</Link>
+            <span className="ch-breadcrumb-sep">›</span>
+            <span className="ch-breadcrumb-current">Checkout</span>
+          </div>
+        </div>
+      </div>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 380px",
-            gap: 32,
-            alignItems: "start",
-          }}
-        >
+      <div className="ch-container">
+        <div className="ch-grid">
           {/* ── Left: form + order list ───────────────────────────── */}
-          <div
-            style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 24,
-              padding: 36,
-              backdropFilter: "blur(20px)",
-            }}
-          >
+          <div className="ch-left-card">
             {/* Cart items */}
-            <h2
-              style={{
-                color: "#fff",
-                fontSize: 20,
-                fontWeight: 700,
-                marginBottom: 20,
-              }}
-            >
-              Order Summary ({cartItems.length} item
-              {cartItems.length !== 1 ? "s" : ""})
-            </h2>
+            <div className="ch-section-header">
+              <h2 className="ch-section-title">Order Items</h2>
+              <span className="ch-item-badge">
+                {cartItems.length} item{cartItems.length !== 1 ? "s" : ""}
+              </span>
+            </div>
 
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 16,
-                maxHeight: 280,
-                overflowY: "auto",
-                marginBottom: 36,
-                paddingRight: 4,
-              }}
-            >
+            <div className="ch-items-list">
               {cartItems.map((item: any) => (
-                <div
-                  key={item.id}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 16,
-                    paddingBottom: 16,
-                    borderBottom: "1px solid rgba(255,255,255,0.06)",
-                  }}
-                >
+                <div key={item.id} className="ch-item-row">
                   <img
                     src={
                       item.imageUrl ||
@@ -220,127 +189,63 @@ export default function CheckoutPage() {
                       "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=600"
                     }
                     alt={item.name}
-                    style={{
-                      width: 64,
-                      height: 64,
-                      objectFit: "cover",
-                      borderRadius: 12,
-                    }}
+                    className="ch-item-img"
                   />
-                  <div style={{ flex: 1 }}>
-                    <p
-                      style={{
-                        color: "#fff",
-                        fontWeight: 600,
-                        margin: "0 0 4px",
-                        fontSize: 15,
-                      }}
-                    >
-                      {item.name}
-                    </p>
-                    <p style={{ color: "#888", fontSize: 13, margin: 0 }}>
-                      Qty: {item.quantity || 1}
-                    </p>
+                  <div className="ch-item-details">
+                    <p className="ch-item-name">{item.name}</p>
+                    <p className="ch-item-qty">Qty: {item.quantity || 1}</p>
                   </div>
-                  <p
-                    style={{
-                      color: "#a78bfa",
-                      fontWeight: 700,
-                      fontSize: 16,
-                      margin: 0,
-                    }}
-                  >
-                    ${((item.price || 0) * (item.quantity || 1)).toFixed(2)}
+                  <p className="ch-item-total-price">
+                    Rs. {((item.price || 0) * (item.quantity || 1)).toLocaleString()}
                   </p>
                 </div>
               ))}
             </div>
 
             {/* Shipping form */}
-            <h2
-              style={{
-                color: "#fff",
-                fontSize: 20,
-                fontWeight: 700,
-                marginBottom: 20,
-              }}
-            >
-              Shipping Information
+            <h2 className="ch-section-title" style={{ marginTop: 32, marginBottom: 20 }}>
+              Shipping Address
             </h2>
 
-            <form
-              onSubmit={handleSubmitOrder}
-              style={{ display: "flex", flexDirection: "column", gap: 16 }}
-            >
-              {[
-                { name: "fullName", placeholder: "Full Name", type: "text" },
-                { name: "email", placeholder: "Email Address", type: "email" },
-                { name: "phone", placeholder: "Phone Number", type: "tel" },
-                { name: "city", placeholder: "City", type: "text" },
-                { name: "zipCode", placeholder: "ZIP / Postal Code", type: "text" },
-              ].map((field) => (
-                <input
-                  key={field.name}
-                  type={field.type}
-                  name={field.name}
-                  value={(formData as any)[field.name]}
-                  onChange={handleInputChange}
-                  placeholder={field.placeholder}
-                  required
-                  style={{
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    borderRadius: 12,
-                    padding: "14px 18px",
-                    color: "#fff",
-                    fontSize: 14,
-                    outline: "none",
-                    width: "100%",
-                    boxSizing: "border-box",
-                  }}
-                />
-              ))}
+            <form onSubmit={handleSubmitOrder} className="ch-form">
+              <div className="ch-input-grid">
+                {[
+                  { name: "fullName", placeholder: "Full Name", type: "text" },
+                  { name: "email", placeholder: "Email Address", type: "email" },
+                  { name: "phone", placeholder: "Phone Number", type: "tel" },
+                  { name: "city", placeholder: "City", type: "text" },
+                  { name: "zipCode", placeholder: "ZIP / Postal Code", type: "text" },
+                ].map((field) => (
+                  <div key={field.name} className="ch-input-field">
+                    <input
+                      type={field.type}
+                      name={field.name}
+                      value={(formData as any)[field.name]}
+                      onChange={handleInputChange}
+                      placeholder={field.placeholder}
+                      required
+                      className="ch-input"
+                    />
+                  </div>
+                ))}
+              </div>
 
-              <textarea
-                name="address"
-                value={formData.address}
-                onChange={handleInputChange}
-                placeholder="Street Address"
-                required
-                rows={3}
-                style={{
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: 12,
-                  padding: "14px 18px",
-                  color: "#fff",
-                  fontSize: 14,
-                  outline: "none",
-                  width: "100%",
-                  boxSizing: "border-box",
-                  resize: "vertical",
-                  fontFamily: "inherit",
-                }}
-              />
+              <div className="ch-input-field" style={{ marginTop: 16 }}>
+                <textarea
+                  name="address"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  placeholder="Street Address"
+                  required
+                  rows={3}
+                  className="ch-textarea"
+                />
+              </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                style={{
-                  background: loading
-                    ? "rgba(255,255,255,0.1)"
-                    : "linear-gradient(135deg,#6366f1,#8b5cf6)",
-                  color: loading ? "#666" : "#fff",
-                  border: "none",
-                  borderRadius: 14,
-                  padding: "16px 0",
-                  fontWeight: 800,
-                  fontSize: 16,
-                  cursor: loading ? "not-allowed" : "pointer",
-                  marginTop: 8,
-                  transition: "all 0.2s ease",
-                  letterSpacing: "0.3px",
-                }}
+                className="ch-submit-btn"
               >
                 {loading ? "Processing…" : "Place Order 💳"}
               </button>
@@ -348,111 +253,433 @@ export default function CheckoutPage() {
           </div>
 
           {/* ── Right: price summary ──────────────────────────────── */}
-          <div
-            style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 24,
-              padding: 28,
-              backdropFilter: "blur(20px)",
-              position: "sticky",
-              top: 110,
-            }}
-          >
-            <h2
-              style={{
-                color: "#fff",
-                fontSize: 18,
-                fontWeight: 700,
-                marginBottom: 24,
-              }}
-            >
-              Price Breakdown
-            </h2>
+          <div className="ch-right-sidebar">
+            <div className="ch-summary-card">
+              <h2 className="ch-summary-title">Summary Breakdown</h2>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {[
-                { label: "Subtotal", value: `$${totalPrice.toFixed(2)}` },
-                { label: "Shipping", value: "Free" },
-                { label: "Tax", value: "$0.00" },
-              ].map((row) => (
-                <div
-                  key={row.label}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    fontSize: 14,
-                  }}
-                >
-                  <span style={{ color: "#999" }}>{row.label}</span>
-                  <span style={{ color: "#ccc", fontWeight: 600 }}>
-                    {row.value}
-                  </span>
-                </div>
-              ))}
-            </div>
+              <div className="ch-summary-rows">
+                {[
+                  { label: "Subtotal", value: `Rs. ${totalPrice.toLocaleString()}` },
+                  { label: "Shipping", value: "FREE" },
+                  { label: "Tax & Service", value: "Rs. 0" },
+                ].map((row) => (
+                  <div key={row.label} className="ch-summary-row">
+                    <span className="label">{row.label}</span>
+                    <span className={`value ${row.value === "FREE" ? "free-tag" : ""}`}>
+                      {row.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
 
-            <div
-              style={{
-                borderTop: "1px solid rgba(255,255,255,0.1)",
-                marginTop: 18,
-                paddingTop: 18,
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <span
-                style={{ color: "#fff", fontWeight: 700, fontSize: 16 }}
+              <div className="ch-summary-divider" />
+
+              <div className="ch-total-row">
+                <span className="total-label">Total Amount</span>
+                <span className="total-value">Rs. {totalPrice.toLocaleString()}</span>
+              </div>
+
+              <div className="ch-secure-badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: 6 }}>
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                Secure 256-bit SSL checkout
+              </div>
+
+              <button
+                onClick={() => router.push("/storefront/shop")}
+                className="ch-back-btn"
               >
-                Total
-              </span>
-              <span
-                style={{
-                  color: "#a78bfa",
-                  fontWeight: 800,
-                  fontSize: 22,
-                }}
-              >
-                ${totalPrice.toFixed(2)}
-              </span>
+                ← Continue Shopping
+              </button>
             </div>
-
-            <div
-              style={{
-                background: "rgba(99,102,241,0.12)",
-                border: "1px solid rgba(99,102,241,0.25)",
-                borderRadius: 12,
-                padding: "12px 16px",
-                marginTop: 24,
-                fontSize: 13,
-                color: "#a78bfa",
-                textAlign: "center",
-              }}
-            >
-              🔒 Secure &amp; Encrypted Checkout
-            </div>
-
-            <button
-              onClick={() => router.push("/storefront/product")}
-              style={{
-                width: "100%",
-                marginTop: 16,
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: 12,
-                padding: "12px 0",
-                color: "#aaa",
-                fontWeight: 600,
-                fontSize: 14,
-                cursor: "pointer",
-              }}
-            >
-              ← Continue Shopping
-            </button>
           </div>
         </div>
       </div>
+
+      {/* ── STYLES ── */}
+      <style>{`
+        .ch-page {
+          min-height: 100vh;
+          background: #f5f5f7;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+          color: #1d1d1f;
+          padding-bottom: 80px;
+        }
+
+        /* ── HERO BANNER ── */
+        .ch-hero {
+          position: relative;
+          padding: 100px 32px 50px;
+          background: linear-gradient(135deg, #ffffff 0%, #f5f5f7 100%);
+          border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+          overflow: hidden;
+        }
+        .ch-hero::before {
+          content: '';
+          position: absolute;
+          top: -80px;
+          right: -80px;
+          width: 400px;
+          height: 400px;
+          background: radial-gradient(circle, rgba(212, 175, 55, 0.04) 0%, transparent 70%);
+          pointer-events: none;
+        }
+        .ch-hero-inner {
+          max-width: 1100px;
+          margin: 0 auto;
+          position: relative;
+          z-index: 1;
+        }
+        .ch-hero-eyebrow {
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 3px;
+          text-transform: uppercase;
+          color: #aa841c;
+          margin: 0 0 12px;
+        }
+        .ch-hero-title {
+          font-size: clamp(32px, 4vw, 46px);
+          font-weight: 800;
+          letter-spacing: -1px;
+          color: #1d1d1f;
+          margin: 0 0 16px;
+          line-height: 1.1;
+        }
+        .ch-breadcrumb {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 13px;
+        }
+        .ch-breadcrumb-link {
+          color: #888;
+          text-decoration: none;
+          transition: color 0.2s;
+        }
+        .ch-breadcrumb-link:hover { color: #aa841c; }
+        .ch-breadcrumb-sep { color: #ccc; }
+        .ch-breadcrumb-current { color: #666; }
+
+        /* ── MAIN GRID ── */
+        .ch-container {
+          max-width: 1100px;
+          margin: 0 auto;
+          padding: 40px 24px 0;
+        }
+        .ch-grid {
+          display: grid;
+          grid-template-columns: 1fr 380px;
+          gap: 32px;
+          align-items: start;
+        }
+        @media (max-width: 960px) {
+          .ch-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        /* ── LEFT CONTAINER ── */
+        .ch-left-card {
+          background: #ffffff;
+          border: 1px solid rgba(0, 0, 0, 0.05);
+          border-radius: 24px;
+          padding: 36px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
+        }
+        @media (max-width: 600px) {
+          .ch-left-card {
+            padding: 24px;
+          }
+        }
+        .ch-section-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 20px;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+          padding-bottom: 12px;
+        }
+        .ch-section-title {
+          font-size: 18px;
+          font-weight: 800;
+          color: #1d1d1f;
+          margin: 0;
+        }
+        .ch-item-badge {
+          font-size: 12px;
+          font-weight: 700;
+          color: #aa841c;
+          background: rgba(212, 175, 55, 0.08);
+          padding: 3px 10px;
+          border-radius: 99px;
+        }
+
+        /* Cart List */
+        .ch-items-list {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          max-height: 280px;
+          overflow-y: auto;
+          padding-right: 8px;
+        }
+        .ch-items-list::-webkit-scrollbar {
+          width: 4px;
+        }
+        .ch-items-list::-webkit-scrollbar-thumb {
+          background: rgba(0, 0, 0, 0.08);
+          border-radius: 10px;
+        }
+        .ch-item-row {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          padding-bottom: 16px;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .ch-item-img {
+          width: 64px;
+          height: 64px;
+          object-fit: cover;
+          border-radius: 12px;
+          border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .ch-item-details {
+          flex: 1;
+          min-width: 0;
+        }
+        .ch-item-name {
+          color: #1d1d1f;
+          font-weight: 700;
+          margin: 0 0 4px;
+          font-size: 14px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .ch-item-qty {
+          color: #777;
+          font-size: 12px;
+          margin: 0;
+        }
+        .ch-item-total-price {
+          color: #1d1d1f;
+          font-weight: 800;
+          font-size: 15px;
+          margin: 0;
+        }
+
+        /* Forms */
+        .ch-form {
+          display: flex;
+          flex-direction: column;
+        }
+        .ch-input-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
+        }
+        @media (max-width: 600px) {
+          .ch-input-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+        .ch-input-field {
+          width: 100%;
+        }
+        .ch-input {
+          background: #f9f9fb;
+          border: 1px solid rgba(0, 0, 0, 0.06);
+          border-radius: 12px;
+          padding: 14px 18px;
+          color: #1d1d1f;
+          font-size: 14px;
+          outline: none;
+          width: 100%;
+          box-sizing: border-box;
+          transition: border-color 0.2s;
+          font-family: inherit;
+        }
+        .ch-input:focus {
+          border-color: rgba(212, 175, 55, 0.4);
+        }
+        .ch-textarea {
+          background: #f9f9fb;
+          border: 1px solid rgba(0, 0, 0, 0.06);
+          border-radius: 12px;
+          padding: 14px 18px;
+          color: #1d1d1f;
+          font-size: 14px;
+          outline: none;
+          width: 100%;
+          box-sizing: border-box;
+          resize: vertical;
+          font-family: inherit;
+          transition: border-color 0.2s;
+        }
+        .ch-textarea:focus {
+          border-color: rgba(212, 175, 55, 0.4);
+        }
+
+        .ch-submit-btn {
+          background: linear-gradient(135deg, #1d1d1f, #000000);
+          color: #fff;
+          border: none;
+          border-radius: 14px;
+          padding: 16px 0;
+          font-weight: 700;
+          font-size: 15px;
+          cursor: pointer;
+          margin-top: 24px;
+          transition: all 0.25s ease;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        .ch-submit-btn:hover:not(:disabled) {
+          transform: translateY(-1px);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+        }
+        .ch-submit-btn:disabled {
+          background: rgba(0, 0, 0, 0.05);
+          color: #999;
+          cursor: not-allowed;
+          box-shadow: none;
+        }
+
+        /* ── RIGHT CONTAINER ── */
+        .ch-right-sidebar {
+          position: sticky;
+          top: 100px;
+        }
+        .ch-summary-card {
+          background: #ffffff;
+          border: 1px solid rgba(0, 0, 0, 0.05);
+          border-radius: 24px;
+          padding: 28px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
+        }
+        .ch-summary-title {
+          font-size: 17px;
+          font-weight: 800;
+          color: #1d1d1f;
+          margin: 0 0 20px;
+        }
+        .ch-summary-rows {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .ch-summary-row {
+          display: flex;
+          justify-content: space-between;
+          font-size: 13.5px;
+        }
+        .ch-summary-row .label {
+          color: #777;
+        }
+        .ch-summary-row .value {
+          color: #1d1d1f;
+          font-weight: 600;
+        }
+        .ch-summary-row .value.free-tag {
+          color: #15803d;
+          font-weight: 700;
+          background: rgba(22, 163, 74, 0.08);
+          padding: 1px 7px;
+          border-radius: 5px;
+        }
+        .ch-summary-divider {
+          height: 1px;
+          background: rgba(0, 0, 0, 0.05);
+          margin: 16px 0;
+        }
+        .ch-total-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+        }
+        .ch-total-row .total-label {
+          font-size: 15px;
+          font-weight: 800;
+          color: #1d1d1f;
+        }
+        .ch-total-row .total-value {
+          font-size: 22px;
+          font-weight: 800;
+          color: #aa841c;
+        }
+        .ch-secure-badge {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(212, 175, 55, 0.08);
+          border: 1px solid rgba(212, 175, 55, 0.15);
+          border-radius: 10px;
+          padding: 10px;
+          font-size: 12px;
+          color: #aa841c;
+          font-weight: 600;
+        }
+        .ch-back-btn {
+          width: 100%;
+          margin-top: 14px;
+          background: transparent;
+          border: 1px solid rgba(0, 0, 0, 0.06);
+          border-radius: 12px;
+          padding: 12px 0;
+          color: #666;
+          font-weight: 600;
+          font-size: 13px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .ch-back-btn:hover {
+          background: rgba(0, 0, 0, 0.02);
+          color: #aa841c;
+          border-color: rgba(212, 175, 55, 0.2);
+        }
+        
+        @media (max-width: 600px) {
+          .ch-container {
+            padding: 20px 16px 0;
+          }
+          .ch-left-card {
+            padding: 20px;
+            border-radius: 20px;
+          }
+          .ch-input-grid {
+            grid-template-columns: 1fr;
+            gap: 12px;
+          }
+          .ch-item-row {
+            gap: 12px;
+            padding-bottom: 12px;
+          }
+          .ch-item-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+          }
+          .ch-item-name {
+            font-size: 13px;
+          }
+          .ch-item-total-price {
+            font-size: 13px;
+          }
+          .ch-summary-card {
+            padding: 20px;
+            border-radius: 20px;
+          }
+          .ch-total-row .total-value {
+            font-size: 20px;
+          }
+        }
+      `}</style>
     </div>
   );
 }

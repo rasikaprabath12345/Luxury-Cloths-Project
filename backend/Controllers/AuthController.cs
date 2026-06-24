@@ -222,5 +222,60 @@ namespace backend.Controllers
             // Frontend handles token deletion from localStorage
             return Ok(new { message = "Logged out successfully" });
         }
+
+        // 9. GET ALL USERS (Admin only)
+        [HttpGet("users")]
+        [Authorize]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var adminId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            var adminUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == adminId);
+            if (adminUser == null || adminUser.Role != "Admin")
+            {
+                return Unauthorized("Only admins can access this resource.");
+            }
+
+            var users = await _context.Users
+                .Select(user => new UserDto
+                {
+                    Id = user.Id,
+                    FullName = user.FullName,
+                    Email = user.Email,
+                    Phone = user.Phone,
+                    Avatar = user.Avatar,
+                    Role = user.Role,
+                    CreatedAt = user.CreatedAt
+                })
+                .ToListAsync();
+
+            return Ok(users);
+        }
+
+        // 10. UPDATE USER ROLE (Admin only)
+        [HttpPut("users/{id}/role")]
+        [Authorize]
+        public async Task<IActionResult> UpdateUserRole(int id, [FromBody] UpdateRoleDto dto)
+        {
+            var adminId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            var adminUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == adminId);
+            if (adminUser == null || adminUser.Role != "Admin")
+            {
+                return Unauthorized("Only admins can perform this action.");
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            user.Role = dto.Role;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "User role updated successfully.", role = user.Role });
+        }
     }
 }
