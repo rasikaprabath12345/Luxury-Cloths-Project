@@ -31,13 +31,13 @@ export default function LoginPage() {
     <div style={{
       fontFamily: "var(--font-montserrat), sans-serif",
       background: "linear-gradient(160deg, #F8F9FA 0%, #E9ECEF 50%, #DEE2E6 100%)",
-      minHeight: "100vh",
+      minHeight: "calc(100vh - 100px)",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
       position: "relative",
       overflow: "hidden",
-      padding: "40px 16px",
+      padding: "24px 16px 64px 16px",
     }}>
       {/* Ambient background blobs */}
       <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
@@ -63,6 +63,7 @@ export default function LoginPage() {
         border: "1px solid rgba(255, 255, 255, 0.85)",
         borderRadius: "24px",
         boxShadow: "0 20px 50px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)",
+       marginTop: "60px",
         width: "100%",
         maxWidth: "840px",
         zIndex: 1,

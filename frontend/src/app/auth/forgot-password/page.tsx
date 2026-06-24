@@ -31,13 +31,13 @@ export default function ForgotPasswordPage() {
     <div style={{
       fontFamily: "var(--font-montserrat), sans-serif",
       background: "linear-gradient(160deg, #F8F9FA 0%, #E9ECEF 50%, #DEE2E6 100%)",
-      minHeight: "100vh",
+      minHeight: "calc(100vh - 100px)",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
       position: "relative",
       overflow: "hidden",
-      padding: "40px 16px",
+      padding: "24px 16px 64px 16px",
     }}>
       {/* Ambient background blobs */}
       <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>

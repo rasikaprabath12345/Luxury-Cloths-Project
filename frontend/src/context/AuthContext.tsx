@@ -79,7 +79,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Auto-login after registration
             await login(email, password);
         } catch (error: any) {
-            const message = error.response?.data?.message || "Registration failed";
+            const message = typeof error.response?.data === "string"
+                ? error.response.data
+                : error.response?.data?.message || "Registration failed";
             throw new Error(message);
         } finally {
             setIsLoading(false);
@@ -105,7 +107,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             localStorage.setItem("luxury_user", JSON.stringify(userData));
             localStorage.setItem("luxury_token", data.token);
         } catch (error: any) {
-            const message = error.response?.data?.message || "Login failed";
+            const message = typeof error.response?.data === "string"
+                ? error.response.data
+                : error.response?.data?.message || "Login failed";
             throw new Error(message);
         } finally {
             setIsLoading(false);
@@ -131,7 +135,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
             await authAPI.forgotPassword({ email });
         } catch (error: any) {
-            const message = error.response?.data?.message || "Failed to send reset email";
+            const message = typeof error.response?.data === "string"
+                ? error.response.data
+                : error.response?.data?.message || "Failed to send reset email";
             throw new Error(message);
         }
     };
@@ -151,7 +157,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 confirmPassword,
             });
         } catch (error: any) {
-            const message = error.response?.data?.message || "Failed to reset password";
+            const message = typeof error.response?.data === "string"
+                ? error.response.data
+                : error.response?.data?.message || "Failed to reset password";
             throw new Error(message);
         }
     };
@@ -215,7 +223,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 confirmPassword,
             });
         } catch (error: any) {
-            const message = error.response?.data?.message || "Failed to change password";
+            const message = typeof error.response?.data === "string"
+                ? error.response.data
+                : error.response?.data?.message || "Failed to change password";
             throw new Error(message);
         }
     };
