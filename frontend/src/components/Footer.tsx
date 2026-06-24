@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 // ─── FOOTER COLUMNS ───────────────────────────────────────────────────────────
 const FOOTER_COLS = [
@@ -71,6 +74,11 @@ const SOCIALS = [
 
 // ─── FOOTER ───────────────────────────────────────────────────────────────────
 export default function Footer() {
+  const pathname = usePathname();
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
+
   return (
     <footer
       style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif" }}

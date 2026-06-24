@@ -4,25 +4,29 @@ import { useState, useEffect } from "react";
 import { productsAPI, categoriesAPI, ordersAPI, authAPI } from "@/lib/api";
 import Link from "next/link";
 
+interface OrderItem {
+  id: number;
+  productName: string;
+  quantity: number;
+  price: number;
+}
+
 interface Order {
   id: number;
   orderDate: string;
   totalAmount: number;
   status: string;
-  items: Array<{
-    id: number;
-    productName: string;
-    quantity: number;
-    price: number;
-  }>;
+  items: OrderItem[];
 }
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
     totalRevenue: 0,
     totalOrders: 0,
+    pendingOrders: 0,
     totalProducts: 0,
     totalUsers: 0,
+    totalCategories: 0,
   });
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,14 +46,24 @@ export default function AdminDashboard() {
           productCount = productsRes.value.data.length;
         }
 
+        let categoryCount = 0;
+        if (categoriesRes.status === "fulfilled") {
+          categoryCount = categoriesRes.value.data.length;
+        }
+
         let orderCount = 0;
+        let pendingCount = 0;
         let revenue = 0;
         let ordersList: Order[] = [];
         if (ordersRes.status === "fulfilled") {
           ordersList = ordersRes.value.data;
           orderCount = ordersList.length;
+          pendingCount = ordersList.filter((o) => o.status?.toLowerCase() === "pending").length;
           revenue = ordersList
-            .filter(o => o.status?.toLowerCase() !== "cancelled")
+            .filter((o) => {
+              const s = o.status?.toLowerCase();
+              return s !== "cancelled";
+            })
             .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
         }
 
@@ -61,12 +75,13 @@ export default function AdminDashboard() {
         setStats({
           totalRevenue: revenue,
           totalOrders: orderCount,
+          pendingOrders: pendingCount,
           totalProducts: productCount,
           totalUsers: userCount,
+          totalCategories: categoryCount,
         });
 
-        // Get last 5 orders
-        setRecentOrders(ordersList.slice(0, 5));
+        setRecentOrders(ordersList.slice(0, 6));
       } catch (error) {
         console.error("Error loading dashboard data:", error);
       } finally {
@@ -94,144 +109,159 @@ export default function AdminDashboard() {
     }
   };
 
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
+
   return (
     <div className="dashboard-container">
       <header className="dashboard-header">
         <div>
-          <h1 className="dashboard-title">Overview</h1>
-          <p className="dashboard-subtitle">Here's what's happening in your shop today.</p>
+          <h1 className="dashboard-title">Dashboard</h1>
+          <p className="dashboard-subtitle">Welcome back! Here&apos;s an overview of your store.</p>
         </div>
-        <div className="dashboard-actions">
+        <div className="header-actions">
           <Link href="/admin/products" className="btn-primary">
-            ➕ Add Product
+            <span>+</span> New Product
           </Link>
         </div>
       </header>
 
       {loading ? (
-        <div className="dashboard-loading">Loading metrics...</div>
+        <div className="stats-grid">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="stat-card">
+              <div className="shimmer" style={{ width: 80, height: 14, marginBottom: 12 }} />
+              <div className="shimmer" style={{ width: 120, height: 32, marginBottom: 8 }} />
+              <div className="shimmer" style={{ width: 140, height: 12 }} />
+            </div>
+          ))}
+        </div>
       ) : (
         <>
-          {/* Stats Grid */}
+          {/* Stat Cards */}
           <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-card-header">
-                <span className="stat-card-title">Total Revenue</span>
-                <span className="stat-card-icon">💰</span>
+            <div className="stat-card stat-revenue">
+              <div className="stat-header">
+                <span className="stat-label">Total Revenue</span>
+                <div className="stat-icon-wrap revenue-icon">$</div>
               </div>
-              <div className="stat-card-value">${stats.totalRevenue.toFixed(2)}</div>
-              <div className="stat-card-desc">From completed/approved orders</div>
+              <div className="stat-value">{formatCurrency(stats.totalRevenue)}</div>
+              <div className="stat-footer">From all non-cancelled orders</div>
             </div>
 
-            <div className="stat-card">
-              <div className="stat-card-header">
-                <span className="stat-card-title">Total Orders</span>
-                <span className="stat-card-icon">🛒</span>
+            <div className="stat-card stat-orders">
+              <div className="stat-header">
+                <span className="stat-label">Total Orders</span>
+                <div className="stat-icon-wrap orders-icon">📋</div>
               </div>
-              <div className="stat-card-value">{stats.totalOrders}</div>
-              <div className="stat-card-desc">All placed orders</div>
+              <div className="stat-value">{stats.totalOrders}</div>
+              <div className="stat-footer">
+                {stats.pendingOrders > 0 && (
+                  <span className="pending-badge">{stats.pendingOrders} pending</span>
+                )}
+                {stats.pendingOrders === 0 && "All orders processed"}
+              </div>
             </div>
 
-            <div className="stat-card">
-              <div className="stat-card-header">
-                <span className="stat-card-title">Products In Store</span>
-                <span className="stat-card-icon">📦</span>
+            <div className="stat-card stat-products">
+              <div className="stat-header">
+                <span className="stat-label">Products</span>
+                <div className="stat-icon-wrap products-icon">📦</div>
               </div>
-              <div className="stat-card-value">{stats.totalProducts}</div>
-              <div className="stat-card-desc">Active catalog listings</div>
+              <div className="stat-value">{stats.totalProducts}</div>
+              <div className="stat-footer">Across {stats.totalCategories} categories</div>
             </div>
 
-            <div className="stat-card">
-              <div className="stat-card-header">
-                <span className="stat-card-title">Registered Users</span>
-                <span className="stat-card-icon">👥</span>
+            <div className="stat-card stat-users">
+              <div className="stat-header">
+                <span className="stat-label">Users</span>
+                <div className="stat-icon-wrap users-icon">👥</div>
               </div>
-              <div className="stat-card-value">{stats.totalUsers}</div>
-              <div className="stat-card-desc">Customers & administrators</div>
+              <div className="stat-value">{stats.totalUsers}</div>
+              <div className="stat-footer">Registered accounts</div>
             </div>
           </div>
 
-          {/* Detailed Content Split */}
-          <div className="dashboard-details">
-            {/* Recent Orders Table */}
-            <div className="details-card main-details">
-              <div className="card-header">
-                <h2 className="card-title">Recent Orders</h2>
-                <Link href="/admin/orders" className="card-header-link">
-                  View All Orders →
-                </Link>
+          {/* Content Section */}
+          <div className="dashboard-grid">
+            {/* Recent Orders */}
+            <div className="card recent-orders-card">
+              <div className="card-top">
+                <h2 className="card-heading">Recent Orders</h2>
+                <Link href="/admin/orders" className="card-link">View All →</Link>
               </div>
 
-              <div className="table-responsive">
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th>Order ID</th>
-                      <th>Date</th>
-                      <th>Total</th>
-                      <th>Status</th>
-                      <th className="text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentOrders.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="text-center text-muted">
-                          No orders placed yet
-                        </td>
-                      </tr>
-                    ) : (
-                      recentOrders.map((order) => (
-                        <tr key={order.id}>
-                          <td className="font-bold text-blue">#{order.id}</td>
-                          <td>
+              {recentOrders.length === 0 ? (
+                <div className="empty-box">
+                  <span className="empty-icon">📭</span>
+                  <p>No orders placed yet</p>
+                </div>
+              ) : (
+                <div className="orders-list">
+                  {recentOrders.map((order) => (
+                    <div key={order.id} className="order-row">
+                      <div className="order-left">
+                        <span className="order-id">#{order.id}</span>
+                        <div className="order-meta">
+                          <span className="order-items-count">{order.items?.length || 0} items</span>
+                          <span className="order-dot">·</span>
+                          <span className="order-date">
                             {order.orderDate
-                              ? new Date(order.orderDate).toLocaleDateString()
+                              ? new Date(order.orderDate).toLocaleDateString("en-US", {
+                                  month: "short",
+                                  day: "numeric",
+                                })
                               : "N/A"}
-                          </td>
-                          <td className="font-mono">${(order.totalAmount || 0).toFixed(2)}</td>
-                          <td>
-                            <span className={`badge ${getStatusBadgeClass(order.status)}`}>
-                              {order.status}
-                            </span>
-                          </td>
-                          <td className="text-right">
-                            <Link href={`/admin/orders`} className="btn-table-action">
-                              Manage
-                            </Link>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                          </span>
+                        </div>
+                      </div>
+                      <div className="order-right">
+                        <span className="order-amount">{formatCurrency(order.totalAmount || 0)}</span>
+                        <span className={`badge ${getStatusBadgeClass(order.status)}`}>
+                          {order.status}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Quick Settings & Navigation */}
-            <div className="details-card side-details">
-              <h2 className="card-title">Quick Actions</h2>
-              <div className="quick-links">
-                <Link href="/admin/products" className="quick-link-item">
-                  <span className="quick-link-icon">📦</span>
+            {/* Quick Actions */}
+            <div className="card quick-actions-card">
+              <h2 className="card-heading">Quick Actions</h2>
+              <div className="quick-actions">
+                <Link href="/admin/products" className="action-item">
+                  <div className="action-icon-box purple">📦</div>
                   <div>
-                    <h4 className="quick-link-title">Products Management</h4>
-                    <p className="quick-link-desc">Add, edit, or delete store products.</p>
+                    <h4 className="action-title">Products</h4>
+                    <p className="action-desc">Add, edit, or remove store items</p>
                   </div>
+                  <span className="action-arrow">→</span>
                 </Link>
-                <Link href="/admin/categories" className="quick-link-item">
-                  <span className="quick-link-icon">🏷️</span>
+                <Link href="/admin/categories" className="action-item">
+                  <div className="action-icon-box teal">🏷️</div>
                   <div>
-                    <h4 className="quick-link-title">Categories Manager</h4>
-                    <p className="quick-link-desc">Manage shirt, pant, shoes, etc. divisions.</p>
+                    <h4 className="action-title">Categories</h4>
+                    <p className="action-desc">Organize product collections</p>
                   </div>
+                  <span className="action-arrow">→</span>
                 </Link>
-                <Link href="/admin/users" className="quick-link-item">
-                  <span className="quick-link-icon">👥</span>
+                <Link href="/admin/orders" className="action-item">
+                  <div className="action-icon-box amber">🛒</div>
                   <div>
-                    <h4 className="quick-link-title">User Accounts</h4>
-                    <p className="quick-link-desc">Verify customer profiles and promote administrators.</p>
+                    <h4 className="action-title">Orders</h4>
+                    <p className="action-desc">Review and process orders</p>
                   </div>
+                  <span className="action-arrow">→</span>
+                </Link>
+                <Link href="/admin/users" className="action-item">
+                  <div className="action-icon-box blue">👥</div>
+                  <div>
+                    <h4 className="action-title">Users</h4>
+                    <p className="action-desc">Manage accounts & roles</p>
+                  </div>
+                  <span className="action-arrow">→</span>
                 </Link>
               </div>
             </div>
@@ -240,294 +270,119 @@ export default function AdminDashboard() {
       )}
 
       <style jsx>{`
-        .dashboard-container {
-          max-width: 1200px;
-          margin: 0 auto;
-        }
+        .dashboard-container { max-width: 1200px; margin: 0 auto; }
 
         .dashboard-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 32px;
-          flex-wrap: wrap;
-          gap: 16px;
+          display: flex; justify-content: space-between; align-items: center;
+          margin-bottom: 32px; flex-wrap: wrap; gap: 16px;
         }
+        .dashboard-title { font-size: 30px; font-weight: 800; color: #0f172a; margin: 0 0 4px; }
+        .dashboard-subtitle { font-size: 14px; color: #64748b; margin: 0; }
 
-        .dashboard-title {
-          font-size: 32px;
-          font-weight: 900;
-          color: #fff;
-          margin: 0 0 6px;
-        }
-
-        .dashboard-subtitle {
-          font-size: 14px;
-          color: #a1a1aa;
-          margin: 0;
-        }
-
+        .header-actions { display: flex; gap: 10px; }
         .btn-primary {
-          background-color: #3b82f6;
-          color: #fff;
-          font-weight: 600;
-          font-size: 13px;
-          padding: 10px 20px;
-          border-radius: 10px;
-          text-decoration: none;
-          display: inline-flex;
-          align-items: center;
-          transition: all 0.2s;
-          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+          background: linear-gradient(135deg, #3b82f6, #2563eb);
+          color: #fff; font-weight: 600; font-size: 13px; padding: 10px 20px;
+          border-radius: 10px; text-decoration: none; display: inline-flex;
+          align-items: center; gap: 6px; transition: all 0.2s;
+          box-shadow: 0 4px 16px rgba(59,130,246,0.25);
         }
-        .btn-primary:hover {
-          background-color: #2563eb;
-          transform: translateY(-1px);
-        }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(59,130,246,0.35); }
 
-        .dashboard-loading {
-          text-align: center;
-          padding: 60px 0;
-          color: #a1a1aa;
-          font-size: 15px;
-        }
-
+        /* Stats Grid */
         .stats-grid {
-          display: grid;
-          grid-template-cols: repeat(auto-fit, minmax(240px, 1fr));
-          gap: 20px;
-          margin-bottom: 32px;
+          display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+          gap: 16px; margin-bottom: 28px;
         }
-
         .stat-card {
-          background-color: #09090b;
-          border: 1px solid #1a1a1f;
-          border-radius: 16px;
-          padding: 24px;
-          transition: all 0.2s;
+          background: #ffffff; border: 1px solid #e2e8f0;
+          border-radius: 16px; padding: 22px 24px; transition: all 0.25s;
         }
-        .stat-card:hover {
-          border-color: #27272a;
+        .stat-card:hover { border-color: #cbd5e1; transform: translateY(-2px); }
+        .stat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .stat-label { font-size: 13px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-icon-wrap {
+          width: 36px; height: 36px; border-radius: 10px;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 14px; font-weight: 800;
         }
-
-        .stat-card-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 12px;
-        }
-
-        .stat-card-title {
-          font-size: 13px;
-          font-weight: 600;
-          color: #a1a1aa;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
+        .revenue-icon { background: rgba(34,197,94,0.1); color: #16a34a; }
+        .orders-icon { background: rgba(234,179,8,0.1); color: #d97706; }
+        .products-icon { background: rgba(139,92,246,0.1); color: #7c3aed; }
+        .users-icon { background: rgba(59,130,246,0.1); color: #2563eb; }
+        .stat-value { font-size: 28px; font-weight: 800; color: #0f172a; margin-bottom: 6px; letter-spacing: -0.5px; }
+        .stat-footer { font-size: 12px; color: #64748b; }
+        .pending-badge {
+          background: rgba(234,179,8,0.1); color: #d97706; padding: 2px 8px;
+          border-radius: 6px; font-size: 11px; font-weight: 600;
         }
 
-        .stat-card-icon {
-          font-size: 20px;
-        }
+        /* Dashboard Grid */
+        .dashboard-grid { display: grid; grid-template-columns: 5fr 3fr; gap: 16px; }
+        @media (max-width: 960px) { .dashboard-grid { grid-template-columns: 1fr; } }
 
-        .stat-card-value {
-          font-size: 28px;
-          font-weight: 800;
-          color: #fff;
-          margin-bottom: 6px;
+        .card {
+          background: #ffffff; border: 1px solid #e2e8f0;
+          border-radius: 16px; padding: 24px;
         }
+        .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .card-heading { font-size: 16px; font-weight: 700; color: #0f172a; margin: 0; }
+        .card-link { font-size: 12px; font-weight: 600; color: #2563eb; text-decoration: none; }
+        .card-link:hover { text-decoration: underline; }
 
-        .stat-card-desc {
-          font-size: 11px;
-          color: #52525b;
-        }
+        /* Empty box */
+        .empty-box { text-align: center; padding: 40px 20px; color: #64748b; }
+        .empty-icon { font-size: 32px; display: block; margin-bottom: 10px; }
+        .empty-box p { font-size: 13px; margin: 0; }
 
-        .dashboard-details {
-          display: grid;
-          grid-template-cols: 2fr 1fr;
-          gap: 20px;
+        /* Orders List */
+        .orders-list { display: flex; flex-direction: column; }
+        .order-row {
+          display: flex; justify-content: space-between; align-items: center;
+          padding: 14px 0; border-bottom: 1px solid #e2e8f0; gap: 12px;
         }
-
-        @media (max-width: 960px) {
-          .dashboard-details {
-            grid-template-cols: 1fr;
-          }
-        }
-
-        .details-card {
-          background-color: #09090b;
-          border: 1px solid #1a1a1f;
-          border-radius: 16px;
-          padding: 24px;
-        }
-
-        .card-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 20px;
-        }
-
-        .card-title {
-          font-size: 18px;
-          font-weight: 700;
-          color: #fff;
-          margin: 0;
-        }
-
-        .card-header-link {
-          font-size: 12px;
-          font-weight: 600;
-          color: #3b82f6;
-          text-decoration: none;
-        }
-        .card-header-link:hover {
-          text-decoration: underline;
-        }
-
-        .table-responsive {
-          overflow-x: auto;
-        }
-
-        .admin-table {
-          width: 100%;
-          border-collapse: collapse;
-          text-align: left;
-          font-size: 13px;
-        }
-        .admin-table th {
-          color: #a1a1aa;
-          font-weight: 600;
-          padding: 12px 16px;
-          border-bottom: 1px solid #1a1a1f;
-          text-transform: uppercase;
-          font-size: 11px;
-          letter-spacing: 0.5px;
-        }
-        .admin-table td {
-          padding: 16px;
-          border-bottom: 1px solid #1a1a1f;
-          color: #e4e4e7;
-        }
-        .admin-table tr:last-child td {
-          border-bottom: none;
-        }
-        .admin-table tr:hover td {
-          background-color: #18181b/10;
-        }
-
-        .font-bold {
-          font-weight: 700;
-        }
-        .text-blue {
-          color: #3b82f6;
-        }
-        .text-center {
-          text-align: center;
-        }
-        .text-muted {
-          color: #52525b;
-        }
-        .text-right {
-          text-align: right;
-        }
-        .font-mono {
-          font-family: monospace;
-          font-size: 14px;
-          color: #e4e4e7;
-        }
+        .order-row:last-child { border-bottom: none; }
+        .order-left { display: flex; align-items: center; gap: 14px; }
+        .order-id { font-weight: 700; color: #2563eb; font-size: 14px; min-width: 36px; }
+        .order-meta { display: flex; align-items: center; gap: 6px; }
+        .order-items-count { font-size: 12px; color: #64748b; }
+        .order-dot { color: #cbd5e1; font-size: 10px; }
+        .order-date { font-size: 12px; color: #64748b; }
+        .order-right { display: flex; align-items: center; gap: 12px; }
+        .order-amount { font-family: 'SF Mono', monospace; font-size: 14px; font-weight: 600; color: #0f172a; }
 
         .badge {
-          display: inline-flex;
-          align-items: center;
-          padding: 4px 10px;
-          border-radius: 9999px;
-          font-size: 11px;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
+          display: inline-flex; align-items: center; padding: 3px 9px;
+          border-radius: 6px; font-size: 10px; font-weight: 700;
+          text-transform: uppercase; letter-spacing: 0.5px;
         }
-        .badge-green {
-          background-color: rgba(34, 197, 94, 0.15);
-          color: #4ade80;
-        }
-        .badge-blue {
-          background-color: rgba(59, 130, 246, 0.15);
-          color: #60a5fa;
-        }
-        .badge-yellow {
-          background-color: rgba(234, 179, 8, 0.15);
-          color: #facc15;
-        }
-        .badge-red {
-          background-color: rgba(239, 68, 68, 0.15);
-          color: #f87171;
-        }
-        .badge-gray {
-          background-color: rgba(161, 161, 170, 0.15);
-          color: #d4d4d8;
-        }
+        .badge-green { background: #f0fdf4; color: #16a34a; }
+        .badge-blue { background: #eff6ff; color: #2563eb; }
+        .badge-yellow { background: #fffbeb; color: #d97706; }
+        .badge-red { background: #fef2f2; color: #dc2626; }
+        .badge-gray { background: #f1f5f9; color: #475569; }
 
-        .btn-table-action {
-          display: inline-flex;
-          padding: 6px 12px;
-          border-radius: 8px;
-          background: #18181b;
-          border: 1px solid #27272a;
-          color: #e4e4e7;
-          text-decoration: none;
-          font-size: 12px;
-          font-weight: 500;
-          transition: all 0.2s;
+        /* Quick Actions */
+        .quick-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+        .action-item {
+          display: flex; align-items: center; gap: 14px; padding: 14px 16px;
+          border: 1px solid #e2e8f0; border-radius: 12px;
+          text-decoration: none; transition: all 0.2s; cursor: pointer;
         }
-        .btn-table-action:hover {
-          border-color: #3b82f6;
-          color: #3b82f6;
+        .action-item:hover { border-color: #cbd5e1; background: rgba(15,23,42,0.02); transform: translateX(3px); }
+        .action-icon-box {
+          width: 40px; height: 40px; border-radius: 10px;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 18px; flex-shrink: 0;
         }
-
-        .quick-links {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          margin-top: 16px;
-        }
-
-        .quick-link-item {
-          display: flex;
-          align-items: flex-start;
-          gap: 14px;
-          padding: 16px;
-          background-color: #09090b;
-          border: 1px solid #1a1a1f;
-          border-radius: 12px;
-          text-decoration: none;
-          transition: all 0.2s;
-        }
-        .quick-link-item:hover {
-          border-color: #27272a;
-          background-color: #18181b/20;
-          transform: translateX(2px);
-        }
-
-        .quick-link-icon {
-          font-size: 24px;
-          padding: 8px;
-          background-color: #18181b;
-          border-radius: 10px;
-        }
-
-        .quick-link-title {
-          font-size: 14px;
-          font-weight: 600;
-          color: #fff;
-          margin: 0 0 4px;
-        }
-
-        .quick-link-desc {
-          font-size: 11px;
-          color: #71717a;
-          margin: 0;
-          line-height: 1.4;
-        }
+        .action-icon-box.purple { background: rgba(139,92,246,0.1); color: #7c3aed; }
+        .action-icon-box.teal { background: rgba(20,184,166,0.1); color: #0d9488; }
+        .action-icon-box.amber { background: rgba(245,158,11,0.1); color: #d97706; }
+        .action-icon-box.blue { background: rgba(59,130,246,0.1); color: #2563eb; }
+        .action-title { font-size: 14px; font-weight: 600; color: #0f172a; margin: 0 0 2px; }
+        .action-desc { font-size: 11px; color: #64748b; margin: 0; }
+        .action-arrow { margin-left: auto; color: #94a3b8; font-size: 16px; transition: color 0.2s; }
+        .action-item:hover .action-arrow { color: #2563eb; }
       `}</style>
     </div>
   );

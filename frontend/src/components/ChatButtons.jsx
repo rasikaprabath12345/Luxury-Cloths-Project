@@ -1,7 +1,15 @@
+"use client";
+
+import { usePathname } from 'next/navigation';
 import { FaWhatsapp, FaFacebookMessenger } from 'react-icons/fa';
 import './ChatButtons.css'; // CSS ගොනුව import කරන්න
 
 const ChatButtons = () => {
+  const pathname = usePathname();
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
+
   return (
     <div className="chat-container">
       {/* WhatsApp Link */}

@@ -230,7 +230,7 @@ namespace backend.Controllers
         {
             var adminId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
             var adminUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == adminId);
-            if (adminUser == null || adminUser.Role != "Admin")
+            if (adminUser == null || !string.Equals(adminUser.Role, "Admin", System.StringComparison.OrdinalIgnoreCase))
             {
                 return Unauthorized("Only admins can access this resource.");
             }
@@ -258,7 +258,7 @@ namespace backend.Controllers
         {
             var adminId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
             var adminUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == adminId);
-            if (adminUser == null || adminUser.Role != "Admin")
+            if (adminUser == null || !string.Equals(adminUser.Role, "Admin", System.StringComparison.OrdinalIgnoreCase))
             {
                 return Unauthorized("Only admins can perform this action.");
             }

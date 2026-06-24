@@ -59,6 +59,27 @@ namespace backend.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateProduct(Product product)
         {
+            if (string.IsNullOrEmpty(product.Slug))
+            {
+                product.Slug = product.Name.ToLower().Replace(" ", "-").Replace("/", "-");
+            }
+
+            if (!string.IsNullOrEmpty(product.ImageUrl))
+            {
+                product.Images = new List<ProductImage>
+                {
+                    new ProductImage { ImageUrl = product.ImageUrl, IsMainImage = true }
+                };
+            }
+
+            if (product.Variants == null || product.Variants.Count == 0)
+            {
+                product.Variants = new List<ProductVariant>
+                {
+                    new ProductVariant { Size = "Free Size", Color = "Default", StockQuantity = 100 }
+                };
+            }
+
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
@@ -84,7 +105,40 @@ namespace backend.Controllers
                 return BadRequest("ID එක ගැලපෙන්නේ නැත.");
             }
 
-            _context.Entry(product).State = EntityState.Modified;
+            var existingProduct = await _context.Products
+                .Include(p => p.Images)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (existingProduct == null)
+            {
+                return NotFound("සමාවන්න, එවැනි භාණ්ඩයක් සොයාගත නොහැක.");
+            }
+
+            existingProduct.Name = product.Name;
+            existingProduct.Price = product.Price;
+            existingProduct.Description = product.Description;
+            existingProduct.CategoryId = product.CategoryId;
+
+            if (!string.IsNullOrEmpty(product.Slug))
+            {
+                existingProduct.Slug = product.Slug;
+            }
+            else
+            {
+                existingProduct.Slug = product.Name.ToLower().Replace(" ", "-").Replace("/", "-");
+            }
+
+            if (!string.IsNullOrEmpty(product.ImageUrl))
+            {
+                if (existingProduct.Images.Any())
+                {
+                    existingProduct.Images[0].ImageUrl = product.ImageUrl;
+                }
+                else
+                {
+                    existingProduct.Images.Add(new ProductImage { ImageUrl = product.ImageUrl, IsMainImage = true });
+                }
+            }
 
             try
             {
@@ -102,7 +156,7 @@ namespace backend.Controllers
                 }
             }
 
-            return Ok(new { message = "Product එක සාර්ථකව යාවත්කාලීන කලා!", product });
+            return Ok(new { message = "Product එක සාර්ථකව යාවත්කාලීන කලා!", product = existingProduct });
         }
 
         // 7. DELETE PRODUCT (ඇඳුමක් අයින් කර දැමීම)

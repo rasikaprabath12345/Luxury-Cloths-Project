@@ -309,7 +309,7 @@ function UserMenu({
               { href: "/profile", icon: "👤", label: "My Profile" },
               { href: "/orders", icon: "📦", label: "My Orders" },
               ...(user.role === "admin"
-                ? [{ href: "/admin/products", icon: "⚙️", label: "Dashboard" }]
+                ? [{ href: "/admin/dashboard", icon: "⚙️", label: "Dashboard" }]
                 : []),
             ].map(item => (
               <Link key={item.href} href={item.href} onClick={() => setOpen(false)}
@@ -376,6 +376,10 @@ export default function Navbar() {
     window.addEventListener("scroll", h, { passive: true });
     return () => window.removeEventListener("scroll", h);
   }, []);
+
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
 
   return (
     <>

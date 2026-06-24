@@ -19,6 +19,15 @@ namespace backend.Models
         public List<ProductImage> Images { get; set; } = new();
         public List<ProductVariant> Variants { get; set; } = new();
         
+        private string? _imageUrl;
+
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public string? ImageUrl
+        {
+            get => _imageUrl ?? (Images != null && Images.Count > 0 ? Images[0].ImageUrl : null);
+            set => _imageUrl = value;
+        }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

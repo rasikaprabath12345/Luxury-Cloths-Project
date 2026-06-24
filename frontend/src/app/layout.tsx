@@ -3,11 +3,11 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 // Components & Providers
-import { CartProvider } from "../context/CartContext"; 
+import { CartProvider } from "../context/CartContext";
 import { AuthProvider } from "../context/AuthContext";
 import Navbar from "../components/Navbar";
-import Footer from "../components/Footer"; 
-import ChatButtons from '@/components/ChatButtons'; 
+import Footer from "../components/Footer";
+import ChatButtons from '@/components/ChatButtons';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,10 +38,10 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-white">
         <AuthProvider>
           <CartProvider>
-            
+
             {/* Navbar */}
             <Navbar />
-            
+
             {/* Main Content */}
             <main className="flex-grow">
               {children}
@@ -49,10 +49,10 @@ export default function RootLayout({
 
             {/* Footer */}
             <Footer />
-            
+
             {/* WhatsApp & Messenger Buttons */}
             <ChatButtons />
-            
+
           </CartProvider>
         </AuthProvider>
       </body>
