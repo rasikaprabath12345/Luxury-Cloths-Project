@@ -1,94 +1,122 @@
 "use client";
-
 import { useState } from "react";
-import axios from "axios";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import Link from "next/link";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
   const router = useRouter();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault(); // පිටුව Refresh වීම වැළැක්වීමට
-    setLoading(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
 
     try {
-      // 1. බැකෙන්ඩ් එකේ Login එන්ඩ්පොයින්ට් එකට දත්ත යැවීම
-      const response = await axios.post("http://localhost:5226/api/Auth/login", {
-        email: email,
-        password: password,
-      });
-
-      if (response.status === 200) {
-        // 2. බැකෙන්ඩ් එකෙන් එවපු Token සහ User ID එක ලබා ගැනීම
-        // (💡 බැකෙන්ඩ් එකෙන් එවන්නේ 'id' නම් 'userId: id' ලෙස වෙනස් කරන්න)
-        const { token, userId } = response.data;
-
-        // 3. දත්ත බ්‍රවුසර් එකේ (LocalStorage) ආරක්ෂිතව සේව් කිරීම
-        localStorage.setItem("luxury_token", token);
-        localStorage.setItem("luxury_userId", userId.toString());
-
-        alert("🎉 සාර්ථකව පද්ධතියට ඇතුළු වුණා (Login Success)!");
-
-        // 4. කෙලින්ම අපි කලින් හදපු Cart පේජ් එකට යූසර්ව රීඩිරෙක්ට් කිරීම
-        router.push("/storefront/cart");
-      }
-    } catch (error: any) {
-      console.error("Login Failed:", error);
-      alert("⚠️ ඇතුළත් කළ ඊමේල් ලිපිනය හෝ මුරපදය වැරදියි. කරුණාකර නැවත උත්සාහ කරන්න.");
+      await login(email, password);
+      router.push("/storefront");
+    } catch (err: any) {
+      setError(err.message || "Login failed");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="bg-black text-white min-h-screen flex items-center justify-center px-4">
-      <div className="max-w-md w-full bg-zinc-950 border border-zinc-800 p-8 rounded-2xl shadow-xl">
-        
-        {/* Brand Logo / Header */}
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-extrabold tracking-tight text-amber-500">LUXURY CLOTHS</h2>
-          <p className="text-gray-400 text-sm mt-2">ඔබේ ගිණුමට ලොග් වන්න</p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Sign in to your account
+          </h2>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-2">ඊමේල් ලිපිනය (Email)</label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 bg-black border border-zinc-800 rounded-xl text-white focus:outline-none focus:border-amber-500 transition text-sm"
-              placeholder="example@gmail.com"
-            />
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {error && (
+            <div className="rounded-md bg-red-50 p-4">
+              <div className="text-sm font-medium text-red-800">{error}</div>
+            </div>
+          )}
+
+          <div className="rounded-md shadow-sm -space-y-px">
+            <div>
+              <label htmlFor="email" className="sr-only">
+                Email address
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="sr-only">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <input
+                id="remember-me"
+                name="remember-me"
+                type="checkbox"
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+                Remember me
+              </label>
+            </div>
+
+            <div className="text-sm">
+              <Link href="/auth/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
+                Forgot your password?
+              </Link>
+            </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-2">මුරපදය (Password)</label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 bg-black border border-zinc-800 rounded-xl text-white focus:outline-none focus:border-amber-500 transition text-sm"
-              placeholder="••••••••"
-            />
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+            >
+              {isLoading ? "Signing in..." : "Sign in"}
+            </button>
           </div>
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-amber-500 hover:bg-amber-600 disabled:bg-zinc-800 disabled:text-gray-500 text-black font-bold py-3.5 rounded-xl transition text-sm tracking-wide uppercase mt-4"
-          >
-            {loading ? "පරීක්ෂා කරමින් පවතී..." : "ඇතුළු වන්න (Sign In)"}
-          </button>
+          <div className="text-center">
+            <span className="text-sm text-gray-600">
+              Don't have an account?{" "}
+              <Link href="/auth/register" className="font-medium text-blue-600 hover:text-blue-500">
+                Sign up
+              </Link>
+            </span>
+          </div>
         </form>
-
       </div>
     </div>
   );

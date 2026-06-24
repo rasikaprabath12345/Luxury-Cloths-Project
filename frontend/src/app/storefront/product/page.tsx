@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import axios from "axios";
 // 💡 Relative path එකක් පාවිච්චි කරලා එරර් එක සම්පූර්ණයෙන්ම විසඳා ඇත
 import { useCart, Product } from "../../../context/CartContext"; 
@@ -9,6 +10,7 @@ export default function ProductPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false); 
+  const router = useRouter();
 
   const { cartItems, addToCart, updateQuantity, removeFromCart } = useCart();
 
@@ -27,6 +29,14 @@ export default function ProductPage() {
   }, []);
 
   const totalPrice = cartItems.reduce((acc, item: any) => acc + item.price * (item.quantity || 1), 0);
+
+  const handleCheckout = () => {
+    if (cartItems.length === 0) {
+      alert("Your cart is empty!");
+      return;
+    }
+    router.push("/orders/checkout");
+  };
 
   return (
     <div className="bg-black text-white min-h-screen relative overflow-x-hidden">
@@ -126,7 +136,11 @@ export default function ProductPage() {
                 <span className="text-zinc-400">මුළු එකතුව (Total):</span>
                 <span className="text-xl text-white">${totalPrice.toFixed(2)}</span>
               </div>
-              <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl text-sm transition">
+              <button 
+                onClick={handleCheckout}
+                disabled={cartItems.length === 0}
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl text-sm transition"
+              >
                 Checkout කරන්න 💳
               </button>
             </div>
