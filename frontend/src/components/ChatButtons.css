@@ -1,0 +1,62 @@
+.chat-container {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 1000;
+}
+
+/* BASE BUTTON */
+.chat-btn {
+  width: 52px;
+  height: 52px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* ✅ FULL ROUND */
+  border-radius: 50%;
+
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+
+  transition: all 0.2s ease;
+  cursor: pointer;
+  text-decoration: none;
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.chat-btn:hover {
+  transform: translateY(-7px) scale(1.07);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.45);
+}
+
+/* 🔥 ULTRA VIBRANT + HIGH CONTRAST */
+
+/* WhatsApp - neon green */
+.whatsapp {
+  background: linear-gradient(135deg, #00ff4c, #009b3a);
+}
+
+/* Messenger - electric blue */
+.messenger {
+  background: linear-gradient(135deg, #00e5ff, #003bff);
+}
+
+/* Instagram - neon mix */
+.instagram {
+  background: linear-gradient(135deg, #ff00aa, #ffcc00);
+}
+
+/* ICONS */
+.chat-btn svg {
+  width: 26px;
+  height: 26px;
+}

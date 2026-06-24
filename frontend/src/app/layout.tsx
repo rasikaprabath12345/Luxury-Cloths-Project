@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-// Context Providers
+
+// Components & Providers
 import { CartProvider } from "../context/CartContext"; 
 import { AuthProvider } from "../context/AuthContext";
-// Navbar component
 import Navbar from "../components/Navbar";
-// Footer component
 import Footer from "../components/Footer"; 
+import ChatButtons from '@/components/ChatButtons'; 
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,16 +38,21 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-white">
         <AuthProvider>
           <CartProvider>
-            {/* Navbar shared across all pages */}
+            
+            {/* Navbar */}
             <Navbar />
             
-            {/* Each page renders here with top padding for fixed navbar */}
+            {/* Main Content */}
             <main className="flex-grow">
               {children}
             </main>
 
-            {/* Footer shared across all pages */}
+            {/* Footer */}
             <Footer />
+            
+            {/* WhatsApp & Messenger Buttons */}
+            <ChatButtons />
+            
           </CartProvider>
         </AuthProvider>
       </body>
