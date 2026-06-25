@@ -1,79 +1,43 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { categoriesAPI } from "@/lib/api";
 
-const COLLECTIONS = [
-  {
-    id: 1,
-    name: "New Arrivals",
-    slug: "new-arrivals",
-    image: "https://images.unsplash.com/photo-1595777707802-52b966efb60f?w=500",
-    count: 48,
-    description: "Fresh styles just in stock"
-  },
-  {
-    id: 2,
-    name: "Best Sellers",
-    slug: "best-sellers",
-    image: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=500",
-    count: 32,
-    description: "Customer favorites"
-  },
-  {
-    id: 3,
-    name: "Dresses",
-    slug: "dresses",
-    image: "https://images.unsplash.com/photo-1595777707802-52b966efb60f?w=500",
-    count: 64,
-    description: "Elegant dresses for every occasion"
-  },
-  {
-    id: 4,
-    name: "Tops & Shirts",
-    slug: "tops",
-    image: "https://images.unsplash.com/photo-1548346328-9e8e8b68ae6b?w=500",
-    count: 56,
-    description: "Stylish tops and shirts"
-  },
-  {
-    id: 5,
-    name: "Bottoms",
-    slug: "bottoms",
-    image: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=500",
-    count: 44,
-    description: "Perfect pants and skirts"
-  },
-  {
-    id: 6,
-    name: "Outerwear",
-    slug: "outerwear",
-    image: "https://images.unsplash.com/photo-1539533057440-7814bae87776?w=500",
-    count: 28,
-    description: "Jackets and coats"
-  },
-  {
-    id: 7,
-    name: "Accessories",
-    slug: "accessories",
-    image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=500",
-    count: 92,
-    description: "Complete your look"
-  },
-  {
-    id: 8,
-    name: "Sale",
-    slug: "sale",
-    image: "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=500",
-    count: 156,
-    description: "Up to 50% off",
-    badge: "HOT"
-  }
-];
+const CATEGORY_IMAGES: Record<string, string> = {
+  women: "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=800",
+  men: "https://images.unsplash.com/photo-1488161628813-04466f872be2?q=80&w=800",
+  children: "https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?q=80&w=800",
+  accessories: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800",
+  shoes: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=800",
+  watches: "https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=800",
+  shirts: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800",
+  pants: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=800"
+};
+
+const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=800";
 
 export default function CollectionsPage() {
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await categoriesAPI.getAllCategories();
+        setCategories(response.data);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCategories();
+  }, []);
+
   return (
-    <main className="min-h-screen bg-white pt-20 pb-16">
+    <main className="min-h-screen bg-white pt-24 pb-16">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         {/* Header */}
         <div className="mb-12">
@@ -89,12 +53,15 @@ export default function CollectionsPage() {
         <div className="mb-16 rounded-2xl overflow-hidden bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-8 sm:p-12 items-center">
             <div>
+              <span className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2 block">
+                Trending Now
+              </span>
               <h2 className="text-3xl font-black text-gray-900 mb-3">Summer 2026</h2>
               <p className="text-gray-600 text-lg mb-6">
                 Discover our latest summer collection featuring vibrant colors and breathable fabrics perfect for warm weather.
               </p>
               <Link
-                href="/storefront/product"
+                href="/storefront/shop?filter=new"
                 className="inline-block px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
               >
                 Shop Summer Collection
@@ -111,36 +78,46 @@ export default function CollectionsPage() {
           </div>
         </div>
 
-        {/* Collections Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {COLLECTIONS.map((collection) => (
-            <Link
-              key={collection.id}
-              href={`/storefront/product?collection=${collection.slug}`}
-              className="group"
-            >
-              <div className="relative h-64 sm:h-72 rounded-lg overflow-hidden mb-4 cursor-pointer">
-                <Image
-                  src={collection.image}
-                  alt={collection.name}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                {collection.badge && (
-                  <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold">
-                    {collection.badge}
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                {collection.name}
-              </h3>
-              <p className="text-sm text-gray-600 mb-2">{collection.description}</p>
-              <p className="text-sm font-semibold text-gray-500">{collection.count} items</p>
-            </Link>
-          ))}
-        </div>
+        {/* Loading State */}
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600 mb-3"></div>
+            <p className="text-sm">Loading collections...</p>
+          </div>
+        ) : (
+          <div>
+            {/* Collections Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {categories.map((cat) => {
+                const slug = cat.slug || cat.name.toLowerCase();
+                const image = CATEGORY_IMAGES[slug] || DEFAULT_IMAGE;
+                
+                return (
+                  <Link
+                    key={cat.id}
+                    href={`/storefront/shop?category=${slug}`}
+                    className="group"
+                  >
+                    <div className="relative h-64 sm:h-72 rounded-lg overflow-hidden mb-4 cursor-pointer shadow-sm group-hover:shadow-md transition-shadow">
+                      <Image
+                        src={image}
+                        alt={cat.name}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                      {cat.name} Collection
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-2">Premium {cat.name.toLowerCase()} wear items</p>
+                    <p className="text-sm font-semibold text-blue-600">View Collection →</p>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* CTA Section */}
         <div className="mt-16 bg-gray-50 rounded-2xl p-8 sm:p-12 text-center border border-gray-200">
@@ -151,7 +128,7 @@ export default function CollectionsPage() {
             Browse all products or use our advanced search and filters to find exactly what you want.
           </p>
           <Link
-            href="/storefront/product"
+            href="/storefront/shop"
             className="inline-block px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
           >
             Browse All Products

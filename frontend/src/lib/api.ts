@@ -103,6 +103,10 @@ export const productsAPI = {
     return apiClient.get(`/Products/${id}`);
   },
 
+  getProductBySlug: async (slug: string) => {
+    return apiClient.get(`/Products/slug/${slug}`);
+  },
+
   getProductsByCategory: async (categoryId: number) => {
     return apiClient.get(`/Products/category/${categoryId}`);
   },

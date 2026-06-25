@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import axios from "axios";
+import { ordersAPI } from "@/lib/api";
 
 interface OrderItem {
   id: number;
@@ -43,12 +43,7 @@ export default function OrderDetailPage() {
     if (user && orderId) {
       const fetchOrder = async () => {
         try {
-          const response = await axios.get(
-            `http://localhost:5226/api/Orders/${orderId}`,
-            {
-              withCredentials: true,
-            }
-          );
+          const response = await ordersAPI.getOrderById(parseInt(orderId));
           setOrder(response.data);
         } catch (error: any) {
           console.error("Failed to fetch order:", error);

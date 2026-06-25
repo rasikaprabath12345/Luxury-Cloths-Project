@@ -2,6 +2,7 @@ using backend.Data;
 using backend.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace backend.Controllers
 {
@@ -16,8 +17,9 @@ namespace backend.Controllers
             _context = context;
         }
 
-        // 1. GET: api/Orders (ඇණවුම් ඉතිහාසය ලබා ගැනීම)
+        // 1. GET: api/Orders (ඇණවුම් ඉතිහාසය ලබා ගැනීම - Admin Only)
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetOrderHistory()
         {
             try
@@ -53,25 +55,30 @@ namespace backend.Controllers
             }
         }
 
-        // GET: api/Orders/5
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetOrder(int id)
+        // 1.5 GET: api/Orders/my-orders (පරිශීලකයාගේ ඇණවුම් ලබා ගැනීම)
+        [HttpGet("my-orders")]
+        [Authorize]
+        public async Task<IActionResult> GetMyOrders()
         {
             try
             {
-                var order = await _context.Orders
+                var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+                if (userId == 0)
+                {
+                    return Unauthorized("පරිශීලකයා හඳුනාගත නොහැක.");
+                }
+
+                var orders = await _context.Orders
                     .Include(o => o.OrderItems)
                         .ThenInclude(oi => oi.ProductVariant)
                             .ThenInclude(pv => pv!.Product)
+                    .Where(o => o.UserId == userId)
                     .Select(o => new
                     {
                         id = o.Id,
                         orderDate = o.CreatedAt,
                         totalAmount = o.TotalAmount,
                         status = o.Status,
-                        paymentMethod = o.PaymentMethod,
-                        paymentSlipUrl = o.PaymentSlipUrl,
-                        userId = o.UserId,
                         items = o.OrderItems.Select(item => new
                         {
                             id = item.Id,
@@ -82,14 +89,65 @@ namespace backend.Controllers
                             price = item.UnitPrice
                         }).ToList()
                     })
-                    .FirstOrDefaultAsync(o => o.id == id);
+                    .OrderByDescending(o => o.orderDate)
+                    .ToListAsync();
+
+                return Ok(orders);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        // GET: api/Orders/5
+        [HttpGet("{id}")]
+        [Authorize]
+        public async Task<IActionResult> GetOrder(int id)
+        {
+            try
+            {
+                var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+                var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
+                var order = await _context.Orders
+                    .Include(o => o.OrderItems)
+                        .ThenInclude(oi => oi.ProductVariant)
+                            .ThenInclude(pv => pv!.Product)
+                    .FirstOrDefaultAsync(o => o.Id == id);
 
                 if (order == null)
                 {
                     return NotFound($"Order ID {id} සොයාගත නොහැක.");
                 }
 
-                return Ok(order);
+                // If not Admin and not the owner of the order, deny access
+                if (!string.Equals(userRole, "Admin", StringComparison.OrdinalIgnoreCase) && order.UserId != userId)
+                {
+                    return Unauthorized("ඔබට මෙම ඇණවුම බැලීමට අවසර නොමැත.");
+                }
+
+                var orderDto = new
+                {
+                    id = order.Id,
+                    orderDate = order.CreatedAt,
+                    totalAmount = order.TotalAmount,
+                    status = order.Status,
+                    paymentMethod = order.PaymentMethod,
+                    paymentSlipUrl = order.PaymentSlipUrl,
+                    userId = order.UserId,
+                    items = order.OrderItems.Select(item => new
+                    {
+                        id = item.Id,
+                        productName = item.ProductVariant != null && item.ProductVariant.Product != null 
+                            ? item.ProductVariant.Product.Name 
+                            : "Unknown Product",
+                        quantity = item.Quantity,
+                        price = item.UnitPrice
+                    }).ToList()
+                };
+
+                return Ok(orderDto);
             }
             catch (Exception ex)
             {
@@ -99,11 +157,18 @@ namespace backend.Controllers
 
         // 2. POST: api/Orders (අලුත් ඇණවුමක් සිදු කිරීම)
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> PlaceOrder([FromBody] CreateOrderDto orderDto)
         {
             if (orderDto == null || orderDto.Items.Count == 0)
             {
                 return BadRequest("ඇණවුමේ භාණ්ඩ ඇතුළත් වී නොමැත.");
+            }
+
+            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+            if (userId == 0)
+            {
+                return Unauthorized("පරිශීලකයා හඳුනාගත නොහැක.");
             }
 
             // Database Transaction එකක් පාවිච්චි කරන්නේ මොකක් හරි එරර් එකක් වුනොත් බාගෙට ඩේටා වැටෙන එක නවත්තන්න
@@ -114,7 +179,7 @@ namespace backend.Controllers
                 // අලුත් Order Object එකක් සෑදීම
                 var newOrder = new Order
                 {
-                    UserId = orderDto.UserId, // දැනට ෆ්‍රන්ට්එන්ඩ් එකෙන් එවන User ID එක (පසුව Auth වලින් ගන්නවා)
+                    UserId = userId, // Extract from JWT claims for security
                     PaymentMethod = orderDto.PaymentMethod,
                     Status = "Pending",
                     CreatedAt = DateTime.UtcNow,

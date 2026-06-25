@@ -47,6 +47,24 @@ namespace backend.Controllers
             return Ok(product);
         }
 
+        // 2.5 GET SINGLE PRODUCT BY SLUG (තනි ඇඳුමක විස්තර Slug එකෙන් ලබා ගැනීම)
+        [HttpGet("slug/{slug}")]
+        public async Task<IActionResult> GetProductBySlug(string slug)
+        {
+            var product = await _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.Images)
+                .Include(p => p.Variants)
+                .FirstOrDefaultAsync(p => p.Slug == slug.ToLower());
+
+            if (product == null)
+            {
+                return NotFound("සමාවන්න, එවැනි භාණ්ඩයක් සොයාගත නොහැක.");
+            }
+
+            return Ok(product);
+        }
+
         // 3. GET ALL CATEGORIES (සියලුම කැටගරි ලබා ගැනීම)
         [HttpGet("categories")]
         public async Task<IActionResult> GetCategories()

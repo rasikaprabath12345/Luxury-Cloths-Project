@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Playfair_Display, Montserrat } from "next/font/google";
 import "./globals.css";
 
-// Components & Providers
 import { CartProvider } from "../context/CartContext";
+import { WishlistProvider } from "../context/WishlistContext";
 import { AuthProvider } from "../context/AuthContext";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -49,23 +49,25 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-white">
         <AuthProvider>
-          <CartProvider>
+          <WishlistProvider>
+            <CartProvider>
 
-            {/* Navbar */}
-            <Navbar />
+              {/* Navbar */}
+              <Navbar />
 
-            {/* Main Content */}
-            <main className="flex-grow">
-              {children}
-            </main>
+              {/* Main Content */}
+              <main className="flex-grow">
+                {children}
+              </main>
 
-            {/* Footer */}
-            <Footer />
+              {/* Footer */}
+              <Footer />
 
-            {/* WhatsApp & Messenger Buttons */}
-            <ChatButtons />
+              {/* WhatsApp & Messenger Buttons */}
+              <ChatButtons />
 
-          </CartProvider>
+            </CartProvider>
+          </WishlistProvider>
         </AuthProvider>
       </body>
     </html>

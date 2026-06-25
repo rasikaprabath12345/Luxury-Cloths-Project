@@ -4,17 +4,20 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import CartDrawer from "@/components/CartDrawer";
+import WishlistDrawer from "@/components/WishlistDrawer";
 import { useAuth } from "@/context/AuthContext";
+import { useWishlist } from "@/context/WishlistContext";
+import { useCart } from "@/context/CartContext";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 const NAV_TABS = [
-  { label: "Women", href: "/storefront/women" },
-  { label: "Men", href: "/storefront/men" },
-  { label: "Kids", href: "/storefront/kids" },
-  { label: "Home & Living", href: "/storefront/home-living" },
-  { label: "Gift Cards", href: "/storefront/gift-cards" },
-  { label: "Offers", href: "/storefront/offers" },
-  { label: "New Arrival", href: "/storefront/new-arrivals" },
+  { label: "Women", href: "/storefront/shop?category=women" },
+  { label: "Men", href: "/storefront/shop?category=men" },
+  { label: "Kids", href: "/storefront/shop?category=children" },
+  { label: "Home & Living", href: "/storefront/shop?category=home-living" },
+  { label: "Gift Cards", href: "/storefront/shop?category=gift-cards" },
+  { label: "Offers", href: "/storefront/shop?filter=offers" },
+  { label: "New Arrival", href: "/storefront/shop?filter=new" },
 ];
 
 // ─── GLASS STYLES ─────────────────────────────────────────────────────────────
@@ -88,6 +91,17 @@ function UserIcon() {
       stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
       <circle cx="12" cy="7" r="4" />
+    </svg>
+  );
+}
+
+// ─── ICON: HOME ───────────────────────────────────────────────────────────────
+function HomeIcon() {
+  return (
+    <svg width={16} height={16} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+      <polyline points="9 22 9 12 15 12 15 22" />
     </svg>
   );
 }
@@ -358,9 +372,12 @@ function UserMenu({
 export default function Navbar() {
   const pathname = usePathname();
   const { user, logout, isLoading } = useAuth();
+  const { wishlistItems } = useWishlist();
+  const { cartItems } = useCart();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [cartCount, setCartCount] = useState(0);
-  const [wishlistCount] = useState(0);
+  const [isWishlistDrawerOpen, setIsWishlistDrawerOpen] = useState(false);
+  const cartCount = cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
+  const wishlistCount = wishlistItems.length;
   const [scrolled, setScrolled] = useState(false);
   const [activeTab, setActiveTab] = useState("/");
 
@@ -444,6 +461,7 @@ export default function Navbar() {
             <IconBtnLabeled
               label="Wishlist"
               badge={wishlistCount}
+              onClick={() => setIsWishlistDrawerOpen(true)}
               icon={<WishlistIcon />}
             />
             <IconBtnLabeled
@@ -483,6 +501,31 @@ export default function Navbar() {
             gap: 2, height: 40,
             overflowX: "auto",
           }}>
+            <Link
+              href="/"
+              onClick={() => setActiveTab("/")}
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "center",
+                padding: "6px 12px", borderRadius: 100,
+                color: activeTab === "/" ? "#fff" : "#3C3C43",
+                background: activeTab === "/" 
+                  ? "linear-gradient(135deg, #007AFF, #5856D6)" 
+                  : "transparent",
+                boxShadow: activeTab === "/" 
+                  ? "0 2px 10px rgba(0,122,255,0.28)" 
+                  : "none",
+                transition: "all 0.18s ease",
+              }}
+              onMouseEnter={e => {
+                if (activeTab !== "/") (e.currentTarget as HTMLElement).style.background = "rgba(0,0,0,0.05)";
+              }}
+              onMouseLeave={e => {
+                if (activeTab !== "/") (e.currentTarget as HTMLElement).style.background = "transparent";
+              }}
+              aria-label="Home"
+            >
+              <HomeIcon />
+            </Link>
             {NAV_TABS.map(tab => {
               const isActive = activeTab === tab.href;
               const isNew = tab.label === "New Arrival";
@@ -539,6 +582,9 @@ export default function Navbar() {
 
       {isDrawerOpen && (
         <CartDrawer onClose={() => setIsDrawerOpen(false)} />
+      )}
+      {isWishlistDrawerOpen && (
+        <WishlistDrawer onClose={() => setIsWishlistDrawerOpen(false)} />
       )}
     </>
   );

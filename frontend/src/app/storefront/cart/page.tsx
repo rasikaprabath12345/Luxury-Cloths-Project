@@ -4,69 +4,37 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-
-interface CartItem {
-  id: number;
-  variantId: number;
-  name: string;
-  price: number;
-  quantity: number;
-  size?: string;
-  color?: string;
-  image?: string;
-}
+import { useCart } from "@/context/CartContext";
 
 const PLACEHOLDER_IMG = "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=600&auto=format&fit=crop";
 
 export default function CartPage() {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const { cartItems, updateQuantity, removeFromCart, clearCart } = useCart();
   const [paymentMethod, setPaymentMethod] = useState<string>("BankTransfer");
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [isOrdering, setIsOrdering] = useState<boolean>(false);
   const [removingId, setRemovingId] = useState<number | null>(null);
   const [coupon, setCoupon] = useState("");
   const [couponApplied, setCouponApplied] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    const savedCart = localStorage.getItem("luxury_cart");
-    if (savedCart) {
-      setCartItems(JSON.parse(savedCart));
-    } else {
-      const dummyItems: CartItem[] = [
-        { id: 1, variantId: 1, name: "Premium Luxury Silk Dress", price: 12500, quantity: 1, size: "M", color: "Black", image: "https://images.unsplash.com/photo-1566479179817-97d2d10a5bbe?q=80&w=600&auto=format&fit=crop" },
-        { id: 2, variantId: 2, name: "Classic Slim Fit Designer Shirt", price: 8500, quantity: 2, size: "L", color: "White", image: "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?q=80&w=600&auto=format&fit=crop" },
-      ];
-      setCartItems(dummyItems);
-      localStorage.setItem("luxury_cart", JSON.stringify(dummyItems));
-    }
-    setLoading(false);
-  }, []);
-
-  const updateQuantity = (variantId: number, newQty: number) => {
-    if (newQty < 1) return;
-    const updated = cartItems.map(item =>
-      item.variantId === variantId ? { ...item, quantity: newQty } : item
-    );
-    setCartItems(updated);
-    localStorage.setItem("luxury_cart", JSON.stringify(updated));
+  const handleUpdateQuantity = (id: number, newQty: number) => {
+    updateQuantity(id, newQty);
   };
 
-  const removeItem = (variantId: number) => {
-    setRemovingId(variantId);
+  const removeItem = (id: number) => {
+    setRemovingId(id);
     setTimeout(() => {
-      const filtered = cartItems.filter(item => item.variantId !== variantId);
-      setCartItems(filtered);
-      localStorage.setItem("luxury_cart", JSON.stringify(filtered));
+      removeFromCart(id);
       setRemovingId(null);
     }, 380);
   };
 
-  const subTotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const subTotal = cartItems.reduce((acc, item) => acc + item.price * (item.quantity || 1), 0);
   const discount = couponApplied ? Math.round(subTotal * 0.1) : 0;
   const shippingFee = cartItems.length > 0 ? 500 : 0;
   const totalAmount = subTotal - discount + shippingFee;
-  const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  const totalItems = cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
 
   const handleApplyCoupon = () => {
     if (coupon.trim().toUpperCase() === "LUXURY10") {
@@ -78,32 +46,40 @@ export default function CartPage() {
 
   const handlePlaceOrder = async () => {
     if (cartItems.length === 0) return;
-    const savedUserId = localStorage.getItem("luxury_userId");
-    if (!savedUserId) {
+    
+    // Check local storage for user token/info, standard auth
+    const savedUserStr = localStorage.getItem("luxury_user");
+    const token = localStorage.getItem("luxury_token");
+    if (!savedUserStr || !token) {
       alert("Please log in to place an order.");
-      router.push("/auth");
+      router.push("/auth/login");
       return;
     }
+
+    const user = JSON.parse(savedUserStr);
     setIsOrdering(true);
     try {
       const orderData = {
-        userId: parseInt(savedUserId),
+        userId: user.id,
         paymentMethod,
         items: cartItems.map(item => ({
-          productVariantId: item.variantId,
-          quantity: item.quantity,
+          productVariantId: item.id, // In this simple db variantId is matched to item id
+          quantity: item.quantity || 1,
         })),
       };
-      const response = await axios.post("http://localhost:5226/api/Orders", orderData);
-      if (response.status === 200) {
-        alert("🎉 " + response.data.message);
-        setCartItems([]);
-        localStorage.removeItem("luxury_cart");
+      const response = await axios.post("http://localhost:5226/api/Orders", orderData, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (response.status === 200 || response.status === 201) {
+        alert("🎉 " + (response.data.message || "Order placed successfully!"));
+        clearCart();
         router.push("/orders");
       }
     } catch (error: any) {
       console.error("Order failed:", error);
-      alert("Order failed. Please try again.");
+      alert(error.response?.data?.message || "Order failed. Please try again.");
     } finally {
       setIsOrdering(false);
     }
@@ -159,11 +135,11 @@ export default function CartPage() {
 
               <div className="cp-items-list">
                 {cartItems.map((item) => {
-                  const img = item.image || PLACEHOLDER_IMG;
-                  const isRemoving = removingId === item.variantId;
+                  const img = item.imageUrl || item.image || PLACEHOLDER_IMG;
+                  const isRemoving = removingId === item.id;
                   return (
                     <div
-                      key={item.variantId}
+                      key={item.id}
                       className={`cp-item ${isRemoving ? "cp-item-exit" : ""}`}
                     >
                       {/* Image */}
@@ -185,7 +161,7 @@ export default function CartPage() {
                           </div>
                           <button
                             className="cp-remove-btn"
-                            onClick={() => removeItem(item.variantId)}
+                            onClick={() => removeItem(item.id)}
                             aria-label="Remove item"
                           >
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -199,9 +175,9 @@ export default function CartPage() {
                         <div className="cp-item-bottom">
                           {/* Qty Controls */}
                           <div className="cp-qty-wrap">
-                            <button className="cp-qty-btn" onClick={() => updateQuantity(item.variantId, item.quantity - 1)}>−</button>
+                            <button className="cp-qty-btn" onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}>−</button>
                             <span className="cp-qty-num">{item.quantity}</span>
-                            <button className="cp-qty-btn" onClick={() => updateQuantity(item.variantId, item.quantity + 1)}>+</button>
+                            <button className="cp-qty-btn" onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}>+</button>
                           </div>
 
                           {/* Price */}

@@ -12,11 +12,13 @@ export interface Product {
 
 interface CartItem extends Product {
   quantity: number;
+  size?: string;
+  color?: string;
 }
 
 interface CartContextType {
   cartItems: CartItem[];
-  addToCart: (product: Product) => void;
+  addToCart: (product: Product, quantity?: number, size?: string, color?: string) => void;
   updateQuantity: (id: number, quantity: number) => void;
   removeFromCart: (id: number) => void;
   clearCart: () => void;
@@ -47,15 +49,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [cartItems, isLoaded]);
 
-  const addToCart = (product: Product) => {
+  const addToCart = (product: Product, qty: number = 1, size?: string, color?: string) => {
     setCartItems((prev) => {
-      const exist = prev.find((item) => item.id === product.id);
+      const exist = prev.find((item) => item.id === product.id && item.size === size && item.color === color);
       if (exist) {
         return prev.map((item) =>
-          item.id === product.id ? { ...item, quantity: (item.quantity || 1) + 1 } : item
+          item.id === product.id && item.size === size && item.color === color
+            ? { ...item, quantity: (item.quantity || 1) + qty }
+            : item
         );
       }
-      return [...prev, { ...product, quantity: 1 }];
+      return [...prev, { ...product, quantity: qty, size, color }];
     });
   };
 

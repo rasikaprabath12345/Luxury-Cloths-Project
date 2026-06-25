@@ -96,10 +96,25 @@ using (var scope = app.Services.CreateScope())
             }
         }
         context.SaveChanges();
+
+        // Seed default Admin user
+        if (!context.Users.Any(u => u.Email == "admin@luxury.lk"))
+        {
+            var adminUser = new backend.Models.User
+            {
+                FullName = "Luxury Admin",
+                Email = "admin@luxury.lk",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("AdminPassword123"),
+                Role = "Admin",
+                CreatedAt = DateTime.UtcNow
+            };
+            context.Users.Add(adminUser);
+            context.SaveChanges();
+        }
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Error seeding categories: {ex.Message}");
+        Console.WriteLine($"Error seeding database: {ex.Message}");
     }
 }
 

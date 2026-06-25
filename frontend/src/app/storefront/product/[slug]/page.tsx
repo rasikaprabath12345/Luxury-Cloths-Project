@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { productsAPI } from "@/lib/api";
+import { useCart } from "@/context/CartContext";
 
 interface ProductDetail {
   id: string;
@@ -26,6 +28,7 @@ interface ProductDetail {
 export default function ProductDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
+  const { addToCart } = useCart();
 
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -35,44 +38,54 @@ export default function ProductDetailPage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
-    // TODO: Replace with actual API call
-    // const fetchProduct = async () => {
-    //   try {
-    //     const res = await fetch(`/api/products/${slug}`);
-    //     const data = await res.json();
-    //     setProduct(data);
-    //   } catch (error) {
-    //     console.error("Failed to fetch product:", error);
-    //   } finally {
-    //     setLoading(false);
-    //   }
-    // };
-    // fetchProduct();
+    const fetchProduct = async () => {
+      try {
+        const res = await productsAPI.getProductBySlug(slug);
+        const data = res.data;
+        
+        // Map backend product to ProductDetail UI interface
+        const sizesArr = data.sizes ? data.sizes.split(",").map((s: string) => s.trim()) : [];
+        const colorsArr = data.variants && data.variants.length > 0 
+          ? Array.from(new Set(data.variants.map((v: any) => v.color).filter(Boolean))) as string[]
+          : [];
+        const imagesArr = data.images && data.images.length > 0
+          ? data.images.map((img: any) => img.imageUrl)
+          : [data.imageUrl || "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=600"];
+        const totalStock = data.variants && data.variants.length > 0
+          ? data.variants.reduce((sum: number, v: any) => sum + (v.stockQuantity || 0), 0)
+          : 10;
 
-    // Mock data for now
-    setProduct({
-      id: "1",
-      slug: slug,
-      name: "Premium Silk Dress",
-      description:
-        "Experience elegance with our premium silk dress. Crafted from the finest Italian silk, this dress offers timeless sophistication and comfort.",
-      price: 299.99,
-      originalPrice: 399.99,
-      images: [
-        "https://images.unsplash.com/photo-1595777707802-52b966efb60f?w=800",
-        "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=800",
-        "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?w=800",
-      ],
-      category: "Women's Wear",
-      stock: 15,
-      rating: 4.8,
-      reviews: 124,
-      sizes: ["XS", "S", "M", "L", "XL", "XXL"],
-      colors: ["Black", "Navy", "Emerald", "Burgundy"],
-      material: "100% Italian Silk",
-      care: ["Dry Clean Only", "Store in Cool Place", "Avoid Direct Sunlight"],
-    });
-    setLoading(false);
+        setProduct({
+          id: data.id.toString(),
+          slug: data.slug,
+          name: data.name,
+          description: data.description || "Ceylon luxury fabrics and modern fit.",
+          price: data.price,
+          originalPrice: data.discount > 0 ? data.price / (1 - data.discount / 100) : undefined,
+          images: imagesArr,
+          category: data.category?.name || "Premium Collection",
+          stock: totalStock,
+          rating: 4.8,
+          reviews: 12,
+          sizes: sizesArr,
+          colors: colorsArr,
+          material: "Ceylon Luxury Cotton & Silk Mix",
+          care: ["Gentle Machine Wash", "Dry in Shade", "Iron Medium Heat"]
+        });
+
+        if (sizesArr.length > 0) setSelectedSize(sizesArr[0]);
+        if (colorsArr.length > 0) setSelectedColor(colorsArr[0]);
+
+      } catch (error) {
+        console.error("Failed to fetch product by slug:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (slug) {
+      fetchProduct();
+    }
   }, [slug]);
 
   if (loading) {
@@ -291,6 +304,16 @@ export default function ProductDetailPage() {
               </div>
               <button
                 disabled={product.stock === 0}
+                onClick={() => {
+                  addToCart({
+                    id: parseInt(product.id),
+                    name: product.name,
+                    price: product.price,
+                    imageUrl: product.images?.[0] || "",
+                    description: product.description,
+                  }, quantity, selectedSize, selectedColor);
+                  alert(`${quantity} × ${product.name} (${selectedSize} / ${selectedColor}) added to cart! 🛒`);
+                }}
                 className="flex-1 bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 Add to Cart

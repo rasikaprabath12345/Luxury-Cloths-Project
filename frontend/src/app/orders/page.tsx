@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import axios from "axios";
+import { ordersAPI } from "@/lib/api";
 
 // Order දත්ත වල හැඩය (TypeScript Type)
 interface OrderItem {
@@ -38,9 +38,7 @@ export default function OrderHistoryPage() {
     if (user) {
       const fetchOrders = async () => {
         try {
-          const response = await axios.get("http://localhost:5226/api/Orders", {
-            withCredentials: true,
-          });
+          const response = await ordersAPI.getUserOrders();
           setOrders(response.data);
         } catch (error: any) {
           console.error("Orders ලබා ගැනීමට නොහැකි විය:", error);

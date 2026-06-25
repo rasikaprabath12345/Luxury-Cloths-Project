@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { ordersAPI } from "@/lib/api";
+import Link from "next/link";
 
 interface Order {
   id: number;
@@ -57,14 +58,15 @@ export default function OrdersPage() {
           ) : orders && orders.length > 0 ? (
             <div className="space-y-4">
               {orders.map((order) => (
-                <div
+                <Link
                   key={order.id}
-                  className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition"
+                  href={`/account/orders/${order.id}`}
+                  className="block border border-gray-200 rounded-lg p-4 hover:shadow-md transition cursor-pointer hover:border-blue-500 hover:no-underline"
                 >
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="font-semibold text-gray-900">
-                        Order #{order.orderNumber || order.id}
+                        Order #ORD-{order.id}
                       </h3>
                       <p className="text-sm text-gray-600 mt-1">
                         {new Date(order.createdAt).toLocaleDateString("en-US", {
@@ -81,22 +83,22 @@ export default function OrdersPage() {
                     </div>
                     <div className="text-right">
                       <p className="text-lg font-bold text-gray-900">
-                        ${order.totalAmount?.toFixed(2) || "0.00"}
+                        Rs. {order.totalAmount?.toLocaleString() || "0.00"}
                       </p>
                       <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium mt-2 ${
-                        order.status === "completed"
+                        order.status?.toLowerCase() === "delivered"
                           ? "bg-green-100 text-green-800"
-                          : order.status === "pending"
+                          : order.status?.toLowerCase() === "processing" || order.status?.toLowerCase() === "pending"
                           ? "bg-yellow-100 text-yellow-800"
-                          : order.status === "cancelled"
+                          : order.status?.toLowerCase() === "cancelled"
                           ? "bg-red-100 text-red-800"
                           : "bg-blue-100 text-blue-800"
                       }`}>
-                        {order.status?.toUpperCase() || "PROCESSING"}
+                        {order.status?.toUpperCase() || "PENDING"}
                       </span>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           ) : (

@@ -3,28 +3,14 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import Link from "next/link";
+import { glass } from "@/utils/theme";
+import ProductCard, { Product, ProductSkeleton } from "@/components/ProductCard";
 
 // ─── CUSTOM HERO IMAGE ──────────────────────────────────────────────────────
 // Change this to your own image (local path inside /public or full URL)
 const HERO_IMAGE = "/qw.jpg"; // e.g. "/images/hero-bg.jpg" or "https://example.com/my-image.jpg"
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-  imageUrl?: string;
-  image?: string;
-  description?: string;
-  sizes?: string;
-  discount?: number;
-  category?: {
-    id: number;
-    name: string;
-    slug: string;
-  };
-  categoryId?: number;
-}
 
 interface User {
   name: string;
@@ -40,54 +26,8 @@ const MOCK_USER: User = {
 };
 
 // ─── GLASS STYLES (inline so no Tailwind conflicts) ───────────────────────────
-const glass = {
-  card: {
-    background: "rgba(255,255,255,0.72)",
-    backdropFilter: "blur(28px) saturate(180%)",
-    WebkitBackdropFilter: "blur(28px) saturate(180%)",
-    border: "1px solid rgba(255,255,255,0.85)",
-    borderRadius: "24px",
-    boxShadow: "0 2px 32px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)",
-  } as React.CSSProperties,
-  dark: {
-    background: "rgba(28,28,30,0.78)",
-    backdropFilter: "blur(32px) saturate(200%)",
-    WebkitBackdropFilter: "blur(32px) saturate(200%)",
-    border: "1px solid rgba(255,255,255,0.10)",
-    borderRadius: "24px",
-    boxShadow: "0 8px 40px rgba(0,0,0,0.3)",
-  } as React.CSSProperties,
-  nav: {
-    background: "rgba(242,242,247,0.82)",
-    backdropFilter: "blur(40px) saturate(200%)",
-    WebkitBackdropFilter: "blur(40px) saturate(200%)",
-    borderBottom: "0.5px solid rgba(0,0,0,0.10)",
-    boxShadow: "0 0.5px 0 rgba(0,0,0,0.08)",
-  } as React.CSSProperties,
-  pill: {
-    background: "rgba(255,255,255,0.68)",
-    backdropFilter: "blur(20px)",
-    WebkitBackdropFilter: "blur(20px)",
-    border: "0.5px solid rgba(255,255,255,0.9)",
-    borderRadius: "100px",
-    boxShadow: "0 1px 12px rgba(0,0,0,0.08)",
-  } as React.CSSProperties,
-};
 
 // ─── SKELETON ─────────────────────────────────────────────────────────────────
-function ProductSkeleton() {
-  return (
-    <div style={{ ...glass.card, padding: 0, overflow: "hidden", height: 420 }}
-      className="animate-pulse flex flex-col">
-      <div style={{ height: 270, background: "rgba(120,120,128,0.08)" }} />
-      <div style={{ padding: "16px", flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
-        <div style={{ height: 14, background: "rgba(120,120,128,0.12)", borderRadius: 8, width: "60%" }} />
-        <div style={{ height: 11, background: "rgba(120,120,128,0.08)", borderRadius: 8 }} />
-        <div style={{ marginTop: "auto", height: 36, background: "rgba(120,120,128,0.08)", borderRadius: 12 }} />
-      </div>
-    </div>
-  );
-}
 
 // ─── USER MENU ────────────────────────────────────────────────────────────────
 function UserMenu({ user, onLogout }: { user: User; onLogout: () => void }) {
@@ -145,25 +85,33 @@ function UserMenu({ user, onLogout }: { user: User; onLogout: () => void }) {
               ...(user.role === "admin" ? [{ href: "/admin/products", icon: "⚙️", label: "Dashboard" }] : []),
             ].map(item => (
               <Link key={item.href} href={item.href} onClick={() => setOpen(false)}
-                style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px",
-                  fontSize: 13, color: "#1C1C1E", textDecoration: "none" }}
+                style={{
+                  display: "flex", alignItems: "center", gap: 10, padding: "10px 16px",
+                  fontSize: 13, color: "#1C1C1E", textDecoration: "none"
+                }}
                 onMouseEnter={e => (e.currentTarget.style.background = "rgba(0,0,0,0.04)")}
                 onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
-                <span style={{ width: 26, height: 26, background: "rgba(120,120,128,0.1)", borderRadius: 8,
-                  display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}>{item.icon}</span>
+                <span style={{
+                  width: 26, height: 26, background: "rgba(120,120,128,0.1)", borderRadius: 8,
+                  display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13
+                }}>{item.icon}</span>
                 {item.label}
               </Link>
             ))}
           </div>
           <div style={{ padding: "6px 8px 8px", borderTop: "0.5px solid rgba(0,0,0,0.06)" }}>
             <button onClick={() => { setOpen(false); onLogout(); }}
-              style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
+              style={{
+                width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
                 background: "none", border: "none", cursor: "pointer", fontSize: 13, color: "#FF3B30",
-                borderRadius: 12 }}
+                borderRadius: 12
+              }}
               onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,59,48,0.06)")}
               onMouseLeave={e => (e.currentTarget.style.background = "none")}>
-              <span style={{ width: 26, height: 26, background: "rgba(255,59,48,0.08)", borderRadius: 8,
-                display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>↩</span>
+              <span style={{
+                width: 26, height: 26, background: "rgba(255,59,48,0.08)", borderRadius: 8,
+                display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12
+              }}>↩</span>
               Sign Out
             </button>
           </div>
@@ -173,114 +121,150 @@ function UserMenu({ user, onLogout }: { user: User; onLogout: () => void }) {
   );
 }
 
-// ─── PRODUCT CARD COMPONENT ───────────────────────────────────────────────────
-function ProductCard({ product }: { product: Product }) {
-  const hasDiscount = product.discount && product.discount > 0;
-  const originalPrice = product.price;
-  const discountAmount = hasDiscount ? (originalPrice * (product.discount || 0)) / 100 : 0;
-  const finalPrice = originalPrice - discountAmount;
 
-  // Split sizes by comma
-  const sizesList = product.sizes ? product.sizes.split(",").map(s => s.trim()) : [];
+// ─── PRODUCT SLIDER COMPONENT ────────────────────────────────────────────────
+function ProductSlider({ products }: { products: Product[] }) {
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(true);
+  const [isMoving, setIsMoving] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 640) {
+        setItemsPerPage(1);
+      } else if (window.innerWidth < 768) {
+        setItemsPerPage(2);
+      } else if (window.innerWidth < 1024) {
+        setItemsPerPage(3);
+      } else {
+        setItemsPerPage(5);
+      }
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const totalProducts = products.length;
+  const isLoopable = totalProducts > itemsPerPage;
+
+  // Align index with clone offset when mounted or resized
+  useEffect(() => {
+    setCurrentIndex(isLoopable ? itemsPerPage : 0);
+    setIsTransitioning(false);
+  }, [itemsPerPage, isLoopable]);
+
+  // Auto slide effect
+  useEffect(() => {
+    if (!isLoopable || isHovered) return;
+    const interval = setInterval(() => {
+      handleNext();
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [totalProducts, itemsPerPage, isHovered, isLoopable]);
+
+  if (totalProducts === 0) return null;
+
+  // Clone products to facilitate infinite loop scrolling
+  const prepended = isLoopable ? products.slice(-itemsPerPage) : [];
+  const appended = isLoopable ? products.slice(0, itemsPerPage) : [];
+  const extendedProducts = [...prepended, ...products, ...appended];
+
+  const handleNext = () => {
+    if (!isLoopable || isMoving) return;
+    setIsMoving(true);
+    setIsTransitioning(true);
+    setCurrentIndex((prev) => prev + 1);
+  };
+
+  const handlePrev = () => {
+    if (!isLoopable || isMoving) return;
+    setIsMoving(true);
+    setIsTransitioning(true);
+    setCurrentIndex((prev) => prev - 1);
+  };
+
+  const handleTransitionEnd = () => {
+    setIsMoving(false);
+    if (currentIndex >= totalProducts + itemsPerPage) {
+      setIsTransitioning(false);
+      setCurrentIndex(itemsPerPage);
+    } else if (currentIndex <= 0) {
+      setIsTransitioning(false);
+      setCurrentIndex(totalProducts);
+    }
+  };
 
   return (
-    <div style={{
-      ...glass.card, padding: 0, overflow: "hidden",
-      display: "flex", flexDirection: "column", height: 445,
-      transition: "transform 0.3s ease, box-shadow 0.3s ease", cursor: "pointer",
-    }}
-      onMouseEnter={e => {
-        (e.currentTarget as HTMLElement).style.transform = "translateY(-6px)";
-        (e.currentTarget as HTMLElement).style.boxShadow = "0 16px 48px rgba(0,0,0,0.12)";
-      }}
-      onMouseLeave={e => {
-        (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
-        (e.currentTarget as HTMLElement).style.boxShadow = glass.card.boxShadow as string;
-      }}>
-      <div style={{ position: "relative", height: 260, overflow: "hidden", flexShrink: 0 }}>
-        <img
-          src={product.imageUrl || product.image || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop"}
-          alt={product.name}
-          style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease" }}
-          onMouseEnter={e => ((e.currentTarget as HTMLImageElement).style.transform = "scale(1.06)")}
-          onMouseLeave={e => ((e.currentTarget as HTMLImageElement).style.transform = "scale(1)")}
-        />
-        {/* Discount Tag */}
-        {hasDiscount && (
-          <div style={{
-            position: "absolute", top: 12, left: 12,
-            background: "#FF3B30", backdropFilter: "blur(8px)",
-            borderRadius: 8, padding: "4px 10px",
-            boxShadow: "0 2px 8px rgba(255,59,48,0.4)",
-            zIndex: 5,
-          }}>
-            <span style={{ fontSize: 10, fontWeight: 800, color: "#fff" }}>
-              {product.discount}% OFF
-            </span>
-          </div>
-        )}
-      </div>
-
-      <div style={{ padding: "14px 16px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-        <div>
-          <span style={{ fontSize: 9, fontWeight: 700, color: "#007AFF", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-            {product.category?.name || "Premium Collection"}
-          </span>
-          <h3 style={{ margin: "4px 0 0", fontSize: 13.5, fontWeight: 700, color: "#1C1C1E",
-            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {product.name}
-          </h3>
-          <p style={{ margin: "2px 0 0", fontSize: 11, color: "#8E8E93",
-            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {product.description || "Ceylon luxury fabrics and modern fit."}
-          </p>
-
-          {/* Sizes */}
-          {sizesList.length > 0 && (
-            <div style={{ display: "flex", gap: "4px", marginTop: "8px", flexWrap: "wrap" }}>
-              {sizesList.map((size, idx) => (
-                <span key={idx} style={{
-                  fontSize: 9, fontWeight: 700, background: "rgba(120,120,128,0.08)",
-                  color: "#48484A", padding: "2px 6px", borderRadius: 4
-                }}>
-                  {size}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
-          paddingTop: 10, borderTop: "0.5px solid rgba(0,0,0,0.06)", marginTop: "6px" }}>
-          <div>
-            {hasDiscount ? (
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <span style={{ fontSize: 11, textDecoration: "line-through", color: "#8E8E93", lineHeight: 1 }}>
-                  Rs. {originalPrice.toLocaleString()}
-                </span>
-                <span style={{ fontSize: 15, fontWeight: 800, color: "#FF3B30", marginTop: 2 }}>
-                  Rs. {finalPrice.toLocaleString()}
-                </span>
-              </div>
-            ) : (
-              <span style={{ fontSize: 15, fontWeight: 800, color: "#1C1C1E" }}>
-                Rs. {originalPrice.toLocaleString()}
-              </span>
-            )}
-          </div>
-          <button style={{
-            background: "linear-gradient(135deg, #1C1C1E, #3C3C43)",
-            border: "none", borderRadius: 12, padding: "8px 14px",
-            fontSize: 11, fontWeight: 600, color: "#fff", cursor: "pointer",
-            transition: "background 0.2s, transform 0.1s",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+    <div 
+      style={{ position: "relative", width: "100%" }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* Slider Viewport */}
+      <div style={{ overflow: "hidden", margin: "0 -8px", padding: "8px 0" }}>
+        <div 
+          onTransitionEnd={handleTransitionEnd}
+          style={{
+            display: "flex",
+            transform: `translateX(-${currentIndex * (100 / extendedProducts.length)}%)`,
+            transition: isTransitioning ? "transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)" : "none",
+            width: `${(extendedProducts.length / itemsPerPage) * 100}%`,
           }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, #007AFF, #5856D6)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 12px rgba(0,122,255,0.3)"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, #1C1C1E, #3C3C43)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 8px rgba(0,0,0,0.15)"; }}>
-            Add to Bag
-          </button>
+        >
+          {extendedProducts.map((product, index) => (
+            <div key={`${product.id}-${index}`} style={{
+              width: `${100 / extendedProducts.length}%`,
+              padding: "0 8px",
+              boxSizing: "border-box",
+            }}>
+              <ProductCard product={product} />
+            </div>
+          ))}
         </div>
       </div>
+
+      {/* Navigation Arrows */}
+      {isLoopable && (
+        <>
+          <button 
+            onClick={handlePrev}
+            style={{
+              position: "absolute", left: -20, top: "50%", transform: "translateY(-50%)",
+              background: "rgba(255,255,255,0.9)", border: "1px solid rgba(0,0,0,0.08)",
+              borderRadius: "50%", width: 44, height: 44, cursor: "pointer", zIndex: 10,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 4px 16px rgba(0,0,0,0.1)", fontSize: 18, color: "#1C1C1E",
+              transition: "transform 0.2s, background 0.2s",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-50%) scale(1.08)"; e.currentTarget.style.background = "#fff"; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = "translateY(-50%)"; e.currentTarget.style.background = "rgba(255,255,255,0.9)"; }}
+          >
+            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+              <path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          <button 
+            onClick={handleNext}
+            style={{
+              position: "absolute", right: -20, top: "50%", transform: "translateY(-50%)",
+              background: "rgba(255,255,255,0.9)", border: "1px solid rgba(0,0,0,0.08)",
+              borderRadius: "50%", width: 44, height: 44, cursor: "pointer", zIndex: 10,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 4px 16px rgba(0,0,0,0.1)", fontSize: 18, color: "#1C1C1E",
+              transition: "transform 0.2s, background 0.2s",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-50%) scale(1.08)"; e.currentTarget.style.background = "#fff"; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = "translateY(-50%)"; e.currentTarget.style.background = "rgba(255,255,255,0.9)"; }}
+          >
+            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+              <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </>
+      )}
     </div>
   );
 }
@@ -313,6 +297,7 @@ export default function HomePage() {
   const [email, setEmail] = useState("");
   const [user, setUser] = useState<User | null>(null);
   const [activeCategory, setActiveCategory] = useState<"Women" | "Men" | "Kids">("Women");
+  const [newArrivalsFilter, setNewArrivalsFilter] = useState<"All" | "Women" | "Men" | "Kids">("All");
 
   const heroRef = useRef<HTMLDivElement>(null);
 
@@ -322,7 +307,9 @@ export default function HomePage() {
     const fetchProducts = async () => {
       try {
         const response = await axios.get("http://localhost:5226/api/Products");
-        setProducts(response.data);
+        // Sort by ID descending to show latest products first
+        const sorted = response.data.sort((a: any, b: any) => b.id - a.id);
+        setProducts(sorted);
       } catch {
         console.error("Could not fetch products");
       } finally {
@@ -342,6 +329,20 @@ export default function HomePage() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const filteredNewArrivals = products.filter(p => {
+    if (newArrivalsFilter === "All") return true;
+    if (newArrivalsFilter === "Women") {
+      return p.category?.name?.toLowerCase().includes("women") || p.category?.name?.toLowerCase().includes("girl") || p.categoryId === 2;
+    }
+    if (newArrivalsFilter === "Men") {
+      return (p.category?.name?.toLowerCase().includes("men") || p.category?.name?.toLowerCase().includes("boy") || p.categoryId === 1) && !p.category?.name?.toLowerCase().includes("women");
+    }
+    if (newArrivalsFilter === "Kids") {
+      return p.category?.name?.toLowerCase().includes("child") || p.category?.name?.toLowerCase().includes("kids") || p.category?.name?.toLowerCase().includes("children") || p.categoryId === 3;
+    }
+    return true;
+  }).slice(0, 10);
 
   return (
     <div style={{
@@ -500,11 +501,111 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ─── NEW ARRIVALS COLLECTION ─────────────────────────────────────────── */}
+      <section style={{ maxWidth: 1200, margin: "0 auto", padding: "16px 24px 40px", position: "relative", zIndex: 1 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 24 }}>
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+            <div>
+              <p style={{
+                margin: "0 0 4px", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
+                textTransform: "uppercase", color: "#007AFF"
+              }}>Fresh Styles</p>
+              <h2 style={{ margin: 0, fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em" }}>New Arrivals ✨</h2>
+            </div>
+            <Link href="/storefront/shop?filter=new" style={{ fontSize: 13, fontWeight: 600, color: "#007AFF", textDecoration: "none" }}>
+              View All New Arrivals →
+            </Link>
+          </div>
+
+          {/* Filter Pills */}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {(["All", "Women", "Men", "Kids"] as const).map((filter) => {
+              const active = newArrivalsFilter === filter;
+              return (
+                <button
+                  key={filter}
+                  onClick={() => setNewArrivalsFilter(filter)}
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: 20,
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    background: active ? "linear-gradient(135deg, #007AFF, #5856D6)" : "rgba(120,120,128,0.08)",
+                    color: active ? "#fff" : "#48484A",
+                    boxShadow: active ? "0 4px 12px rgba(0,122,255,0.24)" : "none",
+                    transition: "all 0.2s ease-in-out",
+                  }}
+                  onMouseEnter={e => {
+                    if (!active) e.currentTarget.style.background = "rgba(120,120,128,0.14)";
+                  }}
+                  onMouseLeave={e => {
+                    if (!active) e.currentTarget.style.background = "rgba(120,120,128,0.08)";
+                  }}
+                >
+                  {filter === "All" ? "All Arrivals" : filter === "Women" ? "Women's" : filter === "Men" ? "Men's" : "Children's"}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => <ProductSkeleton key={n} />)}
+          </div>
+        ) : filteredNewArrivals.length === 0 ? (
+          <div style={{ ...glass.card, padding: 40, textAlign: "center", color: "#8E8E93", fontSize: 14 }}>
+            No new products available for this selection.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {filteredNewArrivals.map(product => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* ─── BEST SELLERS COLLECTION ─────────────────────────────────────────── */}
+      <section style={{ maxWidth: 1200, margin: "0 auto", padding: "16px 24px 40px", position: "relative", zIndex: 1 }}>
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 24 }}>
+          <div>
+            <p style={{
+              margin: "0 0 4px", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
+              textTransform: "uppercase", color: "#007AFF"
+            }}>Trending Items</p>
+            <h2 style={{ margin: 0, fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em" }}>Best Sellers 🔥</h2>
+          </div>
+          <Link href="/storefront/shop?filter=sale" style={{ fontSize: 13, fontWeight: 600, color: "#007AFF", textDecoration: "none" }}>
+            View All Best Sellers →
+          </Link>
+        </div>
+
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {[1, 2, 3, 4, 5].map(n => <ProductSkeleton key={n} />)}
+          </div>
+        ) : products.length === 0 ? (
+          <div style={{ ...glass.card, padding: 40, textAlign: "center", color: "#8E8E93", fontSize: 14 }}>
+            No best sellers available.
+          </div>
+        ) : (
+          <ProductSlider products={(products.filter((p: any) => p.discount > 0).length > 0
+            ? products.filter((p: any) => p.discount > 0)
+            : products.slice(4, 12)
+          ).slice(0, 10)} />
+        )}
+      </section>
+
       {/* ─── CATEGORIES ─────────────────────────────────────────────────────── */}
       <section style={{ maxWidth: 1200, margin: "0 auto", padding: "16px 24px 40px", position: "relative", zIndex: 1 }}>
         <div style={{ marginBottom: 24 }}>
-          <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
-            textTransform: "uppercase", color: "#007AFF" }}>Browse</p>
+          <p style={{
+            margin: "0 0 4px", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
+            textTransform: "uppercase", color: "#007AFF"
+          }}>Browse</p>
           <h2 style={{ margin: 0, fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em", color: "#1C1C1E" }}>
             Shop by Category
           </h2>
@@ -568,8 +669,10 @@ export default function HomePage() {
       <section style={{ maxWidth: 1200, margin: "0 auto", padding: "8px 24px 40px", position: "relative", zIndex: 1 }}>
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 24 }}>
           <div>
-            <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
-              textTransform: "uppercase", color: "#007AFF" }}>Sophisticated Styles</p>
+            <p style={{
+              margin: "0 0 4px", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
+              textTransform: "uppercase", color: "#007AFF"
+            }}>Sophisticated Styles</p>
             <h2 style={{ margin: 0, fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em" }}>Women's Collection 👚</h2>
           </div>
           <Link href="/storefront/product" style={{ fontSize: 13, fontWeight: 600, color: "#007AFF", textDecoration: "none" }}>
@@ -578,19 +681,15 @@ export default function HomePage() {
         </div>
 
         {loading ? (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 16 }}>
-            {[1, 2, 3, 4].map(n => <ProductSkeleton key={n} />)}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {[1, 2, 3, 4, 5].map(n => <ProductSkeleton key={n} />)}
           </div>
         ) : products.filter(p => p.category?.name?.toLowerCase().includes("women") || p.category?.name?.toLowerCase().includes("girl") || p.categoryId === 2).length === 0 ? (
           <div style={{ ...glass.card, padding: 40, textAlign: "center", color: "#8E8E93", fontSize: 14 }}>
             No women's products yet. Check back soon.
           </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 16 }}>
-            {products.filter(p => p.category?.name?.toLowerCase().includes("women") || p.category?.name?.toLowerCase().includes("girl") || p.categoryId === 2).slice(0, 4).map(product => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          <ProductSlider products={products.filter(p => p.category?.name?.toLowerCase().includes("women") || p.category?.name?.toLowerCase().includes("girl") || p.categoryId === 2).slice(0, 10)} />
         )}
       </section>
 
@@ -598,8 +697,10 @@ export default function HomePage() {
       <section style={{ maxWidth: 1200, margin: "0 auto", padding: "16px 24px 40px", position: "relative", zIndex: 1 }}>
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 24 }}>
           <div>
-            <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
-              textTransform: "uppercase", color: "#007AFF" }}>Tailored Precision</p>
+            <p style={{
+              margin: "0 0 4px", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
+              textTransform: "uppercase", color: "#007AFF"
+            }}>Tailored Precision</p>
             <h2 style={{ margin: 0, fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em" }}>Men's Collection 👕</h2>
           </div>
           <Link href="/storefront/product" style={{ fontSize: 13, fontWeight: 600, color: "#007AFF", textDecoration: "none" }}>
@@ -608,19 +709,15 @@ export default function HomePage() {
         </div>
 
         {loading ? (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 16 }}>
-            {[1, 2, 3, 4].map(n => <ProductSkeleton key={n} />)}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {[1, 2, 3, 4, 5].map(n => <ProductSkeleton key={n} />)}
           </div>
         ) : products.filter(p => (p.category?.name?.toLowerCase().includes("men") || p.category?.name?.toLowerCase().includes("boy") || p.categoryId === 1) && !p.category?.name?.toLowerCase().includes("women")).length === 0 ? (
           <div style={{ ...glass.card, padding: 40, textAlign: "center", color: "#8E8E93", fontSize: 14 }}>
             No men's products yet. Check back soon.
           </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 16 }}>
-            {products.filter(p => (p.category?.name?.toLowerCase().includes("men") || p.category?.name?.toLowerCase().includes("boy") || p.categoryId === 1) && !p.category?.name?.toLowerCase().includes("women")).slice(0, 4).map(product => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          <ProductSlider products={products.filter(p => (p.category?.name?.toLowerCase().includes("men") || p.category?.name?.toLowerCase().includes("boy") || p.categoryId === 1) && !p.category?.name?.toLowerCase().includes("women")).slice(0, 10)} />
         )}
       </section>
 
@@ -628,8 +725,10 @@ export default function HomePage() {
       <section style={{ maxWidth: 1200, margin: "0 auto", padding: "16px 24px 40px", position: "relative", zIndex: 1 }}>
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 24 }}>
           <div>
-            <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
-              textTransform: "uppercase", color: "#007AFF" }}>Playful & Durable</p>
+            <p style={{
+              margin: "0 0 4px", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
+              textTransform: "uppercase", color: "#007AFF"
+            }}>Playful & Durable</p>
             <h2 style={{ margin: 0, fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em" }}>Children's Collection 🧸</h2>
           </div>
           <Link href="/storefront/product" style={{ fontSize: 13, fontWeight: 600, color: "#007AFF", textDecoration: "none" }}>
@@ -638,19 +737,15 @@ export default function HomePage() {
         </div>
 
         {loading ? (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 16 }}>
-            {[1, 2, 3, 4].map(n => <ProductSkeleton key={n} />)}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {[1, 2, 3, 4, 5].map(n => <ProductSkeleton key={n} />)}
           </div>
         ) : products.filter(p => p.category?.name?.toLowerCase().includes("child") || p.category?.name?.toLowerCase().includes("kids") || p.category?.name?.toLowerCase().includes("children") || p.categoryId === 3).length === 0 ? (
           <div style={{ ...glass.card, padding: 40, textAlign: "center", color: "#8E8E93", fontSize: 14 }}>
             No children's products yet. Check back soon.
           </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 16 }}>
-            {products.filter(p => p.category?.name?.toLowerCase().includes("child") || p.category?.name?.toLowerCase().includes("kids") || p.category?.name?.toLowerCase().includes("children") || p.categoryId === 3).slice(0, 4).map(product => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          <ProductSlider products={products.filter(p => p.category?.name?.toLowerCase().includes("child") || p.category?.name?.toLowerCase().includes("kids") || p.category?.name?.toLowerCase().includes("children") || p.categoryId === 3).slice(0, 10)} />
         )}
       </section>
 
@@ -664,14 +759,20 @@ export default function HomePage() {
           position: "relative", overflow: "hidden",
         }}>
           {/* Decorative circles */}
-          <div style={{ position: "absolute", top: -60, right: -60, width: 200, height: 200, borderRadius: "50%",
-            background: "rgba(0,122,255,0.12)", filter: "blur(40px)", pointerEvents: "none" }} />
-          <div style={{ position: "absolute", bottom: -40, left: "30%", width: 150, height: 150, borderRadius: "50%",
-            background: "rgba(88,86,214,0.10)", filter: "blur(30px)", pointerEvents: "none" }} />
+          <div style={{
+            position: "absolute", top: -60, right: -60, width: 200, height: 200, borderRadius: "50%",
+            background: "rgba(0,122,255,0.12)", filter: "blur(40px)", pointerEvents: "none"
+          }} />
+          <div style={{
+            position: "absolute", bottom: -40, left: "30%", width: 150, height: 150, borderRadius: "50%",
+            background: "rgba(88,86,214,0.10)", filter: "blur(30px)", pointerEvents: "none"
+          }} />
 
           <div style={{ position: "relative", zIndex: 1 }}>
-            <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
-              textTransform: "uppercase", color: "#64D2FF" }}>Best Sellers</p>
+            <p style={{
+              margin: "0 0 6px", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
+              textTransform: "uppercase", color: "#64D2FF"
+            }}>Best Sellers</p>
             <h2 style={{ margin: "0 0 10px", fontSize: 36, fontWeight: 800, letterSpacing: "-0.03em", color: "#fff" }}>
               Most Loved<br />This Season
             </h2>
@@ -706,8 +807,10 @@ export default function HomePage() {
       {/* ─── OUR BRANDS ─────────────────────────────────────────────────────── */}
       <section style={{ maxWidth: 1200, margin: "0 auto", padding: "8px 24px 40px", position: "relative", zIndex: 1 }}>
         <div style={{ marginBottom: 24 }}>
-          <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
-            textTransform: "uppercase", color: "#007AFF" }}>Curated</p>
+          <p style={{
+            margin: "0 0 4px", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
+            textTransform: "uppercase", color: "#007AFF"
+          }}>Curated</p>
           <h2 style={{ margin: 0, fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em" }}>Our Brands</h2>
         </div>
 
@@ -750,19 +853,27 @@ export default function HomePage() {
           position: "relative", overflow: "hidden",
           boxShadow: "0 20px 60px rgba(0,122,255,0.25)",
         }}>
-          <div style={{ position: "absolute", top: -80, right: -80, width: 300, height: 300, borderRadius: "50%",
-            background: "rgba(255,255,255,0.07)", filter: "blur(40px)", pointerEvents: "none" }} />
-          <div style={{ position: "absolute", bottom: -60, left: -60, width: 240, height: 240, borderRadius: "50%",
-            background: "rgba(255,255,255,0.05)", filter: "blur(30px)", pointerEvents: "none" }} />
+          <div style={{
+            position: "absolute", top: -80, right: -80, width: 300, height: 300, borderRadius: "50%",
+            background: "rgba(255,255,255,0.07)", filter: "blur(40px)", pointerEvents: "none"
+          }} />
+          <div style={{
+            position: "absolute", bottom: -60, left: -60, width: 240, height: 240, borderRadius: "50%",
+            background: "rgba(255,255,255,0.05)", filter: "blur(30px)", pointerEvents: "none"
+          }} />
 
           <div style={{ position: "relative", zIndex: 1 }}>
-            <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 700, letterSpacing: "0.15em",
-              textTransform: "uppercase", color: "rgba(255,255,255,0.65)" }}>Exclusive Offer</p>
+            <p style={{
+              margin: "0 0 8px", fontSize: 11, fontWeight: 700, letterSpacing: "0.15em",
+              textTransform: "uppercase", color: "rgba(255,255,255,0.65)"
+            }}>Exclusive Offer</p>
             <h2 style={{ margin: "0 0 8px", fontSize: 40, fontWeight: 900, letterSpacing: "-0.03em", color: "#fff" }}>
               Get 10% Off
             </h2>
-            <p style={{ margin: "0 auto 32px", fontSize: 15, color: "rgba(255,255,255,0.65)",
-              maxWidth: 360, lineHeight: 1.6, fontWeight: 300 }}>
+            <p style={{
+              margin: "0 auto 32px", fontSize: 15, color: "rgba(255,255,255,0.65)",
+              maxWidth: 360, lineHeight: 1.6, fontWeight: 300
+            }}>
               New arrivals and exclusive deals — straight to your inbox. Unsubscribe anytime.
             </p>
 
