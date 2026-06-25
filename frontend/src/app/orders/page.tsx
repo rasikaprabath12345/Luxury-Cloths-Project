@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { ordersAPI } from "@/lib/api";
+import { ordersAPI, uploadAPI } from "@/lib/api";
 import { glass } from "@/utils/theme";
 
 interface OrderItem {
@@ -19,6 +19,8 @@ interface Order {
   orderDate: string;
   totalAmount: number;
   status: string;
+  paymentMethod?: string;
+  paymentSlipUrl?: string;
   items: OrderItem[];
 }
 
@@ -28,6 +30,38 @@ export default function OrderHistoryPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  const [uploadingId, setUploadingId] = useState<number | null>(null);
+
+  const triggerUpload = (orderId: number) => {
+    setSelectedOrderId(orderId);
+    document.getElementById("slip-file-input")?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || selectedOrderId === null) return;
+
+    setUploadingId(selectedOrderId);
+    try {
+      const uploadRes = await uploadAPI.uploadImage(file);
+      const fileUrl = uploadRes.data.url;
+
+      await ordersAPI.uploadOrderSlip(selectedOrderId, fileUrl);
+
+      alert("🎉 Receipt uploaded successfully!");
+
+      const response = await ordersAPI.getUserOrders();
+      setOrders(response.data);
+    } catch (error: any) {
+      console.error("Receipt upload failed:", error);
+      alert(error.response?.data?.message || "Failed to upload receipt. Please try again.");
+    } finally {
+      setUploadingId(null);
+      setSelectedOrderId(null);
+      e.target.value = "";
+    }
+  };
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -88,6 +122,14 @@ export default function OrderHistoryPage() {
       paddingBottom: 100,
       position: "relative"
     }}>
+      {/* Hidden file input for payment slips */}
+      <input
+        type="file"
+        id="slip-file-input"
+        accept="image/*"
+        style={{ display: "none" }}
+        onChange={handleFileChange}
+      />
       {/* Ambient background blur blobs */}
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
         <div style={{
@@ -294,6 +336,91 @@ export default function OrderHistoryPage() {
                       </div>
                     ))}
                   </div>
+
+                  {/* Payment Slip Upload section */}
+                  {order.paymentMethod === "BankTransfer" && (
+                    <div style={{
+                      margin: "0 24px 20px",
+                      padding: "16px 20px",
+                      borderRadius: 12,
+                      background: "rgba(170, 132, 28, 0.03)",
+                      border: "0.5px solid rgba(170, 132, 28, 0.15)",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                      gap: 16
+                    }}>
+                      <div>
+                        <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: "#aa841c", display: "flex", alignItems: "center", gap: 6 }}>
+                          🏛️ Bank Transfer Payment
+                        </p>
+                        {order.paymentSlipUrl ? (
+                          <p style={{ margin: "4px 0 0", fontSize: 11, color: "#16A34A", fontWeight: 600 }}>
+                            ✓ Payment receipt uploaded successfully
+                          </p>
+                        ) : (
+                          <p style={{ margin: "4px 0 0", fontSize: 11, color: "#FF3B30", fontWeight: 600 }}>
+                            ⚠️ Action Required: Please upload your bank deposit slip
+                          </p>
+                        )}
+                      </div>
+
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        {order.paymentSlipUrl && (
+                          <a
+                            href={order.paymentSlipUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 700,
+                              color: "#aa841c",
+                              textDecoration: "none",
+                              padding: "8px 16px",
+                              borderRadius: 8,
+                              background: "rgba(255, 255, 255, 0.6)",
+                              border: "0.5px solid rgba(170, 132, 28, 0.2)",
+                              transition: "background 0.2s"
+                            }}
+                          >
+                            View Receipt
+                          </a>
+                        )}
+
+                        <button
+                          onClick={() => triggerUpload(order.id)}
+                          disabled={uploadingId === order.id}
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 700,
+                            color: "#fff",
+                            background: "linear-gradient(135deg, #d4af37 0%, #aa841c 100%)",
+                            border: "none",
+                            padding: "8px 16px",
+                            borderRadius: 8,
+                            cursor: "pointer",
+                            boxShadow: "0 2px 8px rgba(170, 132, 28, 0.2)",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                            transition: "opacity 0.2s"
+                          }}
+                        >
+                          {uploadingId === order.id ? (
+                            <>
+                              <span className="cp-spinner" style={{ width: 12, height: 12, border: "2px solid rgba(255,255,255,0.2)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "spin 0.6s linear infinite" }} />
+                              Uploading…
+                            </>
+                          ) : (
+                            <>
+                              📤 {order.paymentSlipUrl ? "Re-upload Receipt" : "Upload Receipt"}
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Order card footer action */}
                   <div style={{

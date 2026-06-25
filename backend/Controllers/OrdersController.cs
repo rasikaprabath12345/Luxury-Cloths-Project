@@ -34,6 +34,19 @@ namespace backend.Controllers
                         orderDate = o.CreatedAt,
                         totalAmount = o.TotalAmount,
                         status = o.Status,
+                        firstName = o.FirstName,
+                        lastName = o.LastName,
+                        email = o.Email,
+                        phone = o.Phone,
+                        country = o.Country,
+                        state = o.State,
+                        city = o.City,
+                        postalCode = o.PostalCode,
+                        address = o.Address,
+                        orderNote = o.OrderNote,
+                        shippingAddress = o.ShippingAddress,
+                        paymentMethod = o.PaymentMethod,
+                        paymentSlipUrl = o.PaymentSlipUrl,
                         items = o.OrderItems.Select(item => new
                         {
                             id = item.Id,
@@ -79,6 +92,19 @@ namespace backend.Controllers
                         orderDate = o.CreatedAt,
                         totalAmount = o.TotalAmount,
                         status = o.Status,
+                        firstName = o.FirstName,
+                        lastName = o.LastName,
+                        email = o.Email,
+                        phone = o.Phone,
+                        country = o.Country,
+                        state = o.State,
+                        city = o.City,
+                        postalCode = o.PostalCode,
+                        address = o.Address,
+                        orderNote = o.OrderNote,
+                        shippingAddress = o.ShippingAddress,
+                        paymentMethod = o.PaymentMethod,
+                        paymentSlipUrl = o.PaymentSlipUrl,
                         items = o.OrderItems.Select(item => new
                         {
                             id = item.Id,
@@ -135,6 +161,17 @@ namespace backend.Controllers
                     status = order.Status,
                     paymentMethod = order.PaymentMethod,
                     paymentSlipUrl = order.PaymentSlipUrl,
+                    firstName = order.FirstName,
+                    lastName = order.LastName,
+                    email = order.Email,
+                    phone = order.Phone,
+                    country = order.Country,
+                    state = order.State,
+                    city = order.City,
+                    postalCode = order.PostalCode,
+                    address = order.Address,
+                    orderNote = order.OrderNote,
+                    shippingAddress = order.ShippingAddress,
                     userId = order.UserId,
                     items = order.OrderItems.Select(item => new
                     {
@@ -182,6 +219,18 @@ namespace backend.Controllers
                     UserId = userId, // Extract from JWT claims for security
                     PaymentMethod = orderDto.PaymentMethod,
                     Status = "Pending",
+                    FirstName = orderDto.FirstName,
+                    LastName = orderDto.LastName,
+                    Email = orderDto.Email,
+                    Phone = orderDto.Phone,
+                    Country = orderDto.Country,
+                    State = orderDto.State,
+                    City = orderDto.City,
+                    PostalCode = orderDto.PostalCode,
+                    Address = orderDto.Address,
+                    OrderNote = orderDto.OrderNote,
+                    ShippingAddress = orderDto.ShippingAddress,
+                    PaymentSlipUrl = orderDto.PaymentSlipUrl,
                     CreatedAt = DateTime.UtcNow,
                     TotalAmount = 0 // මුලින් 0 ලෙස දමා පසුව ගණනය කරමු
                 };
@@ -191,10 +240,17 @@ namespace backend.Controllers
                 // Cart එකේ ආපු හැම අයිතමයක්ම ලූප් එකක් හරහා චෙක් කිරීම
                 foreach (var itemDto in orderDto.Items)
                 {
-                    // ඩේටාබේස් එකෙන් අදාළ Product Variant එක සහ එහි Price එක සොයා ගැනීම
+                    // ඩේටාබේස් එකෙන් අදාළ Product Variant එක සහ එහි Price එක සොයා ගැනීම (පළමුව ProductId ලෙසද, පසුව Variant Id ලෙසද සොයයි)
                     var variant = await _context.ProductVariants
                         .Include(pv => pv.Product)
-                        .FirstOrDefaultAsync(pv => pv.Id == itemDto.ProductVariantId);
+                        .FirstOrDefaultAsync(pv => pv.ProductId == itemDto.ProductVariantId);
+
+                    if (variant == null)
+                    {
+                        variant = await _context.ProductVariants
+                            .Include(pv => pv.Product)
+                            .FirstOrDefaultAsync(pv => pv.Id == itemDto.ProductVariantId);
+                    }
 
                     if (variant == null)
                     {
@@ -207,7 +263,7 @@ namespace backend.Controllers
 
                     var orderItem = new OrderItem
                     {
-                        ProductVariantId = itemDto.ProductVariantId,
+                        ProductVariantId = variant.Id,
                         Quantity = itemDto.Quantity,
                         UnitPrice = itemPrice
                     };
@@ -289,6 +345,18 @@ namespace backend.Controllers
     {
         public int UserId { get; set; }
         public string PaymentMethod { get; set; } = "BankTransfer";
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Phone { get; set; } = string.Empty;
+        public string Country { get; set; } = string.Empty;
+        public string State { get; set; } = string.Empty;
+        public string City { get; set; } = string.Empty;
+        public string PostalCode { get; set; } = string.Empty;
+        public string Address { get; set; } = string.Empty;
+        public string OrderNote { get; set; } = string.Empty;
+        public string ShippingAddress { get; set; } = string.Empty;
+        public string? PaymentSlipUrl { get; set; }
         public List<CartItemDto> Items { get; set; } = new();
     }
 

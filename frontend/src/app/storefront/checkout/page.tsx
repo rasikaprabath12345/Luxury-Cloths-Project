@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, ChangeEvent } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { glass } from "@/utils/theme";
+import { uploadAPI } from "@/lib/api";
 
 const PLACEHOLDER_IMG = "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=600&auto=format&fit=crop";
 
@@ -18,6 +19,36 @@ export default function CartPage() {
   const [coupon, setCoupon] = useState("");
   const [couponApplied, setCouponApplied] = useState(false);
   const router = useRouter();
+  const [firstName, setFirstName] = useState<string>("");
+  const [lastName, setLastName] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [phone, setPhone] = useState<string>("");
+  const [country, setCountry] = useState<string>("Sri Lanka");
+  const [state, setState] = useState<string>("");
+  const [city, setCity] = useState<string>("");
+  const [postalCode, setPostalCode] = useState<string>("");
+  const [address, setAddress] = useState<string>("");
+  const [orderNote, setOrderNote] = useState<string>("");
+  const [paymentSlipUrl, setPaymentSlipUrl] = useState<string>("");
+  const [uploadingSlip, setUploadingSlip] = useState<boolean>(false);
+
+  useEffect(() => {
+    const savedUserStr = localStorage.getItem("luxury_user");
+    if (savedUserStr) {
+      try {
+        const user = JSON.parse(savedUserStr);
+        if (user.fullName) {
+          const parts = user.fullName.trim().split(/\s+/);
+          setFirstName(parts[0] || "");
+          setLastName(parts.slice(1).join(" ") || "");
+        }
+        if (user.email) setEmail(user.email);
+        if (user.phone) setPhone(user.phone);
+      } catch (error) {
+        console.error("Failed to parse user:", error);
+      }
+    }
+  }, []);
 
   const handleUpdateQuantity = (id: number, newQty: number) => {
     if (newQty < 1) return;
@@ -46,6 +77,28 @@ export default function CartPage() {
     }
   };
 
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingSlip(true);
+    try {
+      const uploadRes = await uploadAPI.uploadImage(file);
+      setPaymentSlipUrl(uploadRes.data.url);
+      alert("🎉 Receipt uploaded successfully!");
+    } catch (error: any) {
+      console.error("Receipt upload failed:", error);
+      alert(error.response?.data?.message || "Failed to upload receipt. Please try again.");
+    } finally {
+      setUploadingSlip(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleRemoveSlip = () => {
+    setPaymentSlipUrl("");
+  };
+
   const handlePlaceOrder = async () => {
     if (cartItems.length === 0) return;
     
@@ -58,12 +111,62 @@ export default function CartPage() {
       return;
     }
 
+    if (!firstName.trim()) {
+      alert("Please enter your first name.");
+      return;
+    }
+    if (!lastName.trim()) {
+      alert("Please enter your last name.");
+      return;
+    }
+    if (!email.trim()) {
+      alert("Please enter your email address.");
+      return;
+    }
+    if (!phone.trim()) {
+      alert("Please enter your phone number.");
+      return;
+    }
+    if (!country.trim()) {
+      alert("Please enter your country.");
+      return;
+    }
+    if (!state.trim()) {
+      alert("Please enter your state or province.");
+      return;
+    }
+    if (!city.trim()) {
+      alert("Please enter your city.");
+      return;
+    }
+    if (!address.trim()) {
+      alert("Please enter your street address.");
+      return;
+    }
+
+    if (paymentMethod === "BankTransfer" && !paymentSlipUrl) {
+      alert("Please upload your bank deposit receipt/slip.");
+      return;
+    }
+
     const user = JSON.parse(savedUserStr);
     setIsOrdering(true);
     try {
       const orderData = {
         userId: user.id,
         paymentMethod,
+        firstName,
+        lastName,
+        email,
+        phone,
+        country,
+        state,
+        city,
+        postalCode,
+        address,
+        orderNote,
+        shippingAddress: `${address}, ${city}, ${state}, ${country}. Postal Code: ${postalCode}`,
+        paymentSlipUrl,
         items: cartItems.map(item => ({
           productVariantId: item.id, // In this simple db variantId is matched to item id
           quantity: item.quantity || 1,
@@ -416,11 +519,273 @@ export default function CartPage() {
                 })}
               </div>
 
+              {/* Shipping Details Card */}
+              <div style={{
+                ...glass.card,
+                padding: "28px 24px",
+                border: "1px solid rgba(255,255,255,0.9)",
+                background: "rgba(255,255,255,0.65)",
+                boxShadow: "0 10px 30px rgba(0,0,0,0.02)",
+                display: "flex",
+                flexDirection: "column",
+                gap: 20,
+                marginTop: 20,
+                borderRadius: 16
+              }}>
+                <div style={{ borderBottom: "0.5px solid rgba(0,0,0,0.06)", paddingBottom: 12, display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 20 }}>📋</span>
+                  <h2 style={{ fontSize: 18, fontWeight: 800, color: "#1C1C1E", margin: 0, letterSpacing: "-0.01em", textTransform: "uppercase" }}>Details</h2>
+                </div>
+
+                {/* First Name & Last Name */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: "#1C1C1E" }}>First Name *</label>
+                    <input
+                      type="text"
+                      placeholder="Enter First Name"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      style={{
+                        background: "rgba(255,255,255,0.5)",
+                        border: "1px solid rgba(0,0,0,0.08)",
+                        borderRadius: 10,
+                        padding: "10px 14px",
+                        fontSize: 13,
+                        color: "#1C1C1E",
+                        outline: "none",
+                        fontFamily: "inherit",
+                        transition: "all 0.2s"
+                      }}
+                      className="shipping-input"
+                    />
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: "#1C1C1E" }}>Last Name *</label>
+                    <input
+                      type="text"
+                      placeholder="Enter Last Name"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      style={{
+                        background: "rgba(255,255,255,0.5)",
+                        border: "1px solid rgba(0,0,0,0.08)",
+                        borderRadius: 10,
+                        padding: "10px 14px",
+                        fontSize: 13,
+                        color: "#1C1C1E",
+                        outline: "none",
+                        fontFamily: "inherit",
+                        transition: "all 0.2s"
+                      }}
+                      className="shipping-input"
+                    />
+                  </div>
+                </div>
+
+                {/* Email & Phone Number */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: "#1C1C1E" }}>Email *</label>
+                    <input
+                      type="email"
+                      placeholder="Enter Email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      style={{
+                        background: "rgba(255,255,255,0.5)",
+                        border: "1px solid rgba(0,0,0,0.08)",
+                        borderRadius: 10,
+                        padding: "10px 14px",
+                        fontSize: 13,
+                        color: "#1C1C1E",
+                        outline: "none",
+                        fontFamily: "inherit",
+                        transition: "all 0.2s"
+                      }}
+                      className="shipping-input"
+                    />
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: "#1C1C1E" }}>Phone Number *</label>
+                    <input
+                      type="text"
+                      placeholder="Enter Phone Number"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      style={{
+                        background: "rgba(255,255,255,0.5)",
+                        border: "1px solid rgba(0,0,0,0.08)",
+                        borderRadius: 10,
+                        padding: "10px 14px",
+                        fontSize: 13,
+                        color: "#1C1C1E",
+                        outline: "none",
+                        fontFamily: "inherit",
+                        transition: "all 0.2s"
+                      }}
+                      className="shipping-input"
+                    />
+                  </div>
+                </div>
+
+                {/* Country & State/Province */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: "#1C1C1E" }}>Country *</label>
+                    <input
+                      type="text"
+                      placeholder="Sri Lanka"
+                      value={country}
+                      onChange={(e) => setCountry(e.target.value)}
+                      style={{
+                        background: "rgba(255,255,255,0.5)",
+                        border: "1px solid rgba(0,0,0,0.08)",
+                        borderRadius: 10,
+                        padding: "10px 14px",
+                        fontSize: 13,
+                        color: "#1C1C1E",
+                        outline: "none",
+                        fontFamily: "inherit",
+                        transition: "all 0.2s"
+                      }}
+                      className="shipping-input"
+                    />
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: "#1C1C1E" }}>State/Province *</label>
+                    <input
+                      type="text"
+                      placeholder="Enter State or Province"
+                      value={state}
+                      onChange={(e) => setState(e.target.value)}
+                      style={{
+                        background: "rgba(255,255,255,0.5)",
+                        border: "1px solid rgba(0,0,0,0.08)",
+                        borderRadius: 10,
+                        padding: "10px 14px",
+                        fontSize: 13,
+                        color: "#1C1C1E",
+                        outline: "none",
+                        fontFamily: "inherit",
+                        transition: "all 0.2s"
+                      }}
+                      className="shipping-input"
+                    />
+                  </div>
+                </div>
+
+                {/* City & Postal Code */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: "#1C1C1E" }}>City *</label>
+                    <input
+                      type="text"
+                      placeholder="Enter City"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      style={{
+                        background: "rgba(255,255,255,0.5)",
+                        border: "1px solid rgba(0,0,0,0.08)",
+                        borderRadius: 10,
+                        padding: "10px 14px",
+                        fontSize: 13,
+                        color: "#1C1C1E",
+                        outline: "none",
+                        fontFamily: "inherit",
+                        transition: "all 0.2s"
+                      }}
+                      className="shipping-input"
+                    />
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: "#1C1C1E" }}>Postal Code</label>
+                    <input
+                      type="text"
+                      placeholder="Enter Postal Code"
+                      value={postalCode}
+                      onChange={(e) => setPostalCode(e.target.value)}
+                      style={{
+                        background: "rgba(255,255,255,0.5)",
+                        border: "1px solid rgba(0,0,0,0.08)",
+                        borderRadius: 10,
+                        padding: "10px 14px",
+                        fontSize: 13,
+                        color: "#1C1C1E",
+                        outline: "none",
+                        fontFamily: "inherit",
+                        transition: "all 0.2s"
+                      }}
+                      className="shipping-input"
+                    />
+                  </div>
+                </div>
+
+                {/* Address */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: "#1C1C1E" }}>Address *</label>
+                  <input
+                    type="text"
+                    placeholder="Enter Address"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    style={{
+                      background: "rgba(255,255,255,0.5)",
+                      border: "1px solid rgba(0,0,0,0.08)",
+                      borderRadius: 10,
+                      padding: "10px 14px",
+                      fontSize: 13,
+                      color: "#1C1C1E",
+                      outline: "none",
+                      fontFamily: "inherit",
+                      transition: "all 0.2s"
+                    }}
+                    className="shipping-input"
+                  />
+                </div>
+
+                {/* Order Note */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: "#1C1C1E" }}>Order Note</label>
+                  <textarea
+                    placeholder="Notes about your order, e.g. special notes for delivery..."
+                    value={orderNote}
+                    onChange={(e) => setOrderNote(e.target.value)}
+                    rows={2}
+                    style={{
+                      background: "rgba(255,255,255,0.5)",
+                      border: "1px solid rgba(0,0,0,0.08)",
+                      borderRadius: 10,
+                      padding: "10px 14px",
+                      fontSize: 13,
+                      color: "#1C1C1E",
+                      outline: "none",
+                      fontFamily: "inherit",
+                      resize: "none",
+                      transition: "all 0.2s"
+                    }}
+                    className="shipping-input"
+                  />
+                </div>
+
+                {/* Optional visual elements for match: Ship to another Address */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+                  <input
+                    type="checkbox"
+                    id="shipAnother"
+                    style={{ cursor: "pointer", width: 16, height: 16, accentColor: "#aa841c" }}
+                  />
+                  <label htmlFor="shipAnother" style={{ fontSize: 13, fontWeight: 600, color: "#1C1C1E", cursor: "pointer" }}>
+                    Ship to another Address
+                  </label>
+                </div>
+              </div>
+
               <Link href="/storefront/shop" style={{
                 display: "inline-flex", alignItems: "center", gap: 6,
                 fontSize: 13, fontWeight: 600, color: "#aa841c",
                 textDecoration: "none", transition: "all 0.2s ease",
-                alignSelf: "flex-start", marginTop: 12
+                alignSelf: "flex-start", marginTop: 24
               }} className="continue-link">
                 ← Return to Collections
               </Link>
@@ -580,8 +945,112 @@ export default function CartPage() {
                         <div><strong>Branch:</strong> Colombo Corporate Branch</div>
                       </div>
                       <p style={{ margin: "8px 0 0", color: "#8E8E93", fontSize: 9, lineHeight: 1.4 }}>
-                        * Verify your total amount and place the order. You can upload the deposit slip afterwards from your accounts order history.
+                        * Please deposit the total amount to the bank account above and upload the deposit receipt/slip below before placing the order.
                       </p>
+
+                      {/* Premium Slip Upload Section */}
+                      <div style={{ marginTop: 16 }}>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: "#8E8E93", letterSpacing: "0.02em", textTransform: "uppercase", display: "block", marginBottom: 8 }}>
+                          Bank Receipt / Deposit Slip
+                        </label>
+                        
+                        <input
+                          type="file"
+                          id="slip-upload-input"
+                          accept="image/*"
+                          style={{ display: "none" }}
+                          onChange={handleFileChange}
+                          disabled={uploadingSlip}
+                        />
+
+                        {!paymentSlipUrl ? (
+                          <label
+                            htmlFor="slip-upload-input"
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              padding: "20px 16px",
+                              borderRadius: 12,
+                              border: "1.5px dashed rgba(170,132,28,0.3)",
+                              background: "rgba(255, 255, 255, 0.6)",
+                              cursor: uploadingSlip ? "not-allowed" : "pointer",
+                              transition: "all 0.2s ease-in-out",
+                              textAlign: "center",
+                              gap: 8,
+                            }}
+                            className="slip-upload-zone"
+                          >
+                            {uploadingSlip ? (
+                              <>
+                                <span className="cp-upload-spinner" style={{
+                                  width: 20, height: 20, border: "2px solid rgba(170,132,28,0.15)",
+                                  borderTopColor: "#aa841c", borderRadius: "50%",
+                                  animation: "spin 0.6s linear infinite"
+                                }} />
+                                <span style={{ fontSize: 11, fontWeight: 600, color: "#aa841c" }}>Uploading receipt...</span>
+                              </>
+                            ) : (
+                              <>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#aa841c" strokeWidth={2} style={{ opacity: 0.8 }}>
+                                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+                                </svg>
+                                <div>
+                                  <span style={{ fontSize: 11, fontWeight: 700, color: "#aa841c", display: "block" }}>Click to Upload Receipt</span>
+                                  <span style={{ fontSize: 9, color: "#8E8E93", display: "block", marginTop: 2 }}>Supports PNG, JPG, JPEG (Max 5MB)</span>
+                                </div>
+                              </>
+                            )}
+                          </label>
+                        ) : (
+                          <div style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 12,
+                            padding: "10px 12px",
+                            borderRadius: 12,
+                            border: "1px solid rgba(22, 163, 74, 0.2)",
+                            background: "rgba(22, 163, 74, 0.03)",
+                            position: "relative"
+                          }}>
+                            <div style={{
+                              width: 40,
+                              height: 40,
+                              borderRadius: 8,
+                              overflow: "hidden",
+                              border: "1px solid rgba(0,0,0,0.06)",
+                              flexShrink: 0,
+                              background: "#fff"
+                            }}>
+                              <img src={paymentSlipUrl} alt="Receipt preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: "#16A34A" }}>✓ Slip Uploaded</p>
+                              <p style={{ margin: "1px 0 0", fontSize: 9, color: "#8E8E93", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
+                                {paymentSlipUrl.substring(paymentSlipUrl.lastIndexOf('/') + 1)}
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={handleRemoveSlip}
+                              style={{
+                                background: "rgba(255, 59, 48, 0.08)",
+                                border: "none",
+                                color: "#FF3B30",
+                                padding: "4px 10px",
+                                borderRadius: 8,
+                                fontSize: 10,
+                                fontWeight: 700,
+                                cursor: "pointer",
+                                transition: "all 0.2s"
+                              }}
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
 
@@ -664,6 +1133,11 @@ export default function CartPage() {
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
+        .slip-upload-zone:hover {
+          border-color: rgba(170,132,28,0.6) !important;
+          background: rgba(170,132,28,0.06) !important;
+        }
+
         .cart-grid-container {
           display: grid;
           grid-template-columns: 1.5fr 1fr;
@@ -715,6 +1189,12 @@ export default function CartPage() {
         .coupon-input:focus {
           border-color: rgba(170,132,28,0.3) !important;
           background: rgba(255,255,255,0.7) !important;
+        }
+
+        .shipping-input:focus {
+          border-color: rgba(170,132,28,0.3) !important;
+          background: rgba(255,255,255,1) !important;
+          box-shadow: 0 0 0 3px rgba(170,132,28,0.05) !important;
         }
 
         .coupon-btn:hover:not(:disabled) {
