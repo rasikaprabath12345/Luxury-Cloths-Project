@@ -5,6 +5,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
+import { glass } from "@/utils/theme";
 
 const PLACEHOLDER_IMG = "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=600&auto=format&fit=crop";
 
@@ -19,6 +20,7 @@ export default function CartPage() {
   const router = useRouter();
 
   const handleUpdateQuantity = (id: number, newQty: number) => {
+    if (newQty < 1) return;
     updateQuantity(id, newQty);
   };
 
@@ -32,15 +34,15 @@ export default function CartPage() {
 
   const subTotal = cartItems.reduce((acc, item) => acc + item.price * (item.quantity || 1), 0);
   const discount = couponApplied ? Math.round(subTotal * 0.1) : 0;
-  const shippingFee = cartItems.length > 0 ? 500 : 0;
-  const totalAmount = subTotal - discount + shippingFee;
+  const shippingFee = 0; // FREE
+  const totalAmount = subTotal - discount;
   const totalItems = cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
 
   const handleApplyCoupon = () => {
     if (coupon.trim().toUpperCase() === "LUXURY10") {
       setCouponApplied(true);
     } else {
-      alert("Invalid coupon code.");
+      alert("Invalid coupon code. Try LUXURY10 for 10% off.");
     }
   };
 
@@ -87,103 +89,325 @@ export default function CartPage() {
 
   if (loading) {
     return (
-      <div className="cp-loading">
-        <div className="cp-spinner" />
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "center",
+        minHeight: "100vh", background: "linear-gradient(160deg, #F2F2F7 0%, #E8E8F0 40%, #EEF0F8 100%)"
+      }}>
+        <div className="cp-spinner" style={{
+          width: 44, height: 44,
+          border: "3px solid rgba(0,0,0,0.05)",
+          borderTopColor: "#aa841c", borderRadius: "50%",
+          animation: "spin 0.7s linear infinite"
+        }} />
       </div>
     );
   }
 
   return (
-    <div className="cp-page">
-      {/* ── HERO BANNER ── */}
-      <div className="cp-hero">
-        <div className="cp-hero-inner">
-          <p className="cp-hero-eyebrow">Shopping Cart</p>
-          <h1 className="cp-hero-title">Your Selections</h1>
-          <div className="cp-breadcrumb">
-            <Link href="/" className="cp-breadcrumb-link">Home</Link>
-            <span className="cp-breadcrumb-sep">›</span>
-            <span className="cp-breadcrumb-current">Cart</span>
-          </div>
-        </div>
+    <div style={{
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif",
+      background: "linear-gradient(160deg, #F2F2F7 0%, #E8E8F0 40%, #EEF0F8 100%)",
+      minHeight: "100vh", color: "#1C1C1E",
+      paddingTop: 130,
+      paddingBottom: 100,
+      position: "relative"
+    }}>
+      {/* Ambient background blur blobs */}
+      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
+        <div style={{
+          position: "absolute", top: "-10%", right: "-5%",
+          width: 600, height: 600, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(212,175,55,0.05) 0%, transparent 70%)",
+          filter: "blur(50px)",
+        }} />
+        <div style={{
+          position: "absolute", bottom: "10%", left: "-8%",
+          width: 500, height: 500, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(170,132,28,0.04) 0%, transparent 70%)",
+          filter: "blur(50px)",
+        }} />
       </div>
 
-      {/* ── MAIN ── */}
-      <div className="cp-main">
-        {cartItems.length === 0 ? (
-          /* ── EMPTY STATE ── */
-          <div className="cp-empty">
-            <div className="cp-empty-icon">
-              <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
-                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <path d="M16 10a4 4 0 01-8 0" />
-              </svg>
+      <div style={{ maxWidth: 1240, margin: "0 auto", padding: "0 24px", position: "relative", zIndex: 1 }}>
+        
+        {/* Step Indicator */}
+        <div className="checkout-steps" style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          maxWidth: 640,
+          margin: "0 auto 48px",
+          padding: "14px 28px",
+          ...glass.pill,
+          background: "rgba(255, 255, 255, 0.45)",
+          border: "1.5px solid rgba(255,255,255,0.9)",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.03)"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{
+              width: 26, height: 26, borderRadius: "50%",
+              background: "linear-gradient(135deg, #d4af37 0%, #aa841c 100%)",
+              color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 12, fontWeight: 700, boxShadow: "0 2px 8px rgba(170,132,28,0.25)"
+            }}>1</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#1C1C1E", letterSpacing: "0.02em" }}>Shopping Bag</span>
+          </div>
+          <div style={{ flex: 1, height: 1.5, background: "rgba(0,0,0,0.06)", margin: "0 20px" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 10, opacity: 0.6 }}>
+            <span style={{
+              width: 26, height: 26, borderRadius: "50%",
+              background: "rgba(0,0,0,0.06)",
+              color: "#555", display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 12, fontWeight: 700
+            }}>2</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#555" }}>Payment</span>
+          </div>
+          <div style={{ flex: 1, height: 1.5, background: "rgba(0,0,0,0.06)", margin: "0 20px" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 10, opacity: 0.6 }}>
+            <span style={{
+              width: 26, height: 26, borderRadius: "50%",
+              background: "rgba(0,0,0,0.06)",
+              color: "#555", display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 12, fontWeight: 700
+            }}>3</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#555" }}>Receipt</span>
+          </div>
+        </div>
+
+        {/* Back navigation & Header */}
+        <div style={{
+          display: "flex", flexDirection: "column", gap: 8, marginBottom: 40,
+          borderBottom: "1px solid rgba(0,0,0,0.05)", paddingBottom: 24
+        }}>
+          <Link href="/storefront/shop" style={{
+            display: "inline-flex", alignItems: "center", gap: 8, textDecoration: "none",
+            color: "#8E8E93", fontSize: 13, fontWeight: 600,
+            transition: "all 0.2s ease"
+          }} className="back-link">
+            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+              <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Continue Boutique Shopping
+          </Link>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 12, marginTop: 12 }}>
+            <div>
+              <p style={{
+                margin: "0 0 4px", fontSize: 11, fontWeight: 700, letterSpacing: "0.15em",
+                textTransform: "uppercase", color: "#aa841c"
+              }}>Boutique Cart</p>
+              <h1 style={{ margin: 0, fontSize: "clamp(28px, 4.5vw, 38px)", fontWeight: 800, letterSpacing: "-0.03em", color: "#1C1C1E" }}>
+                Your Selection
+              </h1>
             </div>
-            <h2 className="cp-empty-title">Your cart is empty</h2>
-            <p className="cp-empty-sub">Looks like you haven't added any luxury pieces yet.</p>
-            <Link href="/storefront/shop" className="cp-empty-btn">Explore Collection →</Link>
+            {cartItems.length > 0 && (
+              <button 
+                onClick={clearCart}
+                style={{
+                  background: "transparent", border: "none", color: "#FF3B30", 
+                  fontSize: 13, fontWeight: 600, cursor: "pointer", 
+                  display: "flex", alignItems: "center", gap: 6,
+                  padding: "6px 12px", borderRadius: 8, transition: "background 0.2s"
+                }}
+                className="clear-cart-btn"
+              >
+                Clear All Pieces
+              </button>
+            )}
+          </div>
+        </div>
+
+        {cartItems.length === 0 ? (
+          /* Empty Bag State Card */
+          <div style={{ 
+            ...glass.card, padding: "80px 40px", textAlign: "center",
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 24,
+            maxWidth: 580, margin: "60px auto", boxShadow: "0 8px 40px rgba(0,0,0,0.04)"
+          }}>
+            <div style={{
+              width: 84, height: 84, borderRadius: "50%",
+              background: "rgba(170,132,28,0.06)", border: "1px dashed rgba(170,132,28,0.25)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "#aa841c", fontSize: 32, boxShadow: "inset 0 2px 10px rgba(170,132,28,0.03)"
+            }}>
+              👜
+            </div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#1C1C1E", letterSpacing: "-0.01em" }}>Your Bag is Empty</h3>
+              <p style={{ margin: "8px 0 0", fontSize: 14, color: "#8E8E93", lineHeight: 1.5 }}>
+                Discover our premium luxury collections and select your tailor-made linen, silk, and cotton wear.
+              </p>
+            </div>
+            <Link href="/storefront/shop" style={{
+              background: "linear-gradient(135deg, #d4af37 0%, #aa841c 100%)",
+              color: "#fff", textDecoration: "none", fontSize: 13, fontWeight: 700,
+              padding: "14px 36px", borderRadius: 14,
+              boxShadow: "0 4px 16px rgba(170,132,28,0.2)", transition: "all 0.25s ease",
+              letterSpacing: "0.5px", textTransform: "uppercase"
+            }} className="explore-btn">
+              Explore Collection
+            </Link>
           </div>
         ) : (
-          <div className="cp-grid">
-            {/* ── LEFT: ITEMS ── */}
-            <div className="cp-left">
-              <div className="cp-section-header">
-                <h2 className="cp-section-title">Cart Items</h2>
-                <span className="cp-item-count">{totalItems} {totalItems === 1 ? "item" : "items"}</span>
+          <div className="cart-grid-container">
+            
+            {/* LEFT COLUMN: SELECTED ITEMS */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <h2 style={{ fontSize: 17, fontWeight: 800, color: "#1C1C1E", margin: 0 }}>Selected Pieces</h2>
+                <span style={{
+                  fontSize: 11, fontWeight: 700, color: "#aa841c",
+                  background: "rgba(170,132,28,0.06)", border: "0.5px solid rgba(170,132,28,0.18)",
+                  padding: "3px 10px", borderRadius: 100
+                }}>
+                  {totalItems} {totalItems === 1 ? "item" : "items"}
+                </span>
               </div>
 
-              <div className="cp-items-list">
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 {cartItems.map((item) => {
                   const img = item.imageUrl || item.image || PLACEHOLDER_IMG;
                   const isRemoving = removingId === item.id;
                   return (
                     <div
                       key={item.id}
-                      className={`cp-item ${isRemoving ? "cp-item-exit" : ""}`}
+                      style={{
+                        ...glass.card,
+                        display: "flex",
+                        gap: 20,
+                        padding: "20px 24px 20px 20px",
+                        opacity: isRemoving ? 0 : 1,
+                        transform: isRemoving ? "scale(0.96) translateY(-12px)" : "scale(1)",
+                        transition: "all 0.38s cubic-bezier(0.16, 1, 0.3, 1)",
+                        border: "1px solid rgba(255,255,255,0.9)",
+                        background: "rgba(255,255,255,0.65)"
+                      }}
+                      className="cart-item-card"
                     >
-                      {/* Image */}
-                      <div className="cp-item-img-wrap">
-                        <img src={img} alt={item.name} className="cp-item-img" />
-                        <span className="cp-item-qty-badge">{item.quantity}</span>
+                      {/* Image container with zoom hover */}
+                      <div style={{ 
+                        position: "relative", 
+                        flexShrink: 0,
+                        borderRadius: 16,
+                        overflow: "hidden",
+                        border: "1px solid rgba(0,0,0,0.06)",
+                        boxShadow: "0 2px 10px rgba(0,0,0,0.04)"
+                      }} className="cart-img-box">
+                        <img
+                          src={img}
+                          alt={item.name}
+                          style={{
+                            width: 100, height: 125, objectFit: "cover",
+                            transition: "transform 0.4s ease-out"
+                          }}
+                          className="cart-item-image"
+                        />
+                        <span style={{
+                          position: "absolute", top: -8, right: -8,
+                          background: "#aa841c", color: "#fff",
+                          fontSize: 10, fontWeight: 800, width: 22, height: 22,
+                          borderRadius: "50%", display: "flex", alignItems: "center",
+                          justifyContent: "center", boxShadow: "0 2px 8px rgba(170,132,28,0.2)",
+                          border: "2px solid #fff"
+                        }}>
+                          {item.quantity}
+                        </span>
                       </div>
 
-                      {/* Info */}
-                      <div className="cp-item-info">
-                        <div className="cp-item-top">
-                          <div>
-                            <p className="cp-item-category">Luxury Collection</p>
-                            <h3 className="cp-item-name">{item.name}</h3>
-                            <div className="cp-item-meta">
-                              {item.size && <span className="cp-item-tag">Size: {item.size}</span>}
-                              {item.color && <span className="cp-item-tag">Color: {item.color}</span>}
+                      {/* Info & Controls */}
+                      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", minWidth: 0 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
+                          <div style={{ minWidth: 0 }}>
+                            <p style={{
+                              fontSize: 9, fontWeight: 700, letterSpacing: "0.14em",
+                              textTransform: "uppercase", color: "#aa841c", margin: "0 0 4px"
+                            }}>Luxury Apparel</p>
+                            <h3 style={{
+                              fontSize: 15, fontWeight: 700, color: "#1C1C1E",
+                              margin: 0, lineHeight: 1.3, whiteSpace: "nowrap",
+                              overflow: "hidden", textOverflow: "ellipsis"
+                            }}>{item.name}</h3>
+                            
+                            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+                              {item.size && (
+                                <span style={{
+                                  fontSize: 10, fontWeight: 600, color: "#555",
+                                  background: "rgba(0,0,0,0.04)", border: "0.5px solid rgba(0,0,0,0.05)",
+                                  padding: "2px 8px", borderRadius: 6
+                                }}>Size: {item.size}</span>
+                              )}
+                              {item.color && (
+                                <span style={{
+                                  fontSize: 10, fontWeight: 600, color: "#555",
+                                  background: "rgba(0,0,0,0.04)", border: "0.5px solid rgba(0,0,0,0.05)",
+                                  padding: "2px 8px", borderRadius: 6
+                                }}>Color: {item.color}</span>
+                              )}
                             </div>
                           </div>
+                          
                           <button
-                            className="cp-remove-btn"
                             onClick={() => removeItem(item.id)}
+                            style={{
+                              background: "rgba(0,0,0,0.02)", border: "none", color: "#8E8E93",
+                              cursor: "pointer", width: 28, height: 28, borderRadius: "50%",
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              transition: "all 0.2s ease"
+                            }}
+                            className="cart-delete-btn"
                             aria-label="Remove item"
                           >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <polyline points="3 6 5 6 21 6" />
-                              <path d="M19 6l-1 14H6L5 6" />
-                              <path d="M10 11v6M14 11v6M9 6V4h6v2" />
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                              <line x1="18" y1="6" x2="6" y2="18" />
+                              <line x1="6" y1="6" x2="18" y2="18" />
                             </svg>
                           </button>
                         </div>
 
-                        <div className="cp-item-bottom">
-                          {/* Qty Controls */}
-                          <div className="cp-qty-wrap">
-                            <button className="cp-qty-btn" onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}>−</button>
-                            <span className="cp-qty-num">{item.quantity}</span>
-                            <button className="cp-qty-btn" onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}>+</button>
+                        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, marginTop: 14 }}>
+                          
+                          {/* Premium quantity adjustment buttons */}
+                          <div style={{
+                            display: "flex", alignItems: "center",
+                            background: "rgba(0,0,0,0.03)", border: "0.5px solid rgba(0,0,0,0.06)",
+                            borderRadius: 12, padding: "2px"
+                          }}>
+                            <button
+                              onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
+                              disabled={item.quantity <= 1}
+                              style={{
+                                width: 28, height: 26, display: "flex", alignItems: "center",
+                                justifyItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700,
+                                color: item.quantity <= 1 ? "#C7C7CC" : "#555", background: "transparent", border: "none",
+                                cursor: item.quantity <= 1 ? "default" : "pointer", transition: "background 0.15s",
+                                borderRadius: 10
+                              }}
+                              className="qty-action-btn"
+                            >−</button>
+                            <span style={{
+                              fontSize: 12, fontWeight: 700, color: "#aa841c",
+                              minWidth: 26, textAlign: "center"
+                            }}>{item.quantity}</span>
+                            <button
+                              onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                              style={{
+                                width: 28, height: 26, display: "flex", alignItems: "center",
+                                justifyItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700,
+                                color: "#555", background: "transparent", border: "none",
+                                cursor: "pointer", transition: "background 0.15s",
+                                borderRadius: 10
+                              }}
+                              className="qty-action-btn"
+                            >+</button>
                           </div>
 
-                          {/* Price */}
-                          <div className="cp-item-price-wrap">
-                            <p className="cp-item-unit">Rs. {item.price.toLocaleString()} × {item.quantity}</p>
-                            <p className="cp-item-total">Rs. {(item.price * item.quantity).toLocaleString()}</p>
+                          {/* Prices */}
+                          <div style={{ textAlign: "right" }}>
+                            <span style={{ fontSize: 11, color: "#8E8E93", display: "block", marginBottom: 2 }}>
+                              Rs. {item.price.toLocaleString()} each
+                            </span>
+                            <p style={{ fontSize: 15, fontWeight: 800, color: "#aa841c", margin: 0 }}>
+                              Rs. {(item.price * item.quantity).toLocaleString()}
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -192,116 +416,224 @@ export default function CartPage() {
                 })}
               </div>
 
-              {/* Continue Shopping */}
-              <Link href="/storefront/shop" className="cp-continue">
-                ← Continue Shopping
+              <Link href="/storefront/shop" style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                fontSize: 13, fontWeight: 600, color: "#aa841c",
+                textDecoration: "none", transition: "all 0.2s ease",
+                alignSelf: "flex-start", marginTop: 12
+              }} className="continue-link">
+                ← Return to Collections
               </Link>
             </div>
 
-            {/* ── RIGHT: SUMMARY ── */}
-            <div className="cp-right">
-              {/* Order Summary Card */}
-              <div className="cp-summary-card">
-                <h2 className="cp-summary-title">Order Summary</h2>
+            {/* RIGHT COLUMN: STICKY ORDER SUMMARY & CHECKOUT */}
+            <div className="cart-summary-sticky">
+              <div style={{
+                ...glass.card,
+                padding: "28px 24px",
+                border: "1px solid rgba(255,255,255,0.95)",
+                background: "rgba(255,255,255,0.72)",
+                boxShadow: "0 10px 40px rgba(0,0,0,0.05)"
+              }}>
+                <h2 style={{ fontSize: 17, fontWeight: 800, color: "#1C1C1E", margin: "0 0 20px", letterSpacing: "-0.01em" }}>Order Summary</h2>
 
-                <div className="cp-summary-rows">
-                  <div className="cp-summary-row">
-                    <span>Subtotal ({totalItems} items)</span>
-                    <span>Rs. {subTotal.toLocaleString()}</span>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
+                    <span style={{ color: "#8E8E93" }}>Subtotal ({totalItems} items)</span>
+                    <span style={{ color: "#1C1C1E", fontWeight: 600 }}>Rs. {subTotal.toLocaleString()}</span>
                   </div>
+                  
                   {couponApplied && (
-                    <div className="cp-summary-row cp-discount-row">
-                      <span>Discount (LUXURY10)</span>
-                      <span>− Rs. {discount.toLocaleString()}</span>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
+                      <span style={{ color: "#15803D", fontWeight: 500 }}>Discount (LUXURY10)</span>
+                      <span style={{ color: "#15803D", fontWeight: 700 }}>− Rs. {discount.toLocaleString()}</span>
                     </div>
                   )}
-                  <div className="cp-summary-row">
-                    <span>Delivery</span>
-                    <span className="cp-free-tag">Rs. {shippingFee.toLocaleString()}</span>
+
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, alignItems: "center" }}>
+                    <span style={{ color: "#8E8E93" }}>Delivery Fee</span>
+                    <span style={{
+                      color: "#15803D", fontWeight: 700, fontSize: 10,
+                      background: "rgba(22,163,74,0.08)", padding: "3px 8px", borderRadius: 6
+                    }}>FREE</span>
                   </div>
                 </div>
 
-                <div className="cp-summary-divider" />
+                <div style={{ height: 0.5, background: "rgba(0,0,0,0.06)", marginBottom: 20 }} />
 
-                <div className="cp-total-row">
-                  <span className="cp-total-label">Total</span>
-                  <span className="cp-total-value">Rs. {totalAmount.toLocaleString()}</span>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: "#1C1C1E" }}>Total Amount</span>
+                  <span style={{ fontSize: 22, fontWeight: 900, color: "#aa841c", letterSpacing: "-0.5px" }}>
+                    Rs. {totalAmount.toLocaleString()}
+                  </span>
                 </div>
 
-                {/* Coupon */}
-                <div className="cp-coupon-wrap">
+                {/* Promo Coupon Entry */}
+                <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
                   <input
-                    className="cp-coupon-input"
-                    placeholder="Promo code (e.g. LUXURY10)"
+                    placeholder="Coupon (e.g. LUXURY10)"
                     value={coupon}
                     onChange={(e) => setCoupon(e.target.value)}
                     disabled={couponApplied}
+                    style={{
+                      flex: 1, background: "rgba(255,255,255,0.5)",
+                      border: "1px solid rgba(0,0,0,0.08)", borderRadius: 10,
+                      padding: "10px 14px", fontSize: 12, color: "#1C1C1E",
+                      outline: "none", fontFamily: "inherit", transition: "border-color 0.2s"
+                    }}
+                    className="coupon-input"
                   />
                   <button
-                    className="cp-coupon-btn"
                     onClick={handleApplyCoupon}
                     disabled={couponApplied}
+                    style={{
+                      background: couponApplied ? "rgba(22,163,74,0.08)" : "rgba(0,0,0,0.03)",
+                      border: couponApplied ? "0.5px solid rgba(22,163,74,0.2)" : "0.5px solid rgba(0,0,0,0.08)",
+                      color: couponApplied ? "#15803D" : "#aa841c", fontSize: 12, fontWeight: 700,
+                      padding: "10px 18px", borderRadius: 10, cursor: couponApplied ? "default" : "pointer",
+                      transition: "all 0.2s ease"
+                    }}
+                    className="coupon-btn"
                   >
-                    {couponApplied ? "✓" : "Apply"}
+                    {couponApplied ? "✓ Active" : "Apply"}
                   </button>
                 </div>
 
-                {/* Payment Method */}
-                <div className="cp-payment-section">
-                  <p className="cp-payment-label">Payment Method</p>
-                  <div className="cp-payment-options">
+                {/* Payment Option Selection */}
+                <div style={{ marginBottom: 28 }}>
+                  <p style={{
+                    fontSize: 10, fontWeight: 700, color: "#8E8E93",
+                    letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12
+                  }}>Payment Method</p>
+                  
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     {[
-                      { value: "BankTransfer", label: "Bank Transfer", sub: "Upload slip after order" },
-                      { value: "COD", label: "Cash on Delivery", sub: "Pay when you receive" },
-                    ].map((opt) => (
-                      <label
-                        key={opt.value}
-                        className={`cp-payment-option ${paymentMethod === opt.value ? "cp-payment-active" : ""}`}
-                      >
-                        <input
-                          type="radio"
-                          name="payment"
-                          value={opt.value}
-                          checked={paymentMethod === opt.value}
-                          onChange={(e) => setPaymentMethod(e.target.value)}
-                          className="cp-radio"
-                        />
-                        <div className="cp-payment-icon">
-                          {opt.value === "BankTransfer" ? (
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                              <rect x="2" y="5" width="20" height="14" rx="2" />
-                              <line x1="2" y1="10" x2="22" y2="10" />
-                            </svg>
-                          ) : (
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                              <path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
-                            </svg>
-                          )}
-                        </div>
-                        <div>
-                          <p className="cp-payment-name">{opt.label}</p>
-                          <p className="cp-payment-sub">{opt.sub}</p>
-                        </div>
-                      </label>
-                    ))}
+                      { value: "BankTransfer", label: "Bank Transfer", sub: "Verify & place order, then upload slip" },
+                      { value: "COD", label: "Cash on Delivery", sub: "Pay physically upon delivery" },
+                    ].map((opt) => {
+                      const isActive = paymentMethod === opt.value;
+                      return (
+                        <label
+                          key={opt.value}
+                          style={{
+                            display: "flex", alignItems: "center", gap: 12,
+                            padding: "12px 14px", borderRadius: 12,
+                            border: isActive ? "1.5px solid rgba(170,132,28,0.4)" : "1px solid rgba(0,0,0,0.06)",
+                            background: isActive ? "rgba(170,132,28,0.03)" : "#ffffff",
+                            cursor: "pointer", transition: "all 0.2s ease",
+                            boxShadow: isActive ? "0 2px 10px rgba(170,132,28,0.04)" : "none"
+                          }}
+                          className="payment-method-card"
+                        >
+                          <input
+                            type="radio"
+                            name="payment"
+                            value={opt.value}
+                            checked={isActive}
+                            onChange={(e) => setPaymentMethod(e.target.value)}
+                            style={{ display: "none" }}
+                          />
+                          <div style={{
+                            width: 32, height: 32, borderRadius: 8,
+                            background: isActive ? "rgba(170,132,28,0.08)" : "rgba(0,0,0,0.03)",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            color: isActive ? "#aa841c" : "#555", flexShrink: 0
+                          }}>
+                            {opt.value === "BankTransfer" ? (
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                                <rect x="2" y="5" width="20" height="14" rx="2" />
+                                <line x1="2" y1="10" x2="22" y2="10" />
+                              </svg>
+                            ) : (
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                                <path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+                              </svg>
+                            )}
+                          </div>
+                          <div>
+                            <p style={{ fontSize: 13, fontWeight: 700, color: "#1C1C1E", margin: "0 0 2px" }}>{opt.label}</p>
+                            <p style={{ fontSize: 10, color: "#8E8E93", margin: 0 }}>{opt.sub}</p>
+                          </div>
+                        </label>
+                      );
+                    })}
                   </div>
+
+                  {/* Dynamic Bank details sub-card */}
+                  {paymentMethod === "BankTransfer" && (
+                    <div style={{
+                      marginTop: 12,
+                      padding: "16px",
+                      borderRadius: 14,
+                      background: "rgba(170,132,28,0.03)",
+                      border: "0.5px solid rgba(170,132,28,0.2)",
+                      fontSize: 11,
+                      lineHeight: "1.5em",
+                      color: "#4A3608",
+                      animation: "fadeIn 0.3s ease-in-out"
+                    }}>
+                      <p style={{ margin: "0 0 8px", fontWeight: 700, color: "#aa841c", textTransform: "uppercase", letterSpacing: "0.05em", fontSize: 10 }}>Bank Credentials</p>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        <div><strong>Bank:</strong> Sampath Bank PLC</div>
+                        <div><strong>Account Name:</strong> Luxury Clothing Store</div>
+                        <div><strong>Account Number:</strong> 1009 5421 9882</div>
+                        <div><strong>Branch:</strong> Colombo Corporate Branch</div>
+                      </div>
+                      <p style={{ margin: "8px 0 0", color: "#8E8E93", fontSize: 9, lineHeight: 1.4 }}>
+                        * Verify your total amount and place the order. You can upload the deposit slip afterwards from your accounts order history.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Dynamic Cash on Delivery info */}
+                  {paymentMethod === "COD" && (
+                    <div style={{
+                      marginTop: 12,
+                      padding: "16px",
+                      borderRadius: 14,
+                      background: "rgba(0,0,0,0.02)",
+                      border: "0.5px solid rgba(0,0,0,0.06)",
+                      fontSize: 11,
+                      lineHeight: "1.5em",
+                      color: "#444",
+                      animation: "fadeIn 0.3s ease-in-out"
+                    }}>
+                      <p style={{ margin: "0 0 4px", fontWeight: 700, color: "#1C1C1E" }}>Cash On Delivery instructions</p>
+                      <p style={{ margin: 0, color: "#8E8E93", fontSize: 10 }}>
+                        Place your order now. You will pay the full amount in cash to the courier agent when the shipment is delivered to your doorstep.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
-                {/* Place Order Button */}
+                {/* Checkout CTA */}
                 <button
-                  className="cp-order-btn"
                   onClick={handlePlaceOrder}
                   disabled={isOrdering || cartItems.length === 0}
+                  style={{
+                    width: "100%", display: "flex", alignItems: "center", justifyContent: "center",
+                    gap: 10, background: "linear-gradient(135deg, #d4af37 0%, #aa841c 100%)",
+                    color: "#fff", fontSize: 13, fontWeight: 700,
+                    padding: "16px 20px", borderRadius: 14, border: "none",
+                    cursor: "pointer", letterSpacing: "0.5px", textTransform: "uppercase",
+                    transition: "all 0.25s ease", boxShadow: "0 4px 15px rgba(170,132,28,0.2)",
+                    marginBottom: 16
+                  }}
+                  className="cart-checkout-cta"
                 >
                   {isOrdering ? (
-                    <span className="cp-order-loading">
-                      <span className="cp-order-spinner" />
-                      Processing…
+                    <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <span className="cp-order-spinner" style={{
+                        width: 14, height: 14, border: "2px solid rgba(255,255,255,0.2)",
+                        borderTopColor: "#fff", borderRadius: "50%",
+                        animation: "spin 0.6s linear infinite"
+                      }} />
+                      Processing Order…
                     </span>
                   ) : (
                     <>
-                      <span>Place Order</span>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <span>Confirm & Place Order</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                         <line x1="5" y1="12" x2="19" y2="12" />
                         <polyline points="12 5 19 12 12 19" />
                       </svg>
@@ -309,651 +641,121 @@ export default function CartPage() {
                   )}
                 </button>
 
-                {/* Trust badges */}
-                <div className="cp-trust-row">
-                  {["🔒 Secure Payment", "🚚 Fast Delivery", "↩ Easy Returns"].map((badge) => (
-                    <span key={badge} className="cp-trust-badge">{badge}</span>
+                {/* Trust Badges */}
+                <div style={{
+                  display: "flex", justifyContent: "center", gap: 16,
+                  borderTop: "0.5px solid rgba(0,0,0,0.06)", paddingTop: 16, flexWrap: "wrap"
+                }}>
+                  {["🔒 SSL Secure", "✨ Premium Quality"].map((badge) => (
+                    <span key={badge} style={{ fontSize: 10, color: "#8E8E93", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+                      {badge}
+                    </span>
                   ))}
                 </div>
               </div>
             </div>
+
           </div>
         )}
       </div>
 
-      {/* ── STYLES ── */}
+      {/* Styled classes and keyframe animations */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-
-        .cp-page {
-          font-family: 'Inter', sans-serif;
-          background: #f5f5f7;
-          min-height: 100vh;
-          color: #1d1d1f;
-        }
-
-        /* ── LOADING ── */
-        .cp-loading {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          min-height: 100vh;
-          background: #f5f5f7;
-        }
-        .cp-spinner {
-          width: 44px;
-          height: 44px;
-          border: 3px solid rgba(0, 0, 0, 0.05);
-          border-top-color: #aa841c;
-          border-radius: 50%;
-          animation: spin 0.7s linear infinite;
-        }
         @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* ── HERO ── */
-        .cp-hero {
-          position: relative;
-          padding: 100px 32px 60px;
-          background: linear-gradient(135deg, #ffffff 0%, #f5f5f7 100%);
-          border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-          overflow: hidden;
-        }
-        .cp-hero::before {
-          content: '';
-          position: absolute;
-          top: -80px;
-          right: -80px;
-          width: 400px;
-          height: 400px;
-          background: radial-gradient(circle, rgba(212, 175, 55, 0.05) 0%, transparent 70%);
-          pointer-events: none;
-        }
-        .cp-hero-inner {
-          max-width: 1280px;
-          margin: 0 auto;
-          position: relative;
-          z-index: 1;
-        }
-        .cp-hero-eyebrow {
-          font-size: 12px;
-          font-weight: 600;
-          letter-spacing: 3px;
-          text-transform: uppercase;
-          color: #aa841c;
-          margin: 0 0 12px;
-        }
-        .cp-hero-title {
-          font-size: clamp(32px, 5vw, 52px);
-          font-weight: 800;
-          letter-spacing: -1.5px;
-          color: #1d1d1f;
-          margin: 0 0 20px;
-          line-height: 1.05;
-        }
-        .cp-breadcrumb {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 13px;
-        }
-        .cp-breadcrumb-link {
-          color: #888;
-          text-decoration: none;
-          transition: color 0.2s;
-        }
-        .cp-breadcrumb-link:hover { color: #aa841c; }
-        .cp-breadcrumb-sep { color: #ccc; }
-        .cp-breadcrumb-current { color: #666; }
-
-        /* ── MAIN ── */
-        .cp-main {
-          max-width: 1280px;
-          margin: 0 auto;
-          padding: 56px 32px 80px;
-        }
-
-        /* ── EMPTY STATE ── */
-        .cp-empty {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          text-align: center;
-          padding: 100px 24px;
-          border: 1px dashed rgba(0, 0, 0, 0.1);
-          border-radius: 24px;
-          background: #ffffff;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.02);
-        }
-        .cp-empty-icon {
-          width: 100px;
-          height: 100px;
-          border-radius: 50%;
-          background: rgba(212, 175, 55, 0.05);
-          border: 1px solid rgba(212, 175, 55, 0.1);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #aa841c;
-          margin-bottom: 28px;
-        }
-        .cp-empty-title {
-          font-size: 26px;
-          font-weight: 800;
-          color: #1d1d1f;
-          margin: 0 0 10px;
-        }
-        .cp-empty-sub {
-          font-size: 15px;
-          color: #666;
-          margin: 0 0 32px;
-        }
-        .cp-empty-btn {
-          background: linear-gradient(135deg, #d4af37, #aa841c);
-          color: #fff;
-          font-weight: 700;
-          font-size: 14px;
-          padding: 14px 32px;
-          border-radius: 12px;
-          text-decoration: none;
-          letter-spacing: 0.3px;
-          transition: all 0.25s ease;
-          box-shadow: 0 4px 15px rgba(212, 175, 55, 0.25);
-        }
-        .cp-empty-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(212, 175, 55, 0.35);
-        }
-
-        /* ── GRID ── */
-        .cp-grid {
+        .cart-grid-container {
           display: grid;
-          grid-template-columns: 1fr 380px;
+          grid-template-columns: 1.5fr 1fr;
           gap: 40px;
           align-items: start;
         }
-        @media (max-width: 1024px) {
-          .cp-grid { grid-template-columns: 1fr; }
-        }
 
-        /* ── LEFT PANEL ── */
-        .cp-left {}
-        .cp-section-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 24px;
-        }
-        .cp-section-title {
-          font-size: 20px;
-          font-weight: 800;
-          color: #1d1d1f;
-          margin: 0;
-        }
-        .cp-item-count {
-          font-size: 13px;
-          font-weight: 600;
-          color: #aa841c;
-          background: rgba(212, 175, 55, 0.08);
-          border: 1px solid rgba(212, 175, 55, 0.15);
-          padding: 4px 12px;
-          border-radius: 99px;
-        }
-
-        /* ── ITEM CARD ── */
-        .cp-items-list {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-          margin-bottom: 32px;
-        }
-        .cp-item {
-          display: flex;
-          gap: 20px;
-          background: #ffffff;
-          border: 1px solid rgba(0, 0, 0, 0.05);
-          border-radius: 20px;
-          padding: 20px;
-          transition: all 0.38s cubic-bezier(0.16,1,0.3,1);
-          animation: itemSlideIn 0.4s ease forwards;
-          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.01);
-        }
-        .cp-item:hover {
-          border-color: rgba(212, 175, 55, 0.25);
-          background: #fafafa;
-          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.03);
-        }
-        .cp-item-exit {
-          opacity: 0;
-          transform: translateX(40px) scale(0.96);
-        }
-        @keyframes itemSlideIn {
-          from { opacity: 0; transform: translateY(12px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Item image */
-        .cp-item-img-wrap {
-          position: relative;
-          flex-shrink: 0;
-        }
-        .cp-item-img {
-          width: 110px;
-          height: 130px;
-          object-fit: cover;
-          border-radius: 14px;
-          border: 1px solid rgba(0, 0, 0, 0.06);
-        }
-        .cp-item-qty-badge {
-          position: absolute;
-          top: -8px;
-          right: -8px;
-          background: #1d1d1f;
-          color: #fff;
-          font-size: 11px;
-          font-weight: 800;
-          width: 22px;
-          height: 22px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        /* Item info */
-        .cp-item-info {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-          min-width: 0;
-        }
-        .cp-item-top {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          gap: 12px;
-        }
-        .cp-item-category {
-          font-size: 11px;
-          font-weight: 600;
-          letter-spacing: 2px;
-          text-transform: uppercase;
-          color: #aa841c;
-          margin: 0 0 6px;
-        }
-        .cp-item-name {
-          font-size: 17px;
-          font-weight: 700;
-          color: #1d1d1f;
-          margin: 0 0 10px;
-          line-height: 1.3;
-        }
-        .cp-item-meta {
-          display: flex;
-          gap: 8px;
-          flex-wrap: wrap;
-        }
-        .cp-item-tag {
-          font-size: 11px;
-          font-weight: 600;
-          color: #666;
-          background: #f2f2f4;
-          border: 1px solid rgba(0, 0, 0, 0.04);
-          padding: 3px 10px;
-          border-radius: 6px;
-        }
-        .cp-remove-btn {
-          background: transparent;
-          border: none;
-          color: #999;
-          cursor: pointer;
-          padding: 6px;
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: all 0.2s ease;
-          flex-shrink: 0;
-        }
-        .cp-remove-btn:hover {
-          color: #ef4444;
-          background: rgba(239,68,68,0.05);
-        }
-
-        /* Bottom row */
-        .cp-item-bottom {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-        }
-        .cp-qty-wrap {
-          display: flex;
-          align-items: center;
-          background: #f2f2f4;
-          border: 1px solid rgba(0, 0, 0, 0.05);
-          border-radius: 10px;
-          overflow: hidden;
-        }
-        .cp-qty-btn {
-          width: 36px;
-          height: 36px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 18px;
-          font-weight: 700;
-          color: #555;
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          transition: all 0.15s ease;
-          line-height: 1;
-        }
-        .cp-qty-btn:hover {
-          background: rgba(0, 0, 0, 0.05);
-          color: #000;
-        }
-        .cp-qty-num {
-          font-size: 14px;
-          font-weight: 700;
-          color: #1d1d1f;
-          min-width: 32px;
-          text-align: center;
-        }
-        .cp-item-price-wrap {
-          text-align: right;
-        }
-        .cp-item-unit {
-          font-size: 12px;
-          color: #777;
-          margin: 0 0 4px;
-        }
-        .cp-item-total {
-          font-size: 18px;
-          font-weight: 800;
-          color: #aa841c;
-          margin: 0;
-        }
-
-        /* Continue link */
-        .cp-continue {
-          display: inline-block;
-          font-size: 13px;
-          font-weight: 600;
-          color: #888;
-          text-decoration: none;
-          transition: color 0.2s ease;
-          padding: 4px 0;
-        }
-        .cp-continue:hover { color: #aa841c; }
-
-        /* ── RIGHT: SUMMARY CARD ── */
-        .cp-right {
+        .cart-summary-sticky {
           position: sticky;
-          top: 100px;
-        }
-        .cp-summary-card {
-          background: #ffffff;
-          border: 1px solid rgba(0, 0, 0, 0.06);
-          border-radius: 24px;
-          padding: 28px;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
-        }
-        .cp-summary-title {
-          font-size: 18px;
-          font-weight: 800;
-          color: #1d1d1f;
-          margin: 0 0 24px;
-          padding-bottom: 16px;
-          border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-        }
-        .cp-summary-rows {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          margin-bottom: 20px;
-        }
-        .cp-summary-row {
-          display: flex;
-          justify-content: space-between;
-          font-size: 14px;
-          color: #666;
-        }
-        .cp-summary-row span:last-child { color: #1d1d1f; font-weight: 600; }
-        .cp-discount-row span { color: #15803d !important; }
-        .cp-free-tag {
-          color: #15803d !important;
-          font-weight: 700 !important;
-          background: rgba(22, 163, 74, 0.08);
-          padding: 2px 8px;
-          border-radius: 6px;
-        }
-        .cp-summary-divider {
-          height: 1px;
-          background: rgba(0, 0, 0, 0.06);
-          margin-bottom: 20px;
-        }
-        .cp-total-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 24px;
-        }
-        .cp-total-label {
-          font-size: 16px;
-          font-weight: 800;
-          color: #1d1d1f;
-        }
-        .cp-total-value {
-          font-size: 26px;
-          font-weight: 800;
-          color: #aa841c;
-          letter-spacing: -0.5px;
+          top: 110px;
         }
 
-        /* Coupon */
-        .cp-coupon-wrap {
-          display: flex;
-          gap: 8px;
-          margin-bottom: 24px;
-        }
-        .cp-coupon-input {
-          flex: 1;
-          background: #f2f2f4;
-          border: 1px solid rgba(0, 0, 0, 0.06);
-          border-radius: 10px;
-          padding: 10px 14px;
-          font-size: 13px;
-          color: #1d1d1f;
-          outline: none;
-          transition: border-color 0.2s;
-          font-family: 'Inter', sans-serif;
-        }
-        .cp-coupon-input:focus { border-color: rgba(212, 175, 55, 0.4); }
-        .cp-coupon-input::placeholder { color: #999; }
-        .cp-coupon-input:disabled { opacity: 0.5; }
-        .cp-coupon-btn {
-          background: rgba(0, 0, 0, 0.02);
-          border: 1px solid rgba(0, 0, 0, 0.06);
-          color: #aa841c;
-          font-size: 13px;
-          font-weight: 700;
-          padding: 10px 18px;
-          border-radius: 10px;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          white-space: nowrap;
-        }
-        .cp-coupon-btn:hover:not(:disabled) {
-          background: rgba(0, 0, 0, 0.05);
-        }
-        .cp-coupon-btn:disabled { opacity: 0.6; cursor: default; }
-
-        /* Payment */
-        .cp-payment-section { margin-bottom: 24px; }
-        .cp-payment-label {
-          font-size: 13px;
-          font-weight: 700;
-          color: #888;
-          margin-bottom: 12px;
-          text-transform: uppercase;
-          letter-spacing: 1px;
-        }
-        .cp-payment-options {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-        .cp-payment-option {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 14px 16px;
-          border-radius: 14px;
-          border: 1px solid rgba(0, 0, 0, 0.06);
-          background: #ffffff;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-        .cp-payment-option:hover {
-          border-color: rgba(212, 175, 55, 0.2);
-        }
-        .cp-payment-active {
-          border-color: rgba(212, 175, 55, 0.4) !important;
-          background: rgba(212, 175, 55, 0.04) !important;
-        }
-        .cp-radio { display: none; }
-        .cp-payment-icon {
-          width: 36px;
-          height: 36px;
-          border-radius: 10px;
-          background: #f2f2f4;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #555;
-          flex-shrink: 0;
-        }
-        .cp-payment-active .cp-payment-icon {
-          background: rgba(212, 175, 55, 0.1);
-          color: #aa841c;
-        }
-        .cp-payment-name {
-          font-size: 13px;
-          font-weight: 700;
-          color: #1d1d1f;
-          margin: 0 0 3px;
-        }
-        .cp-payment-sub {
-          font-size: 11px;
-          color: #777;
-          margin: 0;
+        .back-link:hover {
+          color: #aa841c !important;
+          transform: translateX(-4px);
         }
 
-        /* Order button */
-        .cp-order-btn {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          background: linear-gradient(135deg, #1d1d1f 0%, #000000 100%);
-          color: #fff;
-          font-size: 14px;
-          font-weight: 700;
-          padding: 17px 24px;
-          border-radius: 14px;
-          border: none;
-          cursor: pointer;
-          letter-spacing: 0.5px;
-          text-transform: uppercase;
-          transition: all 0.25s ease;
-          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-          margin-bottom: 18px;
-          position: relative;
-          overflow: hidden;
+        .continue-link:hover {
+          color: #d4af37 !important;
+          transform: translateX(-4px);
         }
-        .cp-order-btn:hover:not(:disabled) {
+
+        .clear-cart-btn:hover {
+          background: rgba(255, 59, 48, 0.05) !important;
+        }
+
+        .cart-item-card {
+          transition: all 0.3s ease !important;
+        }
+        .cart-item-card:hover {
+          border-color: rgba(170,132,28,0.25) !important;
+          box-shadow: 0 12px 30px rgba(170,132,28,0.05) !important;
+        }
+
+        .cart-img-box:hover .cart-item-image {
+          transform: scale(1.06);
+        }
+
+        .cart-delete-btn:hover {
+          color: #FF3B30 !important;
+          background: rgba(255,59,48,0.06) !important;
+        }
+
+        .qty-action-btn:hover:not(:disabled) {
+          background: rgba(0,0,0,0.06) !important;
+          color: #000 !important;
+        }
+
+        .coupon-input:focus {
+          border-color: rgba(170,132,28,0.3) !important;
+          background: rgba(255,255,255,0.7) !important;
+        }
+
+        .coupon-btn:hover:not(:disabled) {
+          background: rgba(170,132,28,0.06) !important;
+        }
+
+        .payment-method-card:hover {
+          border-color: rgba(170,132,28,0.2) !important;
+        }
+
+        .cart-checkout-cta:hover:not(:disabled) {
           transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
-        }
-        .cp-order-btn:disabled {
-          background: rgba(0, 0, 0, 0.05);
-          color: #999;
-          box-shadow: none;
-          cursor: not-allowed;
-        }
-        .cp-order-loading {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-        .cp-order-spinner {
-          width: 16px;
-          height: 16px;
-          border: 2px solid rgba(255,255,255,0.2);
-          border-top-color: #fff;
-          border-radius: 50%;
-          animation: spin 0.6s linear infinite;
+          box-shadow: 0 8px 24px rgba(170,132,28,0.3) !important;
         }
 
-        /* Trust badges */
-        .cp-trust-row {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-          justify-content: center;
-        }
-        .cp-trust-badge {
-          font-size: 11px;
-          font-weight: 600;
-          color: #666;
-          background: #f2f2f4;
-          border: 1px solid rgba(0, 0, 0, 0.04);
-          padding: 5px 12px;
-          border-radius: 8px;
-          white-space: nowrap;
+        .explore-btn:hover {
+          transform: scale(1.03);
+          box-shadow: 0 8px 24px rgba(170,132,28,0.3) !important;
         }
 
-        @media (max-width: 640px) {
-          .cp-main { padding: 24px 16px 60px; }
-          .cp-hero { padding: 80px 16px 40px; }
-          .cp-grid { gap: 24px; }
-          .cp-item {
-            padding: 12px;
-            gap: 12px;
-            border-radius: 16px;
+        @media (max-width: 990px) {
+          .cart-grid-container {
+            grid-template-columns: 1fr;
+            gap: 32px;
           }
-          .cp-item-img {
-            width: 75px;
-            height: 95px;
-            border-radius: 10px;
+          .cart-summary-sticky {
+            position: static;
           }
-          .cp-item-name {
-            font-size: 14px;
-            margin-bottom: 6px;
+        }
+
+        @media (max-width: 600px) {
+          .checkout-steps {
+            display: none !important;
           }
-          .cp-qty-btn {
-            width: 30px;
-            height: 30px;
-            font-size: 15px;
+          .cart-item-card {
+            padding: 16px !important;
+            gap: 16px !important;
           }
-          .cp-qty-num {
-            min-width: 24px;
-            font-size: 13px;
-          }
-          .cp-item-total {
-            font-size: 15px;
-          }
-          .cp-summary-card {
-            padding: 20px;
-            border-radius: 20px;
-          }
-          .cp-total-value {
-            font-size: 22px;
+          .cart-img-box img {
+            width: 80px !important;
+            height: 100px !important;
           }
         }
       `}</style>

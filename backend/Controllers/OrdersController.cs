@@ -101,7 +101,7 @@ namespace backend.Controllers
         }
 
         // GET: api/Orders/5
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         [Authorize]
         public async Task<IActionResult> GetOrder(int id)
         {
@@ -256,6 +256,32 @@ namespace backend.Controllers
                 return StatusCode(500, $"ඇණවුමේ තත්ත්වය වෙනස් කිරීමට නොහැකි විය: {ex.Message}");
             }
         }
+
+        // 4. PUT: api/Orders/{id}/slip (User uploads payment slip URL)
+        [HttpPut("{id}/slip")]
+        [Authorize]
+        public async Task<IActionResult> UpdateOrderSlip(int id, [FromBody] UpdateOrderSlipDto dto)
+        {
+            try
+            {
+                var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+                var order = await _context.Orders.FirstOrDefaultAsync(o => o.Id == id && o.UserId == userId);
+                if (order == null)
+                {
+                    return NotFound($"Order ID {id} සොයාගත නොහැක.");
+                }
+
+                order.PaymentSlipUrl = dto.PaymentSlipUrl;
+                _context.Orders.Update(order);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "ගෙවීම් රිසිට්පත සාර්ථකව සුරකින ලදී!", paymentSlipUrl = order.PaymentSlipUrl });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"රිසිට්පත සුරැකීමේදී ගැටලුවක් ඇතිවිය: {ex.Message}");
+            }
+        }
     }
 
     // --- Data Transfer Objects (DTOs) ---
@@ -275,5 +301,10 @@ namespace backend.Controllers
     public class UpdateOrderStatusDto
     {
         public string Status { get; set; } = string.Empty;
+    }
+
+    public class UpdateOrderSlipDto
+    {
+        public string PaymentSlipUrl { get; set; } = string.Empty;
     }
 }

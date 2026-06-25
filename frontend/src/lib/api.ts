@@ -176,6 +176,10 @@ export const ordersAPI = {
   updateOrderStatus: async (id: number, status: string) => {
     return apiClient.put(`/Orders/${id}/status`, { status });
   },
+
+  uploadOrderSlip: async (id: number, paymentSlipUrl: string) => {
+    return apiClient.put(`/Orders/${id}/slip`, { paymentSlipUrl });
+  },
 };
 
 // UPLOAD ENDPOINTS

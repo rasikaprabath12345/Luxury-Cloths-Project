@@ -1,682 +1,761 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useCart } from "@/context/CartContext";
-import { useAuth } from "@/context/AuthContext";
+import { useEffect, useState } from "react";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useCart } from "@/context/CartContext";
+import { glass } from "@/utils/theme";
 
-export default function CheckoutPage() {
+const PLACEHOLDER_IMG = "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=600&auto=format&fit=crop";
+
+export default function CartPage() {
+  const { cartItems, updateQuantity, removeFromCart, clearCart } = useCart();
+  const [paymentMethod, setPaymentMethod] = useState<string>("BankTransfer");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [isOrdering, setIsOrdering] = useState<boolean>(false);
+  const [removingId, setRemovingId] = useState<number | null>(null);
+  const [coupon, setCoupon] = useState("");
+  const [couponApplied, setCouponApplied] = useState(false);
   const router = useRouter();
-  const { user } = useAuth();
-  const { cartItems, clearCart } = useCart();
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    fullName: (user as any)?.fullName || "",
-    email: (user as any)?.email || "",
-    phone: (user as any)?.phone || "",
-    address: "",
-    city: "",
-    zipCode: "",
-    country: "Sri Lanka",
-  });
 
-  const totalPrice = cartItems.reduce(
-    (acc: number, item: any) => acc + item.price * (item.quantity || 1),
-    0
-  );
-
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const handleUpdateQuantity = (id: number, newQty: number) => {
+    if (newQty < 1) return;
+    updateQuantity(id, newQty);
   };
 
-  const handleSubmitOrder = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const removeItem = (id: number) => {
+    setRemovingId(id);
+    setTimeout(() => {
+      removeFromCart(id);
+      setRemovingId(null);
+    }, 380);
+  };
 
-    if (cartItems.length === 0) {
-      alert("Your cart is empty!");
-      return;
+  const subTotal = cartItems.reduce((acc, item) => acc + item.price * (item.quantity || 1), 0);
+  const discount = couponApplied ? Math.round(subTotal * 0.1) : 0;
+  const shippingFee = 0; // FREE
+  const totalAmount = subTotal - discount;
+  const totalItems = cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
+
+  const handleApplyCoupon = () => {
+    if (coupon.trim().toUpperCase() === "LUXURY10") {
+      setCouponApplied(true);
+    } else {
+      alert("Invalid coupon code. Try LUXURY10 for 10% off.");
     }
+  };
 
-    if (!user) {
-      alert("Please sign in to place an order.");
+  const handlePlaceOrder = async () => {
+    if (cartItems.length === 0) return;
+    
+    // Check local storage for user token/info, standard auth
+    const savedUserStr = localStorage.getItem("luxury_user");
+    const token = localStorage.getItem("luxury_token");
+    if (!savedUserStr || !token) {
+      alert("Please log in to place an order.");
       router.push("/auth/login");
       return;
     }
 
-    if (!(user as any).id) {
-      alert("User ID not found. Please sign in again.");
-      return;
-    }
-
-    setLoading(true);
-
+    const user = JSON.parse(savedUserStr);
+    setIsOrdering(true);
     try {
       const orderData = {
-        userId: (user as any).id,
-        paymentMethod: "OnlinePayment",
-        items: cartItems.map((item: any) => ({
-          productVariantId: item.id,
+        userId: user.id,
+        paymentMethod,
+        items: cartItems.map(item => ({
+          productVariantId: item.id, // In this simple db variantId is matched to item id
           quantity: item.quantity || 1,
         })),
       };
-
-      const response = await axios.post(
-        "http://localhost:5226/api/Orders",
-        orderData
-      );
-
+      const response = await axios.post("http://localhost:5226/api/Orders", orderData, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       if (response.status === 200 || response.status === 201) {
-        alert("Order placed successfully! 🎉");
+        alert("🎉 " + (response.data.message || "Order placed successfully!"));
         clearCart();
-        router.push("/");
+        router.push("/orders");
       }
     } catch (error: any) {
-      console.error("Order submission error:", error);
-      alert(
-        error.response?.data?.message ||
-          "Failed to place order. Please try again."
-      );
+      console.error("Order failed:", error);
+      alert(error.response?.data?.message || "Order failed. Please try again.");
     } finally {
-      setLoading(false);
+      setIsOrdering(false);
     }
   };
 
-  /* ── Empty cart state ────────────────────────────────────────────── */
-  if (cartItems.length === 0) {
+  if (loading) {
     return (
-      <div className="ch-empty-page">
-        <div className="ch-empty-icon">🛒</div>
-        <h2 className="ch-empty-title">Your cart is empty</h2>
-        <p className="ch-empty-sub">Add items to your cart before checking out.</p>
-        <button
-          onClick={() => router.push("/storefront/product")}
-          className="ch-empty-btn"
-        >
-          Continue Shopping
-        </button>
-
-        <style>{`
-          .ch-empty-page {
-            min-height: 100vh;
-            background: #f5f5f7;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 20px;
-            padding: 120px 24px 60px;
-            text-align: center;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-          }
-          .ch-empty-icon {
-            font-size: 64px;
-            margin-bottom: 8px;
-          }
-          .ch-empty-title {
-            color: #1d1d1f;
-            font-size: 26px;
-            font-weight: 800;
-            margin: 0;
-          }
-          .ch-empty-sub {
-            color: #666;
-            margin: 0;
-            font-size: 15px;
-          }
-          .ch-empty-btn {
-            background: linear-gradient(135deg, #d4af37, #aa841c);
-            color: #fff;
-            border: none;
-            border-radius: 14px;
-            padding: 14px 36px;
-            fontWeight: 800;
-            fontSize: 15px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
-            transition: all 0.25s ease;
-          }
-          .ch-empty-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.35);
-          }
-        `}</style>
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "center",
+        minHeight: "100vh", background: "linear-gradient(160deg, #F2F2F7 0%, #E8E8F0 40%, #EEF0F8 100%)"
+      }}>
+        <div className="cp-spinner" style={{
+          width: 44, height: 44,
+          border: "3px solid rgba(0,0,0,0.05)",
+          borderTopColor: "#aa841c", borderRadius: "50%",
+          animation: "spin 0.7s linear infinite"
+        }} />
       </div>
     );
   }
 
-  /* ── Main checkout ───────────────────────────────────────────────── */
   return (
-    <div className="ch-page">
-      {/* ── HERO BANNER ── */}
-      <div className="ch-hero">
-        <div className="ch-hero-inner">
-          <p className="ch-hero-eyebrow">Secure Checkout</p>
-          <h1 className="ch-hero-title">Finalize Order</h1>
-          <div className="ch-breadcrumb">
-            <Link href="/" className="ch-breadcrumb-link">Home</Link>
-            <span className="ch-breadcrumb-sep">›</span>
-            <Link href="/storefront/cart" className="ch-breadcrumb-link">Cart</Link>
-            <span className="ch-breadcrumb-sep">›</span>
-            <span className="ch-breadcrumb-current">Checkout</span>
-          </div>
-        </div>
+    <div style={{
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif",
+      background: "linear-gradient(160deg, #F2F2F7 0%, #E8E8F0 40%, #EEF0F8 100%)",
+      minHeight: "100vh", color: "#1C1C1E",
+      paddingTop: 130,
+      paddingBottom: 100,
+      position: "relative"
+    }}>
+      {/* Ambient background blur blobs */}
+      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
+        <div style={{
+          position: "absolute", top: "-10%", right: "-5%",
+          width: 600, height: 600, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(212,175,55,0.05) 0%, transparent 70%)",
+          filter: "blur(50px)",
+        }} />
+        <div style={{
+          position: "absolute", bottom: "10%", left: "-8%",
+          width: 500, height: 500, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(170,132,28,0.04) 0%, transparent 70%)",
+          filter: "blur(50px)",
+        }} />
       </div>
 
-      <div className="ch-container">
-        <div className="ch-grid">
-          {/* ── Left: form + order list ───────────────────────────── */}
-          <div className="ch-left-card">
-            {/* Cart items */}
-            <div className="ch-section-header">
-              <h2 className="ch-section-title">Order Items</h2>
-              <span className="ch-item-badge">
-                {cartItems.length} item{cartItems.length !== 1 ? "s" : ""}
-              </span>
+      <div style={{ maxWidth: 1240, margin: "0 auto", padding: "0 24px", position: "relative", zIndex: 1 }}>
+        
+        {/* Step Indicator */}
+        <div className="checkout-steps" style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          maxWidth: 640,
+          margin: "0 auto 48px",
+          padding: "14px 28px",
+          ...glass.pill,
+          background: "rgba(255, 255, 255, 0.45)",
+          border: "1.5px solid rgba(255,255,255,0.9)",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.03)"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{
+              width: 26, height: 26, borderRadius: "50%",
+              background: "linear-gradient(135deg, #d4af37 0%, #aa841c 100%)",
+              color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 12, fontWeight: 700, boxShadow: "0 2px 8px rgba(170,132,28,0.25)"
+            }}>1</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#1C1C1E", letterSpacing: "0.02em" }}>Shopping Bag</span>
+          </div>
+          <div style={{ flex: 1, height: 1.5, background: "rgba(0,0,0,0.06)", margin: "0 20px" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 10, opacity: 0.6 }}>
+            <span style={{
+              width: 26, height: 26, borderRadius: "50%",
+              background: "rgba(0,0,0,0.06)",
+              color: "#555", display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 12, fontWeight: 700
+            }}>2</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#555" }}>Payment</span>
+          </div>
+          <div style={{ flex: 1, height: 1.5, background: "rgba(0,0,0,0.06)", margin: "0 20px" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 10, opacity: 0.6 }}>
+            <span style={{
+              width: 26, height: 26, borderRadius: "50%",
+              background: "rgba(0,0,0,0.06)",
+              color: "#555", display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 12, fontWeight: 700
+            }}>3</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#555" }}>Receipt</span>
+          </div>
+        </div>
+
+        {/* Back navigation & Header */}
+        <div style={{
+          display: "flex", flexDirection: "column", gap: 8, marginBottom: 40,
+          borderBottom: "1px solid rgba(0,0,0,0.05)", paddingBottom: 24
+        }}>
+          <Link href="/storefront/shop" style={{
+            display: "inline-flex", alignItems: "center", gap: 8, textDecoration: "none",
+            color: "#8E8E93", fontSize: 13, fontWeight: 600,
+            transition: "all 0.2s ease"
+          }} className="back-link">
+            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+              <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Continue Boutique Shopping
+          </Link>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 12, marginTop: 12 }}>
+            <div>
+              <p style={{
+                margin: "0 0 4px", fontSize: 11, fontWeight: 700, letterSpacing: "0.15em",
+                textTransform: "uppercase", color: "#aa841c"
+              }}>Boutique Cart</p>
+              <h1 style={{ margin: 0, fontSize: "clamp(28px, 4.5vw, 38px)", fontWeight: 800, letterSpacing: "-0.03em", color: "#1C1C1E" }}>
+                Your Selection
+              </h1>
+            </div>
+            {cartItems.length > 0 && (
+              <button 
+                onClick={clearCart}
+                style={{
+                  background: "transparent", border: "none", color: "#FF3B30", 
+                  fontSize: 13, fontWeight: 600, cursor: "pointer", 
+                  display: "flex", alignItems: "center", gap: 6,
+                  padding: "6px 12px", borderRadius: 8, transition: "background 0.2s"
+                }}
+                className="clear-cart-btn"
+              >
+                Clear All Pieces
+              </button>
+            )}
+          </div>
+        </div>
+
+        {cartItems.length === 0 ? (
+          /* Empty Bag State Card */
+          <div style={{ 
+            ...glass.card, padding: "80px 40px", textAlign: "center",
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 24,
+            maxWidth: 580, margin: "60px auto", boxShadow: "0 8px 40px rgba(0,0,0,0.04)"
+          }}>
+            <div style={{
+              width: 84, height: 84, borderRadius: "50%",
+              background: "rgba(170,132,28,0.06)", border: "1px dashed rgba(170,132,28,0.25)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "#aa841c", fontSize: 32, boxShadow: "inset 0 2px 10px rgba(170,132,28,0.03)"
+            }}>
+              👜
+            </div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#1C1C1E", letterSpacing: "-0.01em" }}>Your Bag is Empty</h3>
+              <p style={{ margin: "8px 0 0", fontSize: 14, color: "#8E8E93", lineHeight: 1.5 }}>
+                Discover our premium luxury collections and select your tailor-made linen, silk, and cotton wear.
+              </p>
+            </div>
+            <Link href="/storefront/shop" style={{
+              background: "linear-gradient(135deg, #d4af37 0%, #aa841c 100%)",
+              color: "#fff", textDecoration: "none", fontSize: 13, fontWeight: 700,
+              padding: "14px 36px", borderRadius: 14,
+              boxShadow: "0 4px 16px rgba(170,132,28,0.2)", transition: "all 0.25s ease",
+              letterSpacing: "0.5px", textTransform: "uppercase"
+            }} className="explore-btn">
+              Explore Collection
+            </Link>
+          </div>
+        ) : (
+          <div className="cart-grid-container">
+            
+            {/* LEFT COLUMN: SELECTED ITEMS */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <h2 style={{ fontSize: 17, fontWeight: 800, color: "#1C1C1E", margin: 0 }}>Selected Pieces</h2>
+                <span style={{
+                  fontSize: 11, fontWeight: 700, color: "#aa841c",
+                  background: "rgba(170,132,28,0.06)", border: "0.5px solid rgba(170,132,28,0.18)",
+                  padding: "3px 10px", borderRadius: 100
+                }}>
+                  {totalItems} {totalItems === 1 ? "item" : "items"}
+                </span>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                {cartItems.map((item) => {
+                  const img = item.imageUrl || item.image || PLACEHOLDER_IMG;
+                  const isRemoving = removingId === item.id;
+                  return (
+                    <div
+                      key={item.id}
+                      style={{
+                        ...glass.card,
+                        display: "flex",
+                        gap: 20,
+                        padding: "20px 24px 20px 20px",
+                        opacity: isRemoving ? 0 : 1,
+                        transform: isRemoving ? "scale(0.96) translateY(-12px)" : "scale(1)",
+                        transition: "all 0.38s cubic-bezier(0.16, 1, 0.3, 1)",
+                        border: "1px solid rgba(255,255,255,0.9)",
+                        background: "rgba(255,255,255,0.65)"
+                      }}
+                      className="cart-item-card"
+                    >
+                      {/* Image container with zoom hover */}
+                      <div style={{ 
+                        position: "relative", 
+                        flexShrink: 0,
+                        borderRadius: 16,
+                        overflow: "hidden",
+                        border: "1px solid rgba(0,0,0,0.06)",
+                        boxShadow: "0 2px 10px rgba(0,0,0,0.04)"
+                      }} className="cart-img-box">
+                        <img
+                          src={img}
+                          alt={item.name}
+                          style={{
+                            width: 100, height: 125, objectFit: "cover",
+                            transition: "transform 0.4s ease-out"
+                          }}
+                          className="cart-item-image"
+                        />
+                        <span style={{
+                          position: "absolute", top: -8, right: -8,
+                          background: "#aa841c", color: "#fff",
+                          fontSize: 10, fontWeight: 800, width: 22, height: 22,
+                          borderRadius: "50%", display: "flex", alignItems: "center",
+                          justifyContent: "center", boxShadow: "0 2px 8px rgba(170,132,28,0.2)",
+                          border: "2px solid #fff"
+                        }}>
+                          {item.quantity}
+                        </span>
+                      </div>
+
+                      {/* Info & Controls */}
+                      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", minWidth: 0 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
+                          <div style={{ minWidth: 0 }}>
+                            <p style={{
+                              fontSize: 9, fontWeight: 700, letterSpacing: "0.14em",
+                              textTransform: "uppercase", color: "#aa841c", margin: "0 0 4px"
+                            }}>Luxury Apparel</p>
+                            <h3 style={{
+                              fontSize: 15, fontWeight: 700, color: "#1C1C1E",
+                              margin: 0, lineHeight: 1.3, whiteSpace: "nowrap",
+                              overflow: "hidden", textOverflow: "ellipsis"
+                            }}>{item.name}</h3>
+                            
+                            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+                              {item.size && (
+                                <span style={{
+                                  fontSize: 10, fontWeight: 600, color: "#555",
+                                  background: "rgba(0,0,0,0.04)", border: "0.5px solid rgba(0,0,0,0.05)",
+                                  padding: "2px 8px", borderRadius: 6
+                                }}>Size: {item.size}</span>
+                              )}
+                              {item.color && (
+                                <span style={{
+                                  fontSize: 10, fontWeight: 600, color: "#555",
+                                  background: "rgba(0,0,0,0.04)", border: "0.5px solid rgba(0,0,0,0.05)",
+                                  padding: "2px 8px", borderRadius: 6
+                                }}>Color: {item.color}</span>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <button
+                            onClick={() => removeItem(item.id)}
+                            style={{
+                              background: "rgba(0,0,0,0.02)", border: "none", color: "#8E8E93",
+                              cursor: "pointer", width: 28, height: 28, borderRadius: "50%",
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              transition: "all 0.2s ease"
+                            }}
+                            className="cart-delete-btn"
+                            aria-label="Remove item"
+                          >
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                              <line x1="18" y1="6" x2="6" y2="18" />
+                              <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                          </button>
+                        </div>
+
+                        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, marginTop: 14 }}>
+                          
+                          {/* Premium quantity adjustment buttons */}
+                          <div style={{
+                            display: "flex", alignItems: "center",
+                            background: "rgba(0,0,0,0.03)", border: "0.5px solid rgba(0,0,0,0.06)",
+                            borderRadius: 12, padding: "2px"
+                          }}>
+                            <button
+                              onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
+                              disabled={item.quantity <= 1}
+                              style={{
+                                width: 28, height: 26, display: "flex", alignItems: "center",
+                                justifyItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700,
+                                color: item.quantity <= 1 ? "#C7C7CC" : "#555", background: "transparent", border: "none",
+                                cursor: item.quantity <= 1 ? "default" : "pointer", transition: "background 0.15s",
+                                borderRadius: 10
+                              }}
+                              className="qty-action-btn"
+                            >−</button>
+                            <span style={{
+                              fontSize: 12, fontWeight: 700, color: "#aa841c",
+                              minWidth: 26, textAlign: "center"
+                            }}>{item.quantity}</span>
+                            <button
+                              onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                              style={{
+                                width: 28, height: 26, display: "flex", alignItems: "center",
+                                justifyItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700,
+                                color: "#555", background: "transparent", border: "none",
+                                cursor: "pointer", transition: "background 0.15s",
+                                borderRadius: 10
+                              }}
+                              className="qty-action-btn"
+                            >+</button>
+                          </div>
+
+                          {/* Prices */}
+                          <div style={{ textAlign: "right" }}>
+                            <span style={{ fontSize: 11, color: "#8E8E93", display: "block", marginBottom: 2 }}>
+                              Rs. {item.price.toLocaleString()} each
+                            </span>
+                            <p style={{ fontSize: 15, fontWeight: 800, color: "#aa841c", margin: 0 }}>
+                              Rs. {(item.price * item.quantity).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <Link href="/storefront/shop" style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                fontSize: 13, fontWeight: 600, color: "#aa841c",
+                textDecoration: "none", transition: "all 0.2s ease",
+                alignSelf: "flex-start", marginTop: 12
+              }} className="continue-link">
+                ← Return to Collections
+              </Link>
             </div>
 
-            <div className="ch-items-list">
-              {cartItems.map((item: any) => (
-                <div key={item.id} className="ch-item-row">
-                  <img
-                    src={
-                      item.imageUrl ||
-                      item.image ||
-                      "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=600"
-                    }
-                    alt={item.name}
-                    className="ch-item-img"
-                  />
-                  <div className="ch-item-details">
-                    <p className="ch-item-name">{item.name}</p>
-                    <p className="ch-item-qty">Qty: {item.quantity || 1}</p>
+            {/* RIGHT COLUMN: STICKY ORDER SUMMARY & CHECKOUT */}
+            <div className="cart-summary-sticky">
+              <div style={{
+                ...glass.card,
+                padding: "28px 24px",
+                border: "1px solid rgba(255,255,255,0.95)",
+                background: "rgba(255,255,255,0.72)",
+                boxShadow: "0 10px 40px rgba(0,0,0,0.05)"
+              }}>
+                <h2 style={{ fontSize: 17, fontWeight: 800, color: "#1C1C1E", margin: "0 0 20px", letterSpacing: "-0.01em" }}>Order Summary</h2>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
+                    <span style={{ color: "#8E8E93" }}>Subtotal ({totalItems} items)</span>
+                    <span style={{ color: "#1C1C1E", fontWeight: 600 }}>Rs. {subTotal.toLocaleString()}</span>
                   </div>
-                  <p className="ch-item-total-price">
-                    Rs. {((item.price || 0) * (item.quantity || 1)).toLocaleString()}
-                  </p>
+                  
+                  {couponApplied && (
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
+                      <span style={{ color: "#15803D", fontWeight: 500 }}>Discount (LUXURY10)</span>
+                      <span style={{ color: "#15803D", fontWeight: 700 }}>− Rs. {discount.toLocaleString()}</span>
+                    </div>
+                  )}
+
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, alignItems: "center" }}>
+                    <span style={{ color: "#8E8E93" }}>Delivery Fee</span>
+                    <span style={{
+                      color: "#15803D", fontWeight: 700, fontSize: 10,
+                      background: "rgba(22,163,74,0.08)", padding: "3px 8px", borderRadius: 6
+                    }}>FREE</span>
+                  </div>
                 </div>
-              ))}
-            </div>
 
-            {/* Shipping form */}
-            <h2 className="ch-section-title" style={{ marginTop: 32, marginBottom: 20 }}>
-              Shipping Address
-            </h2>
+                <div style={{ height: 0.5, background: "rgba(0,0,0,0.06)", marginBottom: 20 }} />
 
-            <form onSubmit={handleSubmitOrder} className="ch-form">
-              <div className="ch-input-grid">
-                {[
-                  { name: "fullName", placeholder: "Full Name", type: "text" },
-                  { name: "email", placeholder: "Email Address", type: "email" },
-                  { name: "phone", placeholder: "Phone Number", type: "tel" },
-                  { name: "city", placeholder: "City", type: "text" },
-                  { name: "zipCode", placeholder: "ZIP / Postal Code", type: "text" },
-                ].map((field) => (
-                  <div key={field.name} className="ch-input-field">
-                    <input
-                      type={field.type}
-                      name={field.name}
-                      value={(formData as any)[field.name]}
-                      onChange={handleInputChange}
-                      placeholder={field.placeholder}
-                      required
-                      className="ch-input"
-                    />
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: "#1C1C1E" }}>Total Amount</span>
+                  <span style={{ fontSize: 22, fontWeight: 900, color: "#aa841c", letterSpacing: "-0.5px" }}>
+                    Rs. {totalAmount.toLocaleString()}
+                  </span>
+                </div>
+
+                {/* Promo Coupon Entry */}
+                <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+                  <input
+                    placeholder="Coupon (e.g. LUXURY10)"
+                    value={coupon}
+                    onChange={(e) => setCoupon(e.target.value)}
+                    disabled={couponApplied}
+                    style={{
+                      flex: 1, background: "rgba(255,255,255,0.5)",
+                      border: "1px solid rgba(0,0,0,0.08)", borderRadius: 10,
+                      padding: "10px 14px", fontSize: 12, color: "#1C1C1E",
+                      outline: "none", fontFamily: "inherit", transition: "border-color 0.2s"
+                    }}
+                    className="coupon-input"
+                  />
+                  <button
+                    onClick={handleApplyCoupon}
+                    disabled={couponApplied}
+                    style={{
+                      background: couponApplied ? "rgba(22,163,74,0.08)" : "rgba(0,0,0,0.03)",
+                      border: couponApplied ? "0.5px solid rgba(22,163,74,0.2)" : "0.5px solid rgba(0,0,0,0.08)",
+                      color: couponApplied ? "#15803D" : "#aa841c", fontSize: 12, fontWeight: 700,
+                      padding: "10px 18px", borderRadius: 10, cursor: couponApplied ? "default" : "pointer",
+                      transition: "all 0.2s ease"
+                    }}
+                    className="coupon-btn"
+                  >
+                    {couponApplied ? "✓ Active" : "Apply"}
+                  </button>
+                </div>
+
+                {/* Payment Option Selection */}
+                <div style={{ marginBottom: 28 }}>
+                  <p style={{
+                    fontSize: 10, fontWeight: 700, color: "#8E8E93",
+                    letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12
+                  }}>Payment Method</p>
+                  
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {[
+                      { value: "BankTransfer", label: "Bank Transfer", sub: "Verify & place order, then upload slip" },
+                      { value: "COD", label: "Cash on Delivery", sub: "Pay physically upon delivery" },
+                    ].map((opt) => {
+                      const isActive = paymentMethod === opt.value;
+                      return (
+                        <label
+                          key={opt.value}
+                          style={{
+                            display: "flex", alignItems: "center", gap: 12,
+                            padding: "12px 14px", borderRadius: 12,
+                            border: isActive ? "1.5px solid rgba(170,132,28,0.4)" : "1px solid rgba(0,0,0,0.06)",
+                            background: isActive ? "rgba(170,132,28,0.03)" : "#ffffff",
+                            cursor: "pointer", transition: "all 0.2s ease",
+                            boxShadow: isActive ? "0 2px 10px rgba(170,132,28,0.04)" : "none"
+                          }}
+                          className="payment-method-card"
+                        >
+                          <input
+                            type="radio"
+                            name="payment"
+                            value={opt.value}
+                            checked={isActive}
+                            onChange={(e) => setPaymentMethod(e.target.value)}
+                            style={{ display: "none" }}
+                          />
+                          <div style={{
+                            width: 32, height: 32, borderRadius: 8,
+                            background: isActive ? "rgba(170,132,28,0.08)" : "rgba(0,0,0,0.03)",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            color: isActive ? "#aa841c" : "#555", flexShrink: 0
+                          }}>
+                            {opt.value === "BankTransfer" ? (
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                                <rect x="2" y="5" width="20" height="14" rx="2" />
+                                <line x1="2" y1="10" x2="22" y2="10" />
+                              </svg>
+                            ) : (
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                                <path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+                              </svg>
+                            )}
+                          </div>
+                          <div>
+                            <p style={{ fontSize: 13, fontWeight: 700, color: "#1C1C1E", margin: "0 0 2px" }}>{opt.label}</p>
+                            <p style={{ fontSize: 10, color: "#8E8E93", margin: 0 }}>{opt.sub}</p>
+                          </div>
+                        </label>
+                      );
+                    })}
                   </div>
-                ))}
-              </div>
 
-              <div className="ch-input-field" style={{ marginTop: 16 }}>
-                <textarea
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  placeholder="Street Address"
-                  required
-                  rows={3}
-                  className="ch-textarea"
-                />
-              </div>
+                  {/* Dynamic Bank details sub-card */}
+                  {paymentMethod === "BankTransfer" && (
+                    <div style={{
+                      marginTop: 12,
+                      padding: "16px",
+                      borderRadius: 14,
+                      background: "rgba(170,132,28,0.03)",
+                      border: "0.5px solid rgba(170,132,28,0.2)",
+                      fontSize: 11,
+                      lineHeight: "1.5em",
+                      color: "#4A3608",
+                      animation: "fadeIn 0.3s ease-in-out"
+                    }}>
+                      <p style={{ margin: "0 0 8px", fontWeight: 700, color: "#aa841c", textTransform: "uppercase", letterSpacing: "0.05em", fontSize: 10 }}>Bank Credentials</p>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        <div><strong>Bank:</strong> Sampath Bank PLC</div>
+                        <div><strong>Account Name:</strong> Luxury Clothing Store</div>
+                        <div><strong>Account Number:</strong> 1009 5421 9882</div>
+                        <div><strong>Branch:</strong> Colombo Corporate Branch</div>
+                      </div>
+                      <p style={{ margin: "8px 0 0", color: "#8E8E93", fontSize: 9, lineHeight: 1.4 }}>
+                        * Verify your total amount and place the order. You can upload the deposit slip afterwards from your accounts order history.
+                      </p>
+                    </div>
+                  )}
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="ch-submit-btn"
-              >
-                {loading ? "Processing…" : "Place Order 💳"}
-              </button>
-            </form>
-          </div>
+                  {/* Dynamic Cash on Delivery info */}
+                  {paymentMethod === "COD" && (
+                    <div style={{
+                      marginTop: 12,
+                      padding: "16px",
+                      borderRadius: 14,
+                      background: "rgba(0,0,0,0.02)",
+                      border: "0.5px solid rgba(0,0,0,0.06)",
+                      fontSize: 11,
+                      lineHeight: "1.5em",
+                      color: "#444",
+                      animation: "fadeIn 0.3s ease-in-out"
+                    }}>
+                      <p style={{ margin: "0 0 4px", fontWeight: 700, color: "#1C1C1E" }}>Cash On Delivery instructions</p>
+                      <p style={{ margin: 0, color: "#8E8E93", fontSize: 10 }}>
+                        Place your order now. You will pay the full amount in cash to the courier agent when the shipment is delivered to your doorstep.
+                      </p>
+                    </div>
+                  )}
+                </div>
 
-          {/* ── Right: price summary ──────────────────────────────── */}
-          <div className="ch-right-sidebar">
-            <div className="ch-summary-card">
-              <h2 className="ch-summary-title">Summary Breakdown</h2>
-
-              <div className="ch-summary-rows">
-                {[
-                  { label: "Subtotal", value: `Rs. ${totalPrice.toLocaleString()}` },
-                  { label: "Shipping", value: "FREE" },
-                  { label: "Tax & Service", value: "Rs. 0" },
-                ].map((row) => (
-                  <div key={row.label} className="ch-summary-row">
-                    <span className="label">{row.label}</span>
-                    <span className={`value ${row.value === "FREE" ? "free-tag" : ""}`}>
-                      {row.value}
+                {/* Checkout CTA */}
+                <button
+                  onClick={handlePlaceOrder}
+                  disabled={isOrdering || cartItems.length === 0}
+                  style={{
+                    width: "100%", display: "flex", alignItems: "center", justifyContent: "center",
+                    gap: 10, background: "linear-gradient(135deg, #d4af37 0%, #aa841c 100%)",
+                    color: "#fff", fontSize: 13, fontWeight: 700,
+                    padding: "16px 20px", borderRadius: 14, border: "none",
+                    cursor: "pointer", letterSpacing: "0.5px", textTransform: "uppercase",
+                    transition: "all 0.25s ease", boxShadow: "0 4px 15px rgba(170,132,28,0.2)",
+                    marginBottom: 16
+                  }}
+                  className="cart-checkout-cta"
+                >
+                  {isOrdering ? (
+                    <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <span className="cp-order-spinner" style={{
+                        width: 14, height: 14, border: "2px solid rgba(255,255,255,0.2)",
+                        borderTopColor: "#fff", borderRadius: "50%",
+                        animation: "spin 0.6s linear infinite"
+                      }} />
+                      Processing Order…
                     </span>
-                  </div>
-                ))}
+                  ) : (
+                    <>
+                      <span>Confirm & Place Order</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                        <polyline points="12 5 19 12 12 19" />
+                      </svg>
+                    </>
+                  )}
+                </button>
+
+                {/* Trust Badges */}
+                <div style={{
+                  display: "flex", justifyContent: "center", gap: 16,
+                  borderTop: "0.5px solid rgba(0,0,0,0.06)", paddingTop: 16, flexWrap: "wrap"
+                }}>
+                  {["🔒 SSL Secure", "✨ Premium Quality"].map((badge) => (
+                    <span key={badge} style={{ fontSize: 10, color: "#8E8E93", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+                      {badge}
+                    </span>
+                  ))}
+                </div>
               </div>
-
-              <div className="ch-summary-divider" />
-
-              <div className="ch-total-row">
-                <span className="total-label">Total Amount</span>
-                <span className="total-value">Rs. {totalPrice.toLocaleString()}</span>
-              </div>
-
-              <div className="ch-secure-badge">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: 6 }}>
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
-                Secure 256-bit SSL checkout
-              </div>
-
-              <button
-                onClick={() => router.push("/storefront/shop")}
-                className="ch-back-btn"
-              >
-                ← Continue Shopping
-              </button>
             </div>
+
           </div>
-        </div>
+        )}
       </div>
 
-      {/* ── STYLES ── */}
+      {/* Styled classes and keyframe animations */}
       <style>{`
-        .ch-page {
-          min-height: 100vh;
-          background: #f5f5f7;
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-          color: #1d1d1f;
-          padding-bottom: 80px;
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* ── HERO BANNER ── */
-        .ch-hero {
-          position: relative;
-          padding: 100px 32px 50px;
-          background: linear-gradient(135deg, #ffffff 0%, #f5f5f7 100%);
-          border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-          overflow: hidden;
-        }
-        .ch-hero::before {
-          content: '';
-          position: absolute;
-          top: -80px;
-          right: -80px;
-          width: 400px;
-          height: 400px;
-          background: radial-gradient(circle, rgba(212, 175, 55, 0.04) 0%, transparent 70%);
-          pointer-events: none;
-        }
-        .ch-hero-inner {
-          max-width: 1100px;
-          margin: 0 auto;
-          position: relative;
-          z-index: 1;
-        }
-        .ch-hero-eyebrow {
-          font-size: 12px;
-          font-weight: 600;
-          letter-spacing: 3px;
-          text-transform: uppercase;
-          color: #aa841c;
-          margin: 0 0 12px;
-        }
-        .ch-hero-title {
-          font-size: clamp(32px, 4vw, 46px);
-          font-weight: 800;
-          letter-spacing: -1px;
-          color: #1d1d1f;
-          margin: 0 0 16px;
-          line-height: 1.1;
-        }
-        .ch-breadcrumb {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 13px;
-        }
-        .ch-breadcrumb-link {
-          color: #888;
-          text-decoration: none;
-          transition: color 0.2s;
-        }
-        .ch-breadcrumb-link:hover { color: #aa841c; }
-        .ch-breadcrumb-sep { color: #ccc; }
-        .ch-breadcrumb-current { color: #666; }
-
-        /* ── MAIN GRID ── */
-        .ch-container {
-          max-width: 1100px;
-          margin: 0 auto;
-          padding: 40px 24px 0;
-        }
-        .ch-grid {
+        .cart-grid-container {
           display: grid;
-          grid-template-columns: 1fr 380px;
-          gap: 32px;
+          grid-template-columns: 1.5fr 1fr;
+          gap: 40px;
           align-items: start;
         }
-        @media (max-width: 960px) {
-          .ch-grid {
-            grid-template-columns: 1fr;
-          }
-        }
 
-        /* ── LEFT CONTAINER ── */
-        .ch-left-card {
-          background: #ffffff;
-          border: 1px solid rgba(0, 0, 0, 0.05);
-          border-radius: 24px;
-          padding: 36px;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
-        }
-        @media (max-width: 600px) {
-          .ch-left-card {
-            padding: 24px;
-          }
-        }
-        .ch-section-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 20px;
-          border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-          padding-bottom: 12px;
-        }
-        .ch-section-title {
-          font-size: 18px;
-          font-weight: 800;
-          color: #1d1d1f;
-          margin: 0;
-        }
-        .ch-item-badge {
-          font-size: 12px;
-          font-weight: 700;
-          color: #aa841c;
-          background: rgba(212, 175, 55, 0.08);
-          padding: 3px 10px;
-          border-radius: 99px;
-        }
-
-        /* Cart List */
-        .ch-items-list {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-          max-height: 280px;
-          overflow-y: auto;
-          padding-right: 8px;
-        }
-        .ch-items-list::-webkit-scrollbar {
-          width: 4px;
-        }
-        .ch-items-list::-webkit-scrollbar-thumb {
-          background: rgba(0, 0, 0, 0.08);
-          border-radius: 10px;
-        }
-        .ch-item-row {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-          padding-bottom: 16px;
-          border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-        }
-        .ch-item-img {
-          width: 64px;
-          height: 64px;
-          object-fit: cover;
-          border-radius: 12px;
-          border: 1px solid rgba(0, 0, 0, 0.05);
-        }
-        .ch-item-details {
-          flex: 1;
-          min-width: 0;
-        }
-        .ch-item-name {
-          color: #1d1d1f;
-          font-weight: 700;
-          margin: 0 0 4px;
-          font-size: 14px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .ch-item-qty {
-          color: #777;
-          font-size: 12px;
-          margin: 0;
-        }
-        .ch-item-total-price {
-          color: #1d1d1f;
-          font-weight: 800;
-          font-size: 15px;
-          margin: 0;
-        }
-
-        /* Forms */
-        .ch-form {
-          display: flex;
-          flex-direction: column;
-        }
-        .ch-input-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 16px;
-        }
-        @media (max-width: 600px) {
-          .ch-input-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-        .ch-input-field {
-          width: 100%;
-        }
-        .ch-input {
-          background: #f9f9fb;
-          border: 1px solid rgba(0, 0, 0, 0.06);
-          border-radius: 12px;
-          padding: 14px 18px;
-          color: #1d1d1f;
-          font-size: 14px;
-          outline: none;
-          width: 100%;
-          box-sizing: border-box;
-          transition: border-color 0.2s;
-          font-family: inherit;
-        }
-        .ch-input:focus {
-          border-color: rgba(212, 175, 55, 0.4);
-        }
-        .ch-textarea {
-          background: #f9f9fb;
-          border: 1px solid rgba(0, 0, 0, 0.06);
-          border-radius: 12px;
-          padding: 14px 18px;
-          color: #1d1d1f;
-          font-size: 14px;
-          outline: none;
-          width: 100%;
-          box-sizing: border-box;
-          resize: vertical;
-          font-family: inherit;
-          transition: border-color 0.2s;
-        }
-        .ch-textarea:focus {
-          border-color: rgba(212, 175, 55, 0.4);
-        }
-
-        .ch-submit-btn {
-          background: linear-gradient(135deg, #1d1d1f, #000000);
-          color: #fff;
-          border: none;
-          border-radius: 14px;
-          padding: 16px 0;
-          font-weight: 700;
-          font-size: 15px;
-          cursor: pointer;
-          margin-top: 24px;
-          transition: all 0.25s ease;
-          letter-spacing: 0.5px;
-          text-transform: uppercase;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-        .ch-submit-btn:hover:not(:disabled) {
-          transform: translateY(-1px);
-          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
-        }
-        .ch-submit-btn:disabled {
-          background: rgba(0, 0, 0, 0.05);
-          color: #999;
-          cursor: not-allowed;
-          box-shadow: none;
-        }
-
-        /* ── RIGHT CONTAINER ── */
-        .ch-right-sidebar {
+        .cart-summary-sticky {
           position: sticky;
-          top: 100px;
+          top: 110px;
         }
-        .ch-summary-card {
-          background: #ffffff;
-          border: 1px solid rgba(0, 0, 0, 0.05);
-          border-radius: 24px;
-          padding: 28px;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
+
+        .back-link:hover {
+          color: #aa841c !important;
+          transform: translateX(-4px);
         }
-        .ch-summary-title {
-          font-size: 17px;
-          font-weight: 800;
-          color: #1d1d1f;
-          margin: 0 0 20px;
+
+        .continue-link:hover {
+          color: #d4af37 !important;
+          transform: translateX(-4px);
         }
-        .ch-summary-rows {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
+
+        .clear-cart-btn:hover {
+          background: rgba(255, 59, 48, 0.05) !important;
         }
-        .ch-summary-row {
-          display: flex;
-          justify-content: space-between;
-          font-size: 13.5px;
+
+        .cart-item-card {
+          transition: all 0.3s ease !important;
         }
-        .ch-summary-row .label {
-          color: #777;
+        .cart-item-card:hover {
+          border-color: rgba(170,132,28,0.25) !important;
+          box-shadow: 0 12px 30px rgba(170,132,28,0.05) !important;
         }
-        .ch-summary-row .value {
-          color: #1d1d1f;
-          font-weight: 600;
+
+        .cart-img-box:hover .cart-item-image {
+          transform: scale(1.06);
         }
-        .ch-summary-row .value.free-tag {
-          color: #15803d;
-          font-weight: 700;
-          background: rgba(22, 163, 74, 0.08);
-          padding: 1px 7px;
-          border-radius: 5px;
+
+        .cart-delete-btn:hover {
+          color: #FF3B30 !important;
+          background: rgba(255,59,48,0.06) !important;
         }
-        .ch-summary-divider {
-          height: 1px;
-          background: rgba(0, 0, 0, 0.05);
-          margin: 16px 0;
+
+        .qty-action-btn:hover:not(:disabled) {
+          background: rgba(0,0,0,0.06) !important;
+          color: #000 !important;
         }
-        .ch-total-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 20px;
+
+        .coupon-input:focus {
+          border-color: rgba(170,132,28,0.3) !important;
+          background: rgba(255,255,255,0.7) !important;
         }
-        .ch-total-row .total-label {
-          font-size: 15px;
-          font-weight: 800;
-          color: #1d1d1f;
+
+        .coupon-btn:hover:not(:disabled) {
+          background: rgba(170,132,28,0.06) !important;
         }
-        .ch-total-row .total-value {
-          font-size: 22px;
-          font-weight: 800;
-          color: #aa841c;
+
+        .payment-method-card:hover {
+          border-color: rgba(170,132,28,0.2) !important;
         }
-        .ch-secure-badge {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: rgba(212, 175, 55, 0.08);
-          border: 1px solid rgba(212, 175, 55, 0.15);
-          border-radius: 10px;
-          padding: 10px;
-          font-size: 12px;
-          color: #aa841c;
-          font-weight: 600;
+
+        .cart-checkout-cta:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 24px rgba(170,132,28,0.3) !important;
         }
-        .ch-back-btn {
-          width: 100%;
-          margin-top: 14px;
-          background: transparent;
-          border: 1px solid rgba(0, 0, 0, 0.06);
-          border-radius: 12px;
-          padding: 12px 0;
-          color: #666;
-          font-weight: 600;
-          font-size: 13px;
-          cursor: pointer;
-          transition: all 0.2s ease;
+
+        .explore-btn:hover {
+          transform: scale(1.03);
+          box-shadow: 0 8px 24px rgba(170,132,28,0.3) !important;
         }
-        .ch-back-btn:hover {
-          background: rgba(0, 0, 0, 0.02);
-          color: #aa841c;
-          border-color: rgba(212, 175, 55, 0.2);
-        }
-        
-        @media (max-width: 600px) {
-          .ch-container {
-            padding: 20px 16px 0;
-          }
-          .ch-left-card {
-            padding: 20px;
-            border-radius: 20px;
-          }
-          .ch-input-grid {
+
+        @media (max-width: 990px) {
+          .cart-grid-container {
             grid-template-columns: 1fr;
-            gap: 12px;
+            gap: 32px;
           }
-          .ch-item-row {
-            gap: 12px;
-            padding-bottom: 12px;
+          .cart-summary-sticky {
+            position: static;
           }
-          .ch-item-img {
-            width: 50px;
-            height: 50px;
-            border-radius: 8px;
+        }
+
+        @media (max-width: 600px) {
+          .checkout-steps {
+            display: none !important;
           }
-          .ch-item-name {
-            font-size: 13px;
+          .cart-item-card {
+            padding: 16px !important;
+            gap: 16px !important;
           }
-          .ch-item-total-price {
-            font-size: 13px;
-          }
-          .ch-summary-card {
-            padding: 20px;
-            border-radius: 20px;
-          }
-          .ch-total-row .total-value {
-            font-size: 20px;
+          .cart-img-box img {
+            width: 80px !important;
+            height: 100px !important;
           }
         }
       `}</style>
