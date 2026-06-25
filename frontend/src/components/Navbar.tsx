@@ -20,6 +20,125 @@ const NAV_TABS = [
   { label: "New Arrival", href: "/storefront/shop?filter=new" },
 ];
 
+// ─── MEGA MENU DATA ───────────────────────────────────────────────────────────
+const MEGA_MENUS: Record<string, { image: string; columns: { title: string; items: { label: string; href: string }[] }[] }> = {
+  Women: {
+    image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=300&q=80&auto=format&fit=crop",
+    columns: [
+      {
+        title: "Women's Wear",
+        items: [
+          { label: "Tops & Blouses", href: "/storefront/shop?category=women&sub=tops" },
+          { label: "Dresses", href: "/storefront/shop?category=women&sub=dresses" },
+          { label: "Sarees & Lehengas", href: "/storefront/shop?category=women&sub=sarees" },
+          { label: "Kurtis & Tunics", href: "/storefront/shop?category=women&sub=kurtis" },
+          { label: "Trousers & Pants", href: "/storefront/shop?category=women&sub=trousers" },
+          { label: "Skirts", href: "/storefront/shop?category=women&sub=skirts" },
+          { label: "Casual Wear", href: "/storefront/shop?category=women&sub=casual" },
+          { label: "Formal Wear", href: "/storefront/shop?category=women&sub=formal" },
+        ],
+      },
+      {
+        title: "Footwear",
+        items: [
+          { label: "Heels & Pumps", href: "/storefront/shop?category=women&sub=heels" },
+          { label: "Flats & Sandals", href: "/storefront/shop?category=women&sub=sandals" },
+          { label: "Sneakers", href: "/storefront/shop?category=women&sub=sneakers" },
+        ],
+      },
+      {
+        title: "Accessories",
+        items: [
+          { label: "Bags & Clutches", href: "/storefront/shop?category=women&sub=bags" },
+          { label: "Jewellery", href: "/storefront/shop?category=women&sub=jewellery" },
+          { label: "Scarves & Shawls", href: "/storefront/shop?category=women&sub=scarves" },
+          { label: "Sunglasses", href: "/storefront/shop?category=women&sub=sunglasses" },
+        ],
+      },
+    ],
+  },
+  Men: {
+    image: "https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?w=300&q=80&auto=format&fit=crop",
+    columns: [
+      {
+        title: "Men's Wear",
+        items: [
+          { label: "T-Shirts", href: "/storefront/shop?category=men&sub=tshirts" },
+          { label: "Casual Shirts", href: "/storefront/shop?category=men&sub=casual-shirts" },
+          { label: "Formal Shirts", href: "/storefront/shop?category=men&sub=formal-shirts" },
+          { label: "Jackets", href: "/storefront/shop?category=men&sub=jackets" },
+          { label: "Jeans", href: "/storefront/shop?category=men&sub=jeans" },
+          { label: "Casual Trousers", href: "/storefront/shop?category=men&sub=trousers" },
+          { label: "Formal Trousers", href: "/storefront/shop?category=men&sub=formal-trousers" },
+          { label: "Shorts", href: "/storefront/shop?category=men&sub=shorts" },
+          { label: "Track Pants & Joggers", href: "/storefront/shop?category=men&sub=joggers" },
+          { label: "Sarong", href: "/storefront/shop?category=men&sub=sarong" },
+        ],
+      },
+      {
+        title: "Footwear",
+        items: [
+          { label: "Formal Shoes", href: "/storefront/shop?category=men&sub=formal-shoes" },
+          { label: "Sandals & Floaters", href: "/storefront/shop?category=men&sub=sandals" },
+          { label: "Flip Flops", href: "/storefront/shop?category=men&sub=flip-flops" },
+          { label: "Socks", href: "/storefront/shop?category=men&sub=socks" },
+        ],
+      },
+      {
+        title: "Fashion Accessories",
+        items: [
+          { label: "Belts", href: "/storefront/shop?category=men&sub=belts" },
+          { label: "Caps & Hats", href: "/storefront/shop?category=men&sub=caps" },
+          { label: "Sunglasses & Frames", href: "/storefront/shop?category=men&sub=sunglasses" },
+        ],
+      },
+      {
+        title: "Bags & Backpacks",
+        items: [
+          { label: "Backpacks", href: "/storefront/shop?category=men&sub=backpacks" },
+          { label: "Messenger Bags", href: "/storefront/shop?category=men&sub=messenger" },
+          { label: "Laptop Bags", href: "/storefront/shop?category=men&sub=laptop-bags" },
+        ],
+      },
+    ],
+  },
+  Kids: {
+    image: "https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?w=300&q=80&auto=format&fit=crop",
+    columns: [
+      {
+        title: "Boys",
+        items: [
+          { label: "T-Shirts & Tops", href: "/storefront/shop?category=children&sub=boys-tops" },
+          { label: "Shirts", href: "/storefront/shop?category=children&sub=boys-shirts" },
+          { label: "Trousers & Jeans", href: "/storefront/shop?category=children&sub=boys-trousers" },
+          { label: "Shorts", href: "/storefront/shop?category=children&sub=boys-shorts" },
+          { label: "Sportswear", href: "/storefront/shop?category=children&sub=boys-sports" },
+          { label: "School Uniforms", href: "/storefront/shop?category=children&sub=boys-uniforms" },
+        ],
+      },
+      {
+        title: "Girls",
+        items: [
+          { label: "Dresses & Frocks", href: "/storefront/shop?category=children&sub=girls-dresses" },
+          { label: "Tops & Blouses", href: "/storefront/shop?category=children&sub=girls-tops" },
+          { label: "Leggings & Pants", href: "/storefront/shop?category=children&sub=girls-pants" },
+          { label: "Skirts", href: "/storefront/shop?category=children&sub=girls-skirts" },
+          { label: "School Uniforms", href: "/storefront/shop?category=children&sub=girls-uniforms" },
+        ],
+      },
+      {
+        title: "Footwear & Acc.",
+        items: [
+          { label: "Shoes & Sneakers", href: "/storefront/shop?category=children&sub=shoes" },
+          { label: "Sandals", href: "/storefront/shop?category=children&sub=sandals" },
+          { label: "Bags & Backpacks", href: "/storefront/shop?category=children&sub=bags" },
+          { label: "Accessories", href: "/storefront/shop?category=children&sub=accessories" },
+        ],
+      },
+    ],
+  },
+};
+
 // ─── GLASS STYLES ─────────────────────────────────────────────────────────────
 const glass = {
   pill: {
@@ -368,6 +487,81 @@ function UserMenu({
   );
 }
 
+function MegaMenu({ label, data }: { label: string; data: typeof MEGA_MENUS[string] }) {
+  return (
+    <div style={{
+      position: "absolute", top: "calc(100% + 8px)", left: 0,
+      ...glass.dropdown,
+      width: data.columns.length >= 4 ? 620 : data.columns.length === 3 ? 480 : 360,
+      zIndex: 200, overflow: "hidden",
+    }}>
+      {/* Header row with title + View All */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "14px 20px 12px",
+        borderBottom: "0.5px solid rgba(0,0,0,0.06)",
+      }}>
+        <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: "#1C1C1E", letterSpacing: "-0.01em" }}>
+          Shop {label}
+        </p>
+        <Link href={`/storefront/shop?category=${label.toLowerCase() === "kids" ? "children" : label.toLowerCase()}`} style={{
+          fontSize: 11, fontWeight: 700, color: "#aa841c",
+          textDecoration: "none", letterSpacing: "0.04em",
+          display: "flex", alignItems: "center", gap: 4,
+        }}>
+          View All →
+        </Link>
+      </div>
+
+      {/* Category columns */}
+      <div style={{
+        display: "flex", gap: 0,
+        padding: "16px 20px 20px",
+      }}>
+        {data.columns.map((col, i) => (
+          <div key={i} style={{
+            flex: 1,
+            paddingRight: 16,
+            borderRight: i < data.columns.length - 1 ? "0.5px solid rgba(0,0,0,0.06)" : "none",
+            paddingLeft: i > 0 ? 16 : 0,
+          }}>
+            <p style={{
+              margin: "0 0 8px", fontSize: 10, fontWeight: 700,
+              color: "#aa841c", textTransform: "uppercase", letterSpacing: "0.1em"
+            }}>{col.title}</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              {col.items.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  style={{
+                    fontSize: 12.5, color: "#3C3C43", textDecoration: "none",
+                    padding: "5px 8px", borderRadius: 8,
+                    transition: "all 0.15s ease",
+                    display: "block",
+                  }}
+                  onMouseEnter={e => {
+                    (e.currentTarget as HTMLElement).style.background = "rgba(170,132,28,0.06)";
+                    (e.currentTarget as HTMLElement).style.color = "#aa841c";
+                    (e.currentTarget as HTMLElement).style.paddingLeft = "12px";
+                  }}
+                  onMouseLeave={e => {
+                    (e.currentTarget as HTMLElement).style.background = "transparent";
+                    (e.currentTarget as HTMLElement).style.color = "#3C3C43";
+                    (e.currentTarget as HTMLElement).style.paddingLeft = "8px";
+                  }}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── NAVBAR ───────────────────────────────────────────────────────────────────
 export default function Navbar() {
   const pathname = usePathname();
@@ -380,6 +574,8 @@ export default function Navbar() {
   const wishlistCount = wishlistItems.length;
   const [scrolled, setScrolled] = useState(false);
   const [activeTab, setActiveTab] = useState("/");
+  const [hoveredTab, setHoveredTab] = useState<string | null>(null);
+  const megaMenuTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const current = NAV_TABS.find(
@@ -412,6 +608,11 @@ export default function Navbar() {
           borderBottom: "0.5px solid rgba(0,0,0,0.08)",
           boxShadow: scrolled ? "0 1px 20px rgba(0,0,0,0.06)" : "none",
           transition: "background 0.3s, box-shadow 0.3s",
+          overflow: "visible",
+        }}
+        onMouseLeave={() => {
+          if (megaMenuTimer.current) clearTimeout(megaMenuTimer.current);
+          setHoveredTab(null);
         }}
       >
         {/* ── TOP ROW: Logo | Search | Icons ── */}
@@ -493,13 +694,14 @@ export default function Navbar() {
           background: "rgba(255,255,255,0.50)",
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
+          overflow: "visible",
         }}>
           <div style={{
             maxWidth: 1280, margin: "0 auto",
             padding: "0 28px",
             display: "flex", alignItems: "center",
             gap: 2, height: 40,
-            overflowX: "auto",
+            overflow: "visible",
           }}>
             <Link
               href="/"
@@ -508,11 +710,11 @@ export default function Navbar() {
                 display: "flex", alignItems: "center", justifyContent: "center",
                 padding: "6px 12px", borderRadius: 100,
                 color: activeTab === "/" ? "#fff" : "#3C3C43",
-                background: activeTab === "/" 
-                  ? "linear-gradient(135deg, #007AFF, #5856D6)" 
+                background: activeTab === "/"
+                  ? "linear-gradient(135deg, #007AFF, #5856D6)"
                   : "transparent",
-                boxShadow: activeTab === "/" 
-                  ? "0 2px 10px rgba(0,122,255,0.28)" 
+                boxShadow: activeTab === "/"
+                  ? "0 2px 10px rgba(0,122,255,0.28)"
                   : "none",
                 transition: "all 0.18s ease",
               }}
@@ -530,47 +732,73 @@ export default function Navbar() {
               const isActive = activeTab === tab.href;
               const isNew = tab.label === "New Arrival";
               const isOffer = tab.label === "Offers";
+              const hasMega = tab.label in MEGA_MENUS;
+              const isMegaOpen = hoveredTab === tab.label;
               return (
-                <Link
+                <div
                   key={tab.href}
-                  href={tab.href}
-                  onClick={() => setActiveTab(tab.href)}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 5,
-                    padding: "5px 14px", borderRadius: 100,
-                    fontSize: 12.5, fontWeight: isActive ? 600 : 500,
-                    whiteSpace: "nowrap" as const, textDecoration: "none",
-                    transition: "all 0.18s ease",
-                    color: isActive
-                      ? "#fff"
-                      : isOffer
-                        ? "#FF3B30"
-                        : "#3C3C43",
-                    background: isActive
-                      ? "linear-gradient(135deg, #007AFF, #5856D6)"
-                      : "transparent",
-                    boxShadow: isActive
-                      ? "0 2px 10px rgba(0,122,255,0.28)"
-                      : "none",
-                    letterSpacing: "-0.01em",
+                  style={{ position: "relative" }}
+                  onMouseEnter={() => {
+                    if (megaMenuTimer.current) clearTimeout(megaMenuTimer.current);
+                    if (hasMega) setHoveredTab(tab.label);
                   }}
-                  onMouseEnter={e => {
-                    if (!isActive) (e.currentTarget as HTMLElement).style.background = "rgba(0,0,0,0.05)";
-                  }}
-                  onMouseLeave={e => {
-                    if (!isActive) (e.currentTarget as HTMLElement).style.background = "transparent";
+                  onMouseLeave={() => {
+                    megaMenuTimer.current = setTimeout(() => setHoveredTab(null), 120);
                   }}
                 >
-                  {tab.label}
-                  {isNew && (
-                    <span style={{
-                      fontSize: 8, fontWeight: 800, letterSpacing: "0.06em",
-                      textTransform: "uppercase" as const,
-                      background: "linear-gradient(135deg, #FF9500, #FF6B00)",
-                      color: "#fff", padding: "1px 5px", borderRadius: 4,
-                    }}>NEW</span>
+                  <Link
+                    href={tab.href}
+                    onClick={() => { setActiveTab(tab.href); setHoveredTab(null); }}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 5,
+                      padding: "5px 14px", borderRadius: 100,
+                      fontSize: 12.5, fontWeight: isActive ? 600 : 500,
+                      whiteSpace: "nowrap" as const, textDecoration: "none",
+                      transition: "all 0.18s ease",
+                      color: isActive
+                        ? "#fff"
+                        : isOffer
+                          ? "#FF3B30"
+                          : "#3C3C43",
+                      background: isActive
+                        ? "linear-gradient(135deg, #007AFF, #5856D6)"
+                        : isMegaOpen
+                          ? "rgba(0,0,0,0.05)"
+                          : "transparent",
+                      boxShadow: isActive
+                        ? "0 2px 10px rgba(0,122,255,0.28)"
+                        : "none",
+                      letterSpacing: "-0.01em",
+                    }}
+                  >
+                    {tab.label}
+                    {hasMega && (
+                      <svg width={9} height={9} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}
+                        style={{ opacity: 0.5, transition: "transform 0.2s", transform: isMegaOpen ? "rotate(180deg)" : "rotate(0deg)" }}>
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    )}
+                    {isNew && (
+                      <span style={{
+                        fontSize: 8, fontWeight: 800, letterSpacing: "0.06em",
+                        textTransform: "uppercase" as const,
+                        background: "linear-gradient(135deg, #FF9500, #FF6B00)",
+                        color: "#fff", padding: "1px 5px", borderRadius: 4,
+                      }}>NEW</span>
+                    )}
+                  </Link>
+
+                  {/* Mega Menu Dropdown */}
+                  {hasMega && isMegaOpen && (
+                    <div
+                      onMouseEnter={() => { if (megaMenuTimer.current) clearTimeout(megaMenuTimer.current); }}
+                      onMouseLeave={() => { megaMenuTimer.current = setTimeout(() => setHoveredTab(null), 120); }}
+                      style={{ animation: "megaFadeIn 0.2s ease" }}
+                    >
+                      <MegaMenu label={tab.label} data={MEGA_MENUS[tab.label]} />
+                    </div>
                   )}
-                </Link>
+                </div>
               );
             })}
           </div>
@@ -579,6 +807,13 @@ export default function Navbar() {
 
       {/* Spacer for fixed nav (top 58 + bottom 40 = 98px) */}
       <div style={{ height: 98 }} />
+
+      <style>{`
+        @keyframes megaFadeIn {
+          from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+          to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+      `}</style>
 
       {isDrawerOpen && (
         <CartDrawer onClose={() => setIsDrawerOpen(false)} />
