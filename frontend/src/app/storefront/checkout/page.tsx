@@ -246,54 +246,10 @@ export default function CartPage() {
       </div>
 
       <div style={{ maxWidth: 1240, margin: "0 auto", padding: "0 24px", position: "relative", zIndex: 1 }}>
-        
-        {/* Step Indicator */}
-        <div className="checkout-steps" style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          maxWidth: 640,
-          margin: "0 auto 48px",
-          padding: "14px 28px",
-          ...glass.pill,
-          background: "rgba(255, 255, 255, 0.45)",
-          border: "1.5px solid rgba(255,255,255,0.9)",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.03)"
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{
-              width: 26, height: 26, borderRadius: "50%",
-              background: "linear-gradient(135deg, #d4af37 0%, #aa841c 100%)",
-              color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 12, fontWeight: 700, boxShadow: "0 2px 8px rgba(170,132,28,0.25)"
-            }}>1</span>
-            <span style={{ fontSize: 13, fontWeight: 700, color: "#1C1C1E", letterSpacing: "0.02em" }}>Shopping Bag</span>
-          </div>
-          <div style={{ flex: 1, height: 1.5, background: "rgba(0,0,0,0.06)", margin: "0 20px" }} />
-          <div style={{ display: "flex", alignItems: "center", gap: 10, opacity: 0.6 }}>
-            <span style={{
-              width: 26, height: 26, borderRadius: "50%",
-              background: "rgba(0,0,0,0.06)",
-              color: "#555", display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 12, fontWeight: 700
-            }}>2</span>
-            <span style={{ fontSize: 13, fontWeight: 600, color: "#555" }}>Payment</span>
-          </div>
-          <div style={{ flex: 1, height: 1.5, background: "rgba(0,0,0,0.06)", margin: "0 20px" }} />
-          <div style={{ display: "flex", alignItems: "center", gap: 10, opacity: 0.6 }}>
-            <span style={{
-              width: 26, height: 26, borderRadius: "50%",
-              background: "rgba(0,0,0,0.06)",
-              color: "#555", display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 12, fontWeight: 700
-            }}>3</span>
-            <span style={{ fontSize: 13, fontWeight: 600, color: "#555" }}>Receipt</span>
-          </div>
-        </div>
 
         {/* Back navigation & Header */}
         <div style={{
-          display: "flex", flexDirection: "column", gap: 8, marginBottom: 40,
+          display: "flex", flexDirection: "column", gap: 8, marginBottom: 20,
           borderBottom: "1px solid rgba(0,0,0,0.05)", paddingBottom: 24
         }}>
           <Link href="/storefront/shop" style={{
@@ -306,15 +262,61 @@ export default function CartPage() {
             </svg>
             Continue Boutique Shopping
           </Link>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 12, marginTop: 12 }}>
-            <div>
-              <p style={{
-                margin: "0 0 4px", fontSize: 11, fontWeight: 700, letterSpacing: "0.15em",
-                textTransform: "uppercase", color: "#aa841c"
-              }}>Boutique Cart</p>
-              <h1 style={{ margin: 0, fontSize: "clamp(28px, 4.5vw, 38px)", fontWeight: 800, letterSpacing: "-0.03em", color: "#1C1C1E" }}>
-                Your Selection
-              </h1>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 20, marginTop: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 32, flexWrap: "wrap" }}>
+              <div>
+                <p style={{
+                  margin: "0 0 4px", fontSize: 11, fontWeight: 700, letterSpacing: "0.15em",
+                  textTransform: "uppercase", color: "#aa841c"
+                }}>Boutique Cart</p>
+                <h1 style={{ margin: 0, fontSize: "clamp(28px, 4.5vw, 38px)", fontWeight: 800, letterSpacing: "-0.03em", color: "#1C1C1E" }}>
+                  Your Selection
+                </h1>
+              </div>
+
+              {/* Inline Step Indicator */}
+              <div className="checkout-steps" style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                width: 440,
+                padding: "10px 20px",
+                ...glass.pill,
+                background: "rgba(255, 255, 255, 0.45)",
+                border: "1.5px solid rgba(255,255,255,0.9)",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.03)",
+                margin: 0
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{
+                    width: 24, height: 24, borderRadius: "50%",
+                    background: "linear-gradient(135deg, #d4af37 0%, #aa841c 100%)",
+                    color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 11, fontWeight: 700, boxShadow: "0 2px 8px rgba(170,132,28,0.25)"
+                  }}>1</span>
+                  <span style={{ fontSize: 12.5, fontWeight: 700, color: "#1C1C1E", letterSpacing: "0.01em" }}>Shopping Bag</span>
+                </div>
+                <div style={{ flex: 1, height: 1, background: "rgba(0,0,0,0.06)", margin: "0 12px" }} />
+                <div style={{ display: "flex", alignItems: "center", gap: 8, opacity: 0.6 }}>
+                  <span style={{
+                    width: 24, height: 24, borderRadius: "50%",
+                    background: "rgba(0,0,0,0.06)",
+                    color: "#555", display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 11, fontWeight: 700
+                  }}>2</span>
+                  <span style={{ fontSize: 12.5, fontWeight: 600, color: "#555" }}>Payment</span>
+                </div>
+                <div style={{ flex: 1, height: 1, background: "rgba(0,0,0,0.06)", margin: "0 12px" }} />
+                <div style={{ display: "flex", alignItems: "center", gap: 8, opacity: 0.6 }}>
+                  <span style={{
+                    width: 24, height: 24, borderRadius: "50%",
+                    background: "rgba(0,0,0,0.06)",
+                    color: "#555", display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 11, fontWeight: 700
+                  }}>3</span>
+                  <span style={{ fontSize: 12.5, fontWeight: 600, color: "#555" }}>Receipt</span>
+                </div>
+              </div>
             </div>
             {cartItems.length > 0 && (
               <button 

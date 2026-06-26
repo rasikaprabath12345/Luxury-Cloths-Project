@@ -161,7 +161,7 @@ export default function OrderDetailPage() {
       fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif",
       background: "linear-gradient(160deg, #F2F2F7 0%, #E8E8F0 40%, #EEF0F8 100%)",
       minHeight: "100vh", color: "#1C1C1E",
-      paddingTop: 130,
+      paddingTop: 30,
       paddingBottom: 100,
       position: "relative"
     }}>
