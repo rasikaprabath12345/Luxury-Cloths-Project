@@ -198,14 +198,14 @@ function ProductSlider({ products }: { products: Product[] }) {
   };
 
   return (
-    <div 
+    <div
       style={{ position: "relative", width: "100%" }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Slider Viewport */}
       <div style={{ overflow: "hidden", margin: "0 -8px", padding: "8px 0" }}>
-        <div 
+        <div
           onTransitionEnd={handleTransitionEnd}
           style={{
             display: "flex",
@@ -229,7 +229,7 @@ function ProductSlider({ products }: { products: Product[] }) {
       {/* Navigation Arrows */}
       {isLoopable && (
         <>
-          <button 
+          <button
             onClick={handlePrev}
             style={{
               position: "absolute", left: -20, top: "50%", transform: "translateY(-50%)",
@@ -246,7 +246,7 @@ function ProductSlider({ products }: { products: Product[] }) {
               <path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
-          <button 
+          <button
             onClick={handleNext}
             style={{
               position: "absolute", right: -20, top: "50%", transform: "translateY(-50%)",
@@ -483,7 +483,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── TRUST STRIP ────────────────────────────────────────────────────── */}
-      <section style={{ maxWidth: 1200, margin: "0 auto", padding: "48px 24px 32px", position: "relative", zIndex: 1 }}>
+      <section style={{ maxWidth: 1400, margin: "0 auto", padding: "48px 24px 32px", position: "relative", zIndex: 1 }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
           {trust.map((t, i) => (
             <div key={i} style={{ ...glass.card, padding: "20px 22px", display: "flex", alignItems: "center", gap: 14 }}>
@@ -502,7 +502,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── NEW ARRIVALS COLLECTION ─────────────────────────────────────────── */}
-      <section style={{ maxWidth: 1200, margin: "0 auto", padding: "16px 24px 40px", position: "relative", zIndex: 1 }}>
+      <section style={{ maxWidth: 1400, margin: "0 auto", padding: "16px 24px 40px", position: "relative", zIndex: 1 }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 24 }}>
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
             <div>
@@ -569,7 +569,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── BEST SELLERS COLLECTION ─────────────────────────────────────────── */}
-      <section style={{ maxWidth: 1200, margin: "0 auto", padding: "16px 24px 40px", position: "relative", zIndex: 1 }}>
+      <section style={{ maxWidth: 1400, margin: "0 auto", padding: "16px 24px 40px", position: "relative", zIndex: 1 }}>
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 24 }}>
           <div>
             <p style={{
@@ -600,7 +600,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── CATEGORIES ─────────────────────────────────────────────────────── */}
-      <section style={{ maxWidth: 1200, margin: "0 auto", padding: "16px 24px 40px", position: "relative", zIndex: 1 }}>
+      <section style={{ maxWidth: 1400, margin: "0 auto", padding: "16px 24px 40px", position: "relative", zIndex: 1 }}>
         <div style={{ marginBottom: 24 }}>
           <p style={{
             margin: "0 0 4px", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
@@ -666,7 +666,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── WOMEN'S LUXURY COLLECTION ──────────────────────────────────────── */}
-      <section style={{ maxWidth: 1200, margin: "0 auto", padding: "8px 24px 40px", position: "relative", zIndex: 1 }}>
+      <section style={{ maxWidth: 1400, margin: "0 auto", padding: "0px 24px 20px", position: "relative", zIndex: 1 }}>
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 24 }}>
           <div>
             <p style={{
@@ -694,7 +694,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── MEN'S PREMIUM COLLECTION ───────────────────────────────────────── */}
-      <section style={{ maxWidth: 1200, margin: "0 auto", padding: "16px 24px 40px", position: "relative", zIndex: 1 }}>
+      <section style={{ maxWidth: 1400, margin: "0 auto", padding: "0px 24px 20px", position: "relative", zIndex: 1 }}>
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 24 }}>
           <div>
             <p style={{
@@ -722,7 +722,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── CHILDREN'S COLLECTION ─────────────────────────────────────────── */}
-      <section style={{ maxWidth: 1200, margin: "0 auto", padding: "16px 24px 40px", position: "relative", zIndex: 1 }}>
+      <section style={{ maxWidth: 1400, margin: "0 auto", padding: "0px 24px 20px", position: "relative", zIndex: 1 }}>
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 24 }}>
           <div>
             <p style={{
@@ -750,7 +750,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── BEST SELLERS FEATURE BANNER ────────────────────────────────────── */}
-      <section style={{ maxWidth: 1200, margin: "0 auto", padding: "8px 24px 40px", position: "relative", zIndex: 1 }}>
+      <section style={{ maxWidth: 1400, margin: "0 auto", padding: "8px 24px 40px", position: "relative", zIndex: 1 }}>
         <div style={{
           ...glass.dark,
           padding: "40px 48px",
@@ -805,7 +805,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── OUR BRANDS ─────────────────────────────────────────────────────── */}
-      <section style={{ maxWidth: 1200, margin: "0 auto", padding: "8px 24px 40px", position: "relative", zIndex: 1 }}>
+      <section style={{ maxWidth: 1400, margin: "0 auto", padding: "8px 24px 40px", position: "relative", zIndex: 1 }}>
         <div style={{ marginBottom: 24 }}>
           <p style={{
             margin: "0 0 4px", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
@@ -846,7 +846,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── NEWSLETTER ─────────────────────────────────────────────────────── */}
-      <section style={{ maxWidth: 1200, margin: "0 auto", padding: "8px 24px 64px", position: "relative", zIndex: 1 }}>
+      <section style={{ maxWidth: 1400, margin: "0 auto", padding: "8px 24px 64px", position: "relative", zIndex: 1 }}>
         <div style={{
           background: "linear-gradient(135deg, #007AFF 0%, #5856D6 60%, #AF52DE 100%)",
           borderRadius: 32, padding: "56px 48px", textAlign: "center",

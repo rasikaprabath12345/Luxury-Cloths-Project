@@ -36,15 +36,15 @@ function ShopContent() {
       const slug = product.category?.slug?.toLowerCase();
       const name = product.category?.name?.toLowerCase();
       const catMatch = slug === categoryFilter.toLowerCase() || name?.includes(categoryFilter.toLowerCase());
-      
+
       // Additional logic for common categories mapping
       if (categoryFilter === "women" && (name?.includes("women") || name?.includes("girl") || product.categoryId === 2)) return true;
       if (categoryFilter === "men" && ((name?.includes("men") || name?.includes("boy") || product.categoryId === 1) && !name?.includes("women"))) return true;
       if (categoryFilter === "children" && (name?.includes("child") || name?.includes("kids") || product.categoryId === 3)) return true;
-      
+
       if (!catMatch) return false;
     }
-    
+
     // Filter by Type (Offers/Sale or New)
     if (filterType === "sale" || filterType === "offers") {
       if (!(product.discount > 0)) return false;
@@ -63,7 +63,7 @@ function ShopContent() {
       fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif",
       background: "linear-gradient(160deg, #F2F2F7 0%, #E8E8F0 40%, #EEF0F8 100%)",
       minHeight: "100vh", color: "#1C1C1E",
-      paddingTop: 120, // To account for fixed navbar
+      paddingTop: 30, // Account for spacer inside Navbar.tsx
       paddingBottom: 60,
     }}>
       {/* ─── AMBIENT BLOBS ──────────────────────────────────────────────────── */}
@@ -106,10 +106,10 @@ function ShopContent() {
               textTransform: "uppercase", color: "#007AFF"
             }}>Premium Collection</p>
             <h1 style={{ margin: 0, fontSize: "clamp(28px, 4vw, 42px)", fontWeight: 900, letterSpacing: "-0.04em", color: "#1C1C1E" }}>
-              {filterType === "new" ? "New Arrivals ✨" : 
-               filterType === "sale" || filterType === "offers" ? "Special Offers 🔥" :
-               categoryFilter ? `${categoryFilter.charAt(0).toUpperCase() + categoryFilter.slice(1)}'s Collection` : 
-               "All Premium Apparel"}
+              {filterType === "new" ? "New Arrivals ✨" :
+                filterType === "sale" || filterType === "offers" ? "Special Offers 🔥" :
+                  categoryFilter ? `${categoryFilter.charAt(0).toUpperCase() + categoryFilter.slice(1)}'s Collection` :
+                    "All Premium Apparel"}
             </h1>
             <p style={{ margin: "6px 0 0", color: "#8E8E93", fontSize: 15, fontWeight: 400 }}>
               Discover curated luxury fashion items crafted for your premium taste.
@@ -124,7 +124,7 @@ function ShopContent() {
         ) : (
           <div>
             {filteredProducts.length === 0 ? (
-              <div style={{ 
+              <div style={{
                 ...glass.card, padding: "60px 20px", textAlign: "center",
                 display: "flex", flexDirection: "column", alignItems: "center", gap: 16
               }}>

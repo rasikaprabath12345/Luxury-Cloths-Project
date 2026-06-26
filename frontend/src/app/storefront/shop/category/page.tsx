@@ -11,7 +11,7 @@ const PLACEHOLDER_IMG = "https://images.unsplash.com/photo-1540221652346-e5dd6b5
 function CategoryContent() {
   const searchParams = useSearchParams();
   const categoryName = searchParams.get("name") || "Products";
-  
+
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { addToCart } = useCart();
@@ -30,12 +30,12 @@ function CategoryContent() {
     fetchProducts();
   }, []);
 
-  const filteredProducts = products.filter((product: any) => 
+  const filteredProducts = products.filter((product: any) =>
     product.category?.name?.toLowerCase() === categoryName.toLowerCase()
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 pt-24 bg-white min-h-screen">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 pt-8 bg-white min-h-screen">
       <div className="flex justify-between items-center mb-10 pb-6 border-b border-gray-100">
         <div>
           <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">{categoryName}</h1>
@@ -64,17 +64,17 @@ function CategoryContent() {
               {filteredProducts.map((product: any) => {
                 const imgUrl = product.imageUrl || product.image || PLACEHOLDER_IMG;
                 const hasDiscount = product.discount > 0;
-                const finalPrice = hasDiscount 
-                  ? product.price - (product.price * product.discount / 100) 
+                const finalPrice = hasDiscount
+                  ? product.price - (product.price * product.discount / 100)
                   : product.price;
 
                 return (
                   <div key={product.id} className="group relative flex flex-col justify-between bg-white border border-gray-100 rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300">
                     <Link href={`/storefront/product/${product.slug}`} className="cursor-pointer">
                       <div className="aspect-square w-full overflow-hidden bg-gray-50 relative">
-                        <img 
-                          src={imgUrl} 
-                          alt={product.name} 
+                        <img
+                          src={imgUrl}
+                          alt={product.name}
                           className="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                         />
                         {hasDiscount && (
@@ -103,7 +103,7 @@ function CategoryContent() {
                       </div>
                     </Link>
                     <div className="px-5 pb-5 pt-0">
-                      <button 
+                      <button
                         onClick={() => {
                           addToCart({
                             id: product.id,

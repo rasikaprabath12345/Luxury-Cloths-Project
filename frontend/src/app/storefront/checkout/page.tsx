@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { glass } from "@/utils/theme";
-import { uploadAPI } from "@/lib/api";
+import { uploadAPI, ordersAPI } from "@/lib/api";
 
 const PLACEHOLDER_IMG = "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=600&auto=format&fit=crop";
 
@@ -18,6 +18,7 @@ export default function CartPage() {
   const [removingId, setRemovingId] = useState<number | null>(null);
   const [coupon, setCoupon] = useState("");
   const [couponApplied, setCouponApplied] = useState(false);
+  const [isFirstOrder, setIsFirstOrder] = useState<boolean>(false);
   const router = useRouter();
   const [firstName, setFirstName] = useState<string>("");
   const [lastName, setLastName] = useState<string>("");
@@ -34,7 +35,8 @@ export default function CartPage() {
 
   useEffect(() => {
     const savedUserStr = localStorage.getItem("luxury_user");
-    if (savedUserStr) {
+    const token = localStorage.getItem("luxury_token");
+    if (savedUserStr && token) {
       try {
         const user = JSON.parse(savedUserStr);
         if (user.fullName) {
@@ -44,6 +46,18 @@ export default function CartPage() {
         }
         if (user.email) setEmail(user.email);
         if (user.phone) setPhone(user.phone);
+
+        // Fetch user orders to verify first order promo
+        ordersAPI.getUserOrders()
+          .then(res => {
+            if (res.data && res.data.length === 0) {
+              setCouponApplied(true);
+              setIsFirstOrder(true);
+            }
+          })
+          .catch(err => {
+            console.error("Failed to fetch user orders:", err);
+          });
       } catch (error) {
         console.error("Failed to parse user:", error);
       }
@@ -211,7 +225,7 @@ export default function CartPage() {
       fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif",
       background: "linear-gradient(160deg, #F2F2F7 0%, #E8E8F0 40%, #EEF0F8 100%)",
       minHeight: "100vh", color: "#1C1C1E",
-      paddingTop: 130,
+      paddingTop: 30,
       paddingBottom: 100,
       position: "relative"
     }}>
@@ -793,6 +807,24 @@ export default function CartPage() {
 
             {/* RIGHT COLUMN: STICKY ORDER SUMMARY & CHECKOUT */}
             <div className="cart-summary-sticky">
+              {isFirstOrder && (
+                <div style={{
+                  background: "linear-gradient(135deg, #15803D 0%, #166534 100%)",
+                  color: "#fff",
+                  borderRadius: 12,
+                  padding: "12px 16px",
+                  marginBottom: 16,
+                  fontSize: 12.5,
+                  fontWeight: 600,
+                  boxShadow: "0 4px 14px rgba(22,101,52,0.15)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10
+                }}>
+                  <span style={{ fontSize: 18 }}>🎉</span>
+                  <span>Welcome! <strong>10% First Order Discount</strong> has been automatically applied to your checkout.</span>
+                </div>
+              )}
               <div style={{
                 ...glass.card,
                 padding: "28px 24px",
@@ -810,7 +842,7 @@ export default function CartPage() {
                   
                   {couponApplied && (
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
-                      <span style={{ color: "#15803D", fontWeight: 500 }}>Discount (LUXURY10)</span>
+                      <span style={{ color: "#15803D", fontWeight: 500 }}>Discount ({isFirstOrder ? "First Order Offer" : "LUXURY10"})</span>
                       <span style={{ color: "#15803D", fontWeight: 700 }}>− Rs. {discount.toLocaleString()}</span>
                     </div>
                   )}
@@ -836,8 +868,8 @@ export default function CartPage() {
                 {/* Promo Coupon Entry */}
                 <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
                   <input
-                    placeholder="Coupon (e.g. LUXURY10)"
-                    value={coupon}
+                    placeholder={isFirstOrder ? "First Order Offer Applied!" : "Coupon (e.g. LUXURY10)"}
+                    value={couponApplied && isFirstOrder ? "WELCOME10" : coupon}
                     onChange={(e) => setCoupon(e.target.value)}
                     disabled={couponApplied}
                     style={{

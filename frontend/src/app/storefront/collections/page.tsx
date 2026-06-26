@@ -37,7 +37,7 @@ export default function CollectionsPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-white pt-24 pb-16">
+    <main className="min-h-screen bg-white pt-8 pb-16">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         {/* Header */}
         <div className="mb-12">
@@ -91,7 +91,7 @@ export default function CollectionsPage() {
               {categories.map((cat) => {
                 const slug = cat.slug || cat.name.toLowerCase();
                 const image = CATEGORY_IMAGES[slug] || DEFAULT_IMAGE;
-                
+
                 return (
                   <Link
                     key={cat.id}

@@ -600,6 +600,32 @@ export default function Navbar() {
         style={{
           fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', sans-serif",
           position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
+          overflow: "visible",
+        }}
+        onMouseLeave={() => {
+          if (megaMenuTimer.current) clearTimeout(megaMenuTimer.current);
+          setHoveredTab(null);
+        }}
+      >
+        {/* Promo strip */}
+        <div style={{
+          background: "#0c1033", // deep luxury navy blue matching image
+          color: "#fff",
+          fontSize: 13,
+          fontWeight: 500,
+          height: 32,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "0 28px",
+          width: "100%",
+        }}>
+          <div style={{ maxWidth: 1400, width: "100%", margin: "0 auto", display: "flex", justifyContent: "center" }}>
+            <span style={{ fontSize: 13.5, letterSpacing: "0.01em", opacity: 0.95 }}>Sign up and get 10% off on your first order</span>
+          </div>
+        </div>
+
+        <div style={{
           background: scrolled
             ? "rgba(248,248,252,0.92)"
             : "rgba(248,248,252,0.82)",
@@ -609,15 +635,10 @@ export default function Navbar() {
           boxShadow: scrolled ? "0 1px 20px rgba(0,0,0,0.06)" : "none",
           transition: "background 0.3s, box-shadow 0.3s",
           overflow: "visible",
-        }}
-        onMouseLeave={() => {
-          if (megaMenuTimer.current) clearTimeout(megaMenuTimer.current);
-          setHoveredTab(null);
-        }}
-      >
+        }}>
         {/* ── TOP ROW: Logo | Search | Icons ── */}
         <div style={{
-          maxWidth: 1280, margin: "0 auto",
+          maxWidth: 1400, margin: "0 auto",
           padding: "0 28px", height: 58,
           display: "flex", alignItems: "center",
           justifyContent: "space-between", gap: 20,
@@ -662,13 +683,13 @@ export default function Navbar() {
             <IconBtnLabeled
               label="Wishlist"
               badge={wishlistCount}
-              onClick={() => setIsWishlistDrawerOpen(true)}
+              onClick={() => setIsWishlistDrawerOpen(!isWishlistDrawerOpen)}
               icon={<WishlistIcon />}
             />
             <IconBtnLabeled
               label="Cart"
               badge={cartCount}
-              onClick={() => setIsDrawerOpen(true)}
+              onClick={() => setIsDrawerOpen(!isDrawerOpen)}
               icon={<CartIcon />}
             />
 
@@ -697,7 +718,7 @@ export default function Navbar() {
           overflow: "visible",
         }}>
           <div style={{
-            maxWidth: 1280, margin: "0 auto",
+            maxWidth: 1400, margin: "0 auto",
             padding: "0 28px",
             display: "flex", alignItems: "center",
             gap: 2, height: 40,
@@ -803,10 +824,11 @@ export default function Navbar() {
             })}
           </div>
         </div>
+        </div>
       </nav>
 
-      {/* Spacer for fixed nav (top 58 + bottom 40 = 98px) */}
-      <div style={{ height: 98 }} />
+      {/* Spacer for fixed nav (top 58 + bottom 40 + promo 32 = 130px) */}
+      <div style={{ height: 130 }} />
 
       <style>{`
         @keyframes megaFadeIn {

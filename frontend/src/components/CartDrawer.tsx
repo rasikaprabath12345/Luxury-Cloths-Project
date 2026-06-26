@@ -3,13 +3,20 @@
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function CartDrawer({ onClose }: { onClose: () => void }) {
     const { cartItems, updateQuantity, removeFromCart } = useCart();
     const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
     const router = useRouter();
     const [removingId, setRemovingId] = useState<number | null>(null);
+
+    useEffect(() => {
+        document.body.style.overflow = "hidden";
+        return () => {
+            document.body.style.overflow = "unset";
+        };
+    }, []);
 
     const totalPrice = cartItems.reduce(
         (acc, item: any) => acc + item.price * (item.quantity || 1),
@@ -60,19 +67,14 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
             className="cart-overlay"
             onClick={(e) => e.target === e.currentTarget && onClose()}
         >
-            <div className="cart-drawer-full ali-style-cart">
-                {/* Global Close Header */}
-                <div className="global-close-header">
-                    <button onClick={onClose} className="global-close-btn" aria-label="Close cart">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <line x1="18" y1="6" x2="6" y2="18" />
-                            <line x1="6" y1="6" x2="18" y2="18" />
-                        </svg>
-                        <span>Close</span>
-                    </button>
-                </div>
-
-                <div className="ali-cart-body">
+            <div
+                className="cart-drawer-full ali-style-cart"
+                onClick={(e) => e.target === e.currentTarget && onClose()}
+            >
+                <div
+                    className="ali-cart-body"
+                    onClick={(e) => e.target === e.currentTarget && onClose()}
+                >
                     {cartItems.length === 0 ? (
                         <div className="cart-empty-full">
                             <div className="cart-empty-icon">
@@ -89,7 +91,7 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                         </div>
                     ) : (
                         <div className="ali-cart-grid">
-                            
+
                             {/* LEFT COLUMN */}
                             <div className="ali-cart-left">
                                 {/* Top Cart Header Card */}
@@ -97,9 +99,9 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                                     <h2 className="ali-cart-title">Cart ({cartItems.length})</h2>
                                     <div className="ali-select-all-row">
                                         <label className="ali-checkbox-label">
-                                            <input 
-                                                type="checkbox" 
-                                                className="ali-checkbox" 
+                                            <input
+                                                type="checkbox"
+                                                className="ali-checkbox"
                                                 checked={selectedItems.length === cartItems.length && cartItems.length > 0}
                                                 onChange={toggleAll}
                                             />
@@ -137,13 +139,13 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
 
                                             return (
                                                 <div key={item.id} className="ali-item-row">
-                                                    <input 
-                                                        type="checkbox" 
+                                                    <input
+                                                        type="checkbox"
                                                         className="ali-checkbox item-checkbox"
                                                         checked={isSelected}
                                                         onChange={() => toggleSelection(item.id)}
                                                     />
-                                                    
+
                                                     <div className="ali-item-img-container">
                                                         <img src={itemImg} alt={item.name} className="ali-item-img" />
                                                         <div className="ali-item-img-overlay">Only 1 left</div>
@@ -152,8 +154,8 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                                                     <div className="ali-item-details">
                                                         <div className="ali-item-title-row">
                                                             <h4 className="ali-item-title">{item.name}</h4>
-                                                              <div className="ali-item-actions">
-                                                                <button 
+                                                            <div className="ali-item-actions">
+                                                                <button
                                                                     className="ali-action-btn"
                                                                     onClick={() => {
                                                                         if (isInWishlist(item.id)) {
@@ -164,12 +166,12 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                                                                     }}
                                                                     title={isInWishlist(item.id) ? "Remove from wishlist" : "Add to wishlist"}
                                                                 >
-                                                                    <svg 
-                                                                        width="18" 
-                                                                        height="18" 
-                                                                        viewBox="0 0 24 24" 
-                                                                        fill={isInWishlist(item.id) ? "#e5103a" : "none"} 
-                                                                        stroke={isInWishlist(item.id) ? "#e5103a" : "currentColor"} 
+                                                                    <svg
+                                                                        width="18"
+                                                                        height="18"
+                                                                        viewBox="0 0 24 24"
+                                                                        fill={isInWishlist(item.id) ? "#e5103a" : "none"}
+                                                                        stroke={isInWishlist(item.id) ? "#e5103a" : "currentColor"}
                                                                         strokeWidth="2"
                                                                     >
                                                                         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
@@ -178,7 +180,7 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                                                                 <button className="ali-action-btn" onClick={() => handleRemove(item.id)}>
                                                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                                                                 </button>
-                                                              </div>
+                                                            </div>
                                                         </div>
 
                                                         <div className="ali-item-variant">
@@ -212,7 +214,7 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                             <div className="ali-cart-right">
                                 <div className="ali-summary-card">
                                     <h2 className="ali-summary-title">Summary</h2>
-                                    
+
                                     {selectedCartItems.length > 0 && (
                                         <div className="ali-summary-thumbnails">
                                             {selectedCartItems.slice(0, 4).map((item: any) => (
@@ -254,9 +256,9 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                                     <h3 className="ali-payment-title">Pay with</h3>
                                     <div className="ali-payment-icons">
                                         {/* Mock payment icons */}
-                                        <div className="ali-pay-icon" style={{color: '#1a1f71', fontWeight: 800}}>VISA</div>
-                                        <div className="ali-pay-icon" style={{background: 'linear-gradient(to right, #eb001b, #f79e1b)', WebkitBackgroundClip: 'text', color: 'transparent', fontWeight: 800}}>MC</div>
-                                        <div className="ali-pay-icon" style={{color: '#00457c', fontWeight: 800}}>AMEX</div>
+                                        <div className="ali-pay-icon" style={{ color: '#1a1f71', fontWeight: 800 }}>VISA</div>
+                                        <div className="ali-pay-icon" style={{ background: 'linear-gradient(to right, #eb001b, #f79e1b)', WebkitBackgroundClip: 'text', color: 'transparent', fontWeight: 800 }}>MC</div>
+                                        <div className="ali-pay-icon" style={{ color: '#00457c', fontWeight: 800 }}>AMEX</div>
                                     </div>
                                 </div>
 
@@ -284,7 +286,7 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                     z-index: 40; /* Below Navbar z-index (50) */
                     background: #f5f5f5; /* Grey background matching image */
                     overflow: hidden;
-                    padding-top: 98px; /* Offset for the fixed Navbar */
+                    padding-top: 130px; /* Offset for the fixed Navbar */
                     animation: overlayIn 0.2s ease forwards;
                 }
 
@@ -296,40 +298,36 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
                     overflow: hidden;
                 }
-
-                .global-close-header {
-                    background: #fff;
-                    padding: 12px 24px;
-                    display: flex;
-                    justify-content: flex-end;
-                    border-bottom: 1px solid #eaeaea;
-                    flex-shrink: 0;
-                }
-                .global-close-btn {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    background: none;
-                    border: none;
-                    cursor: pointer;
-                    font-size: 14px;
-                    color: #333;
-                }
-
                 /* ===== BODY LAYOUT ===== */
                 .ali-cart-body {
                     flex: 1;
-                    max-width: 1200px;
-                    margin: 0 auto;
                     width: 100%;
                     padding: 16px 20px;
                     overflow-y: auto;
+                    scrollbar-width: thin; /* Firefox */
+                    scrollbar-color: rgba(0, 0, 0, 0.15) transparent; /* Firefox */
+                }
+                .ali-cart-body::-webkit-scrollbar {
+                    width: 6px;
+                }
+                .ali-cart-body::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                .ali-cart-body::-webkit-scrollbar-thumb {
+                    background: rgba(0, 0, 0, 0.15);
+                    border-radius: 3px;
+                }
+                .ali-cart-body::-webkit-scrollbar-thumb:hover {
+                    background: rgba(0, 0, 0, 0.3);
                 }
 
                 .ali-cart-grid {
                     display: flex;
                     gap: 16px;
                     align-items: flex-start;
+                    max-width: 1200px;
+                    margin: 0 auto;
+                    width: 100%;
                 }
 
                 /* LEFT COLUMN */
@@ -745,6 +743,9 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                     padding: 60px 20px;
                     background: #fff;
                     border-radius: 8px;
+                    max-width: 1200px;
+                    margin: 0 auto;
+                    width: 100%;
                 }
                 .cart-empty-icon {
                     width: 64px;
