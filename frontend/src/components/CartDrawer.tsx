@@ -32,38 +32,45 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
         router.push("/storefront/checkout");
     };
 
+    // Selection state for checkboxes
+    const [selectedItems, setSelectedItems] = useState<number[]>(cartItems.map((i: any) => i.id));
+
+    const toggleSelection = (id: number) => {
+        setSelectedItems(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+    };
+
+    const toggleAll = () => {
+        if (selectedItems.length === cartItems.length) {
+            setSelectedItems([]);
+        } else {
+            setSelectedItems(cartItems.map((i: any) => i.id));
+        }
+    };
+
+    const selectedCartItems = cartItems.filter((i: any) => selectedItems.includes(i.id));
+
+    const itemsTotal = selectedCartItems.reduce((acc, item: any) => acc + (item.price * 1.5) * (item.quantity || 1), 0); // Fake original price
+    const subtotal = selectedCartItems.reduce((acc, item: any) => acc + item.price * (item.quantity || 1), 0);
+    const itemsDiscount = itemsTotal - subtotal;
+
     return (
         <div
             className="cart-overlay"
             onClick={(e) => e.target === e.currentTarget && onClose()}
         >
-            <div className="cart-drawer-full">
-                {/* Header */}
-                <div className="cart-header">
-                    <div className="cart-header-left">
-                        <div className="cart-icon-wrap">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
-                                <line x1="3" y1="6" x2="21" y2="6" />
-                                <path d="M16 10a4 4 0 01-8 0" />
-                            </svg>
-                        </div>
-                        <div>
-                            <h2 className="cart-title">Your Cart</h2>
-                            <p className="cart-subtitle">{totalItems} {totalItems === 1 ? "item" : "items"} selected</p>
-                        </div>
-                    </div>
-                    <button onClick={onClose} className="cart-close-btn" aria-label="Close cart">
-                        <span className="close-text">Back to Shop</span>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <div className="cart-drawer-full ali-style-cart">
+                {/* Global Close Header */}
+                <div className="global-close-header">
+                    <button onClick={onClose} className="global-close-btn" aria-label="Close cart">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <line x1="18" y1="6" x2="6" y2="18" />
                             <line x1="6" y1="6" x2="18" y2="18" />
                         </svg>
+                        <span>Close</span>
                     </button>
                 </div>
 
-                {/* Main Content Area */}
-                <div className="cart-body-layout">
+                <div className="ali-cart-body">
                     {cartItems.length === 0 ? (
                         <div className="cart-empty-full">
                             <div className="cart-empty-icon">
@@ -74,137 +81,172 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                                 </svg>
                             </div>
                             <h3 className="cart-empty-title">Your cart is empty</h3>
-                            <p className="cart-empty-sub">Add luxury items to get started</p>
                             <button onClick={onClose} className="cart-continue-btn">
                                 Start Shopping
                             </button>
                         </div>
                     ) : (
-                        <div className="cart-grid">
-                            {/* Left Side: Items List */}
-                            <div className="cart-items-column">
-                                <div className="cart-items-list-full">
-                                    {cartItems.map((item: any) => {
-                                        const itemImg =
-                                            item.imageUrl ||
-                                            item.image ||
-                                            "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=600&auto=format&fit=crop";
-                                        const itemQuantity = item.quantity || 1;
-                                        const isRemoving = removingId === item.id;
+                        <div className="ali-cart-grid">
+                            
+                            {/* LEFT COLUMN */}
+                            <div className="ali-cart-left">
+                                {/* Top Cart Header Card */}
+                                <div className="ali-card ali-cart-header-card">
+                                    <h2 className="ali-cart-title">Cart ({cartItems.length})</h2>
+                                    <div className="ali-select-all-row">
+                                        <label className="ali-checkbox-label">
+                                            <input 
+                                                type="checkbox" 
+                                                className="ali-checkbox" 
+                                                checked={selectedItems.length === cartItems.length && cartItems.length > 0}
+                                                onChange={toggleAll}
+                                            />
+                                            <span className="ali-checkbox-text">Select all items</span>
+                                        </label>
+                                        <button className="ali-delete-selected-btn">Delete selected items</button>
+                                    </div>
+                                    <div className="ali-brand-day-banner">
+                                        <span className="ali-banner-logo">Brand<em>Day</em></span>
+                                        <span className="ali-banner-text">Ends: Jun 27, 12:29 (GMT+5.5)</span>
+                                        <span className="ali-banner-arrow">&gt;</span>
+                                    </div>
+                                </div>
 
-                                        return (
-                                            <div
-                                                key={item.id}
-                                                className={`cart-item-full ${isRemoving ? "cart-item-removing" : ""}`}
-                                            >
-                                                {/* Image */}
-                                                <div className="cart-item-img-wrap-full">
-                                                    <img
-                                                        src={itemImg}
-                                                        className="cart-item-img-full"
-                                                        alt={item.name}
+                                {/* Seller Group Card */}
+                                <div className="ali-card ali-seller-card">
+                                    <div className="ali-seller-header">
+                                        <label className="ali-checkbox-label">
+                                            <input type="checkbox" className="ali-checkbox" readOnly checked={selectedItems.length > 0} />
+                                            <span className="ali-checkbox-text bold-text">Shipped by global sellers</span>
+                                        </label>
+                                        <svg className="ali-info-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <circle cx="12" cy="12" r="10" />
+                                            <line x1="12" y1="16" x2="12" y2="12" />
+                                            <line x1="12" y1="8" x2="12.01" y2="8" />
+                                        </svg>
+                                    </div>
+
+                                    <div className="ali-items-list">
+                                        {cartItems.map((item: any) => {
+                                            const itemImg = item.imageUrl || item.image || "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=600&auto=format&fit=crop";
+                                            const itemQuantity = item.quantity || 1;
+                                            const originalPrice = item.price * 1.5; // fake original price
+                                            const isSelected = selectedItems.includes(item.id);
+
+                                            return (
+                                                <div key={item.id} className="ali-item-row">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        className="ali-checkbox item-checkbox"
+                                                        checked={isSelected}
+                                                        onChange={() => toggleSelection(item.id)}
                                                     />
-                                                    <span className="cart-item-badge-full">{itemQuantity}</span>
-                                                </div>
-
-                                                {/* Details */}
-                                                <div className="cart-item-details-full">
-                                                    <div className="cart-item-meta-row">
-                                                        <h4 className="cart-item-name-full">{item.name}</h4>
-                                                        {/* Remove Button */}
-                                                        <button
-                                                            className="cart-remove-btn-full"
-                                                            onClick={() => handleRemove(item.id)}
-                                                            aria-label="Remove item"
-                                                        >
-                                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                                <polyline points="3 6 5 6 21 6" />
-                                                                <path d="M19 6l-1 14H6L5 6" />
-                                                                <path d="M10 11v6M14 11v6" />
-                                                                <path d="M9 6V4h6v2" />
-                                                            </svg>
-                                                        </button>
+                                                    
+                                                    <div className="ali-item-img-container">
+                                                        <img src={itemImg} alt={item.name} className="ali-item-img" />
+                                                        <div className="ali-item-img-overlay">Only 1 left</div>
                                                     </div>
-                                                    
-                                                    {item.size && (
-                                                        <span className="cart-item-size-full">Size: {item.size}</span>
-                                                    )}
-                                                    
-                                                    <div className="cart-item-footer-row">
-                                                        {/* Quantity Controls */}
-                                                        <div className="cart-qty-controls-full">
-                                                            <button
-                                                                className="cart-qty-btn-full"
-                                                                onClick={() => updateQuantity(item.id, itemQuantity - 1)}
-                                                                aria-label="Decrease"
-                                                            >
-                                                                −
-                                                            </button>
-                                                            <span className="cart-qty-value-full">{itemQuantity}</span>
-                                                            <button
-                                                                className="cart-qty-btn-full"
-                                                                onClick={() => updateQuantity(item.id, itemQuantity + 1)}
-                                                                aria-label="Increase"
-                                                            >
-                                                                +
-                                                            </button>
+
+                                                    <div className="ali-item-details">
+                                                        <div className="ali-item-title-row">
+                                                            <h4 className="ali-item-title">{item.name}</h4>
+                                                            <div className="ali-item-actions">
+                                                                <button className="ali-action-btn">
+                                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                                                                </button>
+                                                                <button className="ali-action-btn" onClick={() => handleRemove(item.id)}>
+                                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                                                </button>
+                                                            </div>
                                                         </div>
 
-                                                        <div className="cart-price-block">
-                                                            <span className="cart-item-unit-price-full">
-                                                                Rs. {item.price.toLocaleString()} each
-                                                            </span>
-                                                            <p className="cart-item-subtotal-full">
-                                                                Rs. {(item.price * itemQuantity).toLocaleString()}
-                                                            </p>
+                                                        <div className="ali-item-variant">
+                                                            {item.size ? `Size: ${item.size}` : 'Standard / Luxury'} <span className="ali-chevron">&gt;</span>
                                                         </div>
+
+                                                        <div className="ali-item-price-row">
+                                                            <div className="ali-price-block">
+                                                                <span className="ali-current-price">LKR {(item.price).toLocaleString()}</span>
+                                                                <span className="ali-original-price">LKR {originalPrice.toLocaleString()}</span>
+                                                                <span className="ali-discount-tag">Save LKR {(originalPrice - item.price).toLocaleString()}</span>
+                                                            </div>
+                                                            <div className="ali-qty-controls">
+                                                                <button className="ali-qty-btn" onClick={() => updateQuantity(item.id, itemQuantity - 1)}>−</button>
+                                                                <span className="ali-qty-val">{itemQuantity}</span>
+                                                                <button className="ali-qty-btn" onClick={() => updateQuantity(item.id, itemQuantity + 1)}>+</button>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="ali-item-shipping">Free shipping</div>
+                                                        <div className="ali-item-store">Luxury Flagship Store</div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        );
-                                    })}
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Right Side: Order Summary & Checkout */}
-                            <div className="cart-summary-column">
-                                <div className="cart-summary-card-full">
-                                    <h3 className="summary-card-title">Order Summary</h3>
+                            {/* RIGHT COLUMN */}
+                            <div className="ali-cart-right">
+                                <div className="ali-summary-card">
+                                    <h2 className="ali-summary-title">Summary</h2>
                                     
-                                    <div className="summary-card-details">
-                                        <div className="summary-row-full">
-                                            <span className="label">Subtotal</span>
-                                            <span className="value">Rs. {totalPrice.toLocaleString()}</span>
+                                    {selectedCartItems.length > 0 && (
+                                        <div className="ali-summary-thumbnails">
+                                            {selectedCartItems.slice(0, 4).map((item: any) => (
+                                                <img key={item.id} src={item.imageUrl || item.image} alt="thumb" className="ali-thumb" />
+                                            ))}
+                                            {selectedCartItems.length > 4 && <span className="ali-thumb-more">+{selectedCartItems.length - 4}</span>}
                                         </div>
-                                        <div className="summary-row-full">
-                                            <span className="label">Estimated Shipping</span>
-                                            <span className="value free-shipping">FREE</span>
+                                    )}
+
+                                    <div className="ali-summary-rows">
+                                        <div className="ali-summary-row">
+                                            <span>Items total</span>
+                                            <span>LKR {itemsTotal.toLocaleString()}</span>
                                         </div>
-                                        <div className="summary-divider-full" />
-                                        <div className="summary-row-full total-row">
-                                            <span className="label">Total Amount</span>
-                                            <span className="value grand-total">Rs. {totalPrice.toLocaleString()}</span>
+                                        <div className="ali-summary-row">
+                                            <span>Items discount</span>
+                                            <span className="ali-red-text">- LKR {itemsDiscount.toLocaleString()}</span>
+                                        </div>
+                                        <div className="ali-summary-row ali-subtotal-row">
+                                            <span>Subtotal</span>
+                                            <span>LKR {subtotal.toLocaleString()}</span>
+                                        </div>
+                                        <div className="ali-summary-row ali-shipping-row">
+                                            <span>Shipping</span>
+                                            <span>Free</span>
+                                        </div>
+                                        <div className="ali-summary-row ali-total-row">
+                                            <span>Estimated total</span>
+                                            <span className="ali-huge-total">LKR {subtotal.toLocaleString()}</span>
                                         </div>
                                     </div>
 
-                                    <button
-                                        onClick={handleCheckout}
-                                        className="cart-checkout-btn-full"
-                                    >
-                                        <span>Proceed to Checkout</span>
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                            <line x1="5" y1="12" x2="19" y2="12" />
-                                            <polyline points="12 5 19 12 12 19" />
+                                    <button className="ali-checkout-btn" onClick={handleCheckout}>
+                                        Checkout ({selectedItems.length})
+                                    </button>
+                                </div>
+
+                                <div className="ali-payment-card">
+                                    <h3 className="ali-payment-title">Pay with</h3>
+                                    <div className="ali-payment-icons">
+                                        {/* Mock payment icons */}
+                                        <div className="ali-pay-icon" style={{color: '#1a1f71', fontWeight: 800}}>VISA</div>
+                                        <div className="ali-pay-icon" style={{background: 'linear-gradient(to right, #eb001b, #f79e1b)', WebkitBackgroundClip: 'text', color: 'transparent', fontWeight: 800}}>MC</div>
+                                        <div className="ali-pay-icon" style={{color: '#00457c', fontWeight: 800}}>AMEX</div>
+                                    </div>
+                                </div>
+
+                                <div className="ali-protection-card">
+                                    <h3 className="ali-payment-title">Buyer protection</h3>
+                                    <div className="ali-protection-content">
+                                        <svg className="ali-check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2">
+                                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
                                         </svg>
-                                    </button>
-
-                                    <button onClick={onClose} className="cart-back-shop-btn">
-                                        ← Continue Shopping
-                                    </button>
-
-                                    <div className="trust-badges-row">
-                                        <span className="badge-item">🛡️ Secure checkout</span>
-                                        <span className="badge-item">✨ Premium quality</span>
+                                        <span>Get a full refund if the item is not as described or not delivered</span>
                                     </div>
                                 </div>
                             </div>
@@ -214,546 +256,509 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
             </div>
 
             <style>{`
-                /* ===== PREMIUM LIGHT FULL SCREEN OVERLAY ===== */
+                /* ===== FULL SCREEN OVERLAY ===== */
                 .cart-overlay {
                     position: fixed;
                     inset: 0;
                     z-index: 9999;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    background: rgba(255, 255, 255, 0.8);
-                    backdrop-filter: blur(12px);
-                    animation: overlayIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                    background: #f5f5f5; /* Grey background matching image */
+                    overflow-y: auto;
+                    animation: overlayIn 0.2s ease forwards;
                 }
 
-                /* ===== PREMIUM LIGHT CONTAINER ===== */
-                .cart-drawer-full {
-                    width: 100vw;
-                    height: 100vh;
-                    background: linear-gradient(135deg, #fbfbfd 0%, #f5f5f7 100%);
+                .cart-drawer-full.ali-style-cart {
+                    width: 100%;
+                    min-height: 100vh;
                     display: flex;
                     flex-direction: column;
-                    animation: drawerSlideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-                    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.08);
-                    overflow: hidden;
-                    color: #1d1d1f;
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
                 }
 
-                /* ===== HEADER ===== */
-                .cart-header {
+                .global-close-header {
+                    background: #fff;
+                    padding: 12px 40px;
+                    display: flex;
+                    justify-content: flex-end;
+                    border-bottom: 1px solid #eaeaea;
+                }
+                .global-close-btn {
                     display: flex;
                     align-items: center;
-                    justify-content: space-between;
-                    padding: 24px 40px;
-                    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-                    background: rgba(255, 255, 255, 0.6);
-                    flex-shrink: 0;
-                }
-                .cart-header-left {
-                    display: flex;
-                    align-items: center;
-                    gap: 16px;
-                }
-                .cart-icon-wrap {
-                    width: 46px;
-                    height: 46px;
-                    background: linear-gradient(135deg, #d4af37, #aa841c);
-                    border-radius: 14px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    color: #fff;
-                    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.25);
-                    flex-shrink: 0;
-                }
-                .cart-title {
-                    font-size: 22px;
-                    font-weight: 800;
-                    color: #1d1d1f;
-                    letter-spacing: -0.5px;
-                    margin: 0;
-                }
-                .cart-subtitle {
-                    font-size: 13px;
-                    color: #aa841c;
-                    margin: 2px 0 0;
-                    font-weight: 600;
-                }
-                .cart-close-btn {
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
-                    padding: 10px 20px;
-                    border-radius: 12px;
-                    background: rgba(0, 0, 0, 0.03);
-                    border: 1px solid rgba(0, 0, 0, 0.06);
-                    color: #444;
+                    gap: 8px;
+                    background: none;
+                    border: none;
                     cursor: pointer;
-                    font-weight: 600;
-                    font-size: 13px;
-                    transition: all 0.25s ease;
-                }
-                .cart-close-btn:hover {
-                    background: #1d1d1f;
-                    color: #fff;
-                    border-color: #1d1d1f;
-                    transform: translateY(-1px);
-                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-                }
-                .cart-close-btn:hover .close-text {
-                    color: #fff;
-                }
-                .close-text {
-                    color: #555;
-                    transition: color 0.25s ease;
+                    font-size: 14px;
+                    color: #333;
                 }
 
                 /* ===== BODY LAYOUT ===== */
-                .cart-body-layout {
+                .ali-cart-body {
                     flex: 1;
-                    overflow: hidden;
-                    display: flex;
-                    flex-direction: column;
-                }
-
-                /* ===== TWO COLUMN GRID ===== */
-                .cart-grid {
-                    display: grid;
-                    grid-template-columns: 1.4fr 1fr;
-                    height: 100%;
-                    max-width: 1300px;
-                    width: 100%;
+                    max-width: 1200px;
                     margin: 0 auto;
-                    padding: 40px;
-                    gap: 40px;
-                    overflow: hidden;
+                    width: 100%;
+                    padding: 30px 20px;
                 }
 
-                /* ===== LEFT COLUMN: ITEMS ===== */
-                .cart-items-column {
-                    overflow-y: auto;
-                    padding-right: 15px;
-                    height: 100%;
-                    scrollbar-width: thin;
-                    scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
+                .ali-cart-grid {
+                    display: flex;
+                    gap: 20px;
+                    align-items: flex-start;
                 }
-                .cart-items-column::-webkit-scrollbar {
-                    width: 5px;
-                }
-                .cart-items-column::-webkit-scrollbar-thumb {
-                    background: rgba(0, 0, 0, 0.1);
-                    border-radius: 10px;
-                }
-                .cart-items-list-full {
+
+                /* LEFT COLUMN */
+                .ali-cart-left {
+                    flex: 1;
                     display: flex;
                     flex-direction: column;
                     gap: 16px;
                 }
 
-                /* ===== PREMIUM LIGHT ITEM ROW ===== */
-                .cart-item-full {
-                    display: flex;
-                    gap: 20px;
-                    background: #ffffff;
-                    border: 1px solid rgba(0, 0, 0, 0.05);
-                    border-radius: 20px;
-                    padding: 20px;
-                    transition: all 0.3s ease;
-                    animation: itemFadeInUp 0.35s ease forwards;
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.015);
-                }
-                .cart-item-full:hover {
-                    background: #fafafa;
-                    border-color: rgba(212, 175, 55, 0.3);
-                    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.03);
-                }
-                .cart-item-removing {
-                    opacity: 0;
-                    transform: scale(0.95) translateY(-10px);
+                /* CARDS */
+                .ali-card {
+                    background: #fff;
+                    border-radius: 8px;
+                    padding: 24px;
                 }
 
-                /* Image Box */
-                .cart-item-img-wrap-full {
-                    position: relative;
-                    flex-shrink: 0;
+                /* HEADER CARD */
+                .ali-cart-title {
+                    font-size: 24px;
+                    font-weight: 700;
+                    color: #222;
+                    margin: 0 0 20px 0;
                 }
-                .cart-item-img-full {
-                    width: 90px;
-                    height: 110px;
-                    object-fit: cover;
-                    border-radius: 14px;
-                    border: 1px solid rgba(0, 0, 0, 0.06);
-                }
-                .cart-item-badge-full {
-                    position: absolute;
-                    top: -8px;
-                    right: -8px;
-                    background: #1d1d1f;
-                    color: #fff;
-                    font-size: 11px;
-                    font-weight: 800;
-                    width: 22px;
-                    height: 22px;
-                    border-radius: 50%;
+                .ali-select-all-row {
                     display: flex;
                     align-items: center;
-                    justify-content: center;
-                    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+                    gap: 16px;
+                    margin-bottom: 20px;
+                }
+                .ali-checkbox-label {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    cursor: pointer;
+                }
+                .ali-checkbox {
+                    width: 18px;
+                    height: 18px;
+                    accent-color: #e5103a;
+                    cursor: pointer;
+                }
+                .ali-checkbox-text {
+                    font-size: 14px;
+                    color: #222;
+                }
+                .bold-text {
+                    font-weight: 700;
+                }
+                .ali-delete-selected-btn {
+                    background: none;
+                    border: none;
+                    color: #0b5ed7;
+                    font-size: 14px;
+                    cursor: pointer;
+                }
+                .ali-delete-selected-btn:hover {
+                    text-decoration: underline;
                 }
 
-                /* Info box */
-                .cart-item-details-full {
+                .ali-brand-day-banner {
+                    background: #0066ff;
+                    border-radius: 6px;
+                    padding: 12px 16px;
+                    display: flex;
+                    align-items: center;
+                    color: #fff;
+                    font-size: 14px;
+                    cursor: pointer;
+                }
+                .ali-banner-logo {
+                    font-weight: 800;
+                    margin-right: 12px;
+                    font-size: 16px;
+                }
+                .ali-banner-logo em {
+                    font-style: italic;
+                    color: #ffd700;
+                }
+                .ali-banner-text {
+                    font-weight: 600;
+                    flex: 1;
+                }
+                .ali-banner-arrow {
+                    font-weight: bold;
+                }
+
+                /* SELLER CARD */
+                .ali-seller-card {
+                    padding: 0;
+                }
+                .ali-seller-header {
+                    padding: 20px 24px;
+                    border-bottom: 1px solid #f0f0f0;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+                .ali-info-icon {
+                    color: #999;
+                    cursor: pointer;
+                }
+                .ali-items-list {
+                    display: flex;
+                    flex-direction: column;
+                }
+                .ali-item-row {
+                    display: flex;
+                    padding: 24px;
+                    gap: 16px;
+                    border-bottom: 1px solid #f0f0f0;
+                }
+                .ali-item-row:last-child {
+                    border-bottom: none;
+                }
+                .item-checkbox {
+                    margin-top: 40px;
+                }
+
+                /* ITEM IMAGE */
+                .ali-item-img-container {
+                    position: relative;
+                    width: 100px;
+                    height: 100px;
+                    border-radius: 6px;
+                    overflow: hidden;
+                    background: #f9f9f9;
+                    flex-shrink: 0;
+                }
+                .ali-item-img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                }
+                .ali-item-img-overlay {
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    right: 0;
+                    background: rgba(0,0,0,0.6);
+                    color: #fff;
+                    font-size: 11px;
+                    text-align: center;
+                    padding: 2px 0;
+                }
+
+                /* ITEM DETAILS */
+                .ali-item-details {
                     flex: 1;
                     display: flex;
                     flex-direction: column;
-                    justify-content: space-between;
-                    min-width: 0;
                 }
-                .cart-item-meta-row {
+                .ali-item-title-row {
                     display: flex;
                     justify-content: space-between;
                     align-items: flex-start;
+                    gap: 16px;
+                }
+                .ali-item-title {
+                    font-size: 14px;
+                    color: #222;
+                    margin: 0;
+                    line-height: 1.4;
+                    font-weight: 500;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                }
+                .ali-item-actions {
+                    display: flex;
                     gap: 12px;
                 }
-                .cart-item-name-full {
-                    font-size: 16px;
-                    font-weight: 700;
-                    color: #1d1d1f;
-                    margin: 0;
-                    line-height: 1.3;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                }
-                .cart-item-size-full {
-                    font-size: 12px;
-                    color: #666;
-                    background: rgba(0, 0, 0, 0.04);
-                    border: 1px solid rgba(0, 0, 0, 0.06);
-                    padding: 3px 10px;
-                    border-radius: 6px;
-                    align-self: flex-start;
-                    margin-top: 6px;
-                    font-weight: 600;
-                }
-                .cart-item-footer-row {
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    margin-top: 14px;
-                }
-
-                /* Quantity */
-                .cart-qty-controls-full {
-                    display: flex;
-                    align-items: center;
-                    background: rgba(0, 0, 0, 0.03);
-                    border: 1px solid rgba(0, 0, 0, 0.06);
-                    border-radius: 10px;
-                    overflow: hidden;
-                }
-                .cart-qty-btn-full {
-                    width: 32px;
-                    height: 30px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 16px;
-                    color: #555;
-                    cursor: pointer;
-                    background: transparent;
-                    border: none;
-                    transition: all 0.15s ease;
-                    font-weight: 700;
-                }
-                .cart-qty-btn-full:hover {
-                    background: rgba(0, 0, 0, 0.05);
-                    color: #000;
-                }
-                .cart-qty-value-full {
-                    font-size: 13px;
-                    font-weight: 700;
-                    color: #1d1d1f;
-                    min-width: 26px;
-                    text-align: center;
-                }
-                .cart-price-block {
-                    text-align: right;
-                }
-                .cart-item-unit-price-full {
-                    font-size: 11px;
-                    color: #888;
-                    display: block;
-                    margin-bottom: 2px;
-                }
-                .cart-item-subtotal-full {
-                    font-size: 16px;
-                    font-weight: 800;
-                    color: #aa841c;
-                    margin: 0;
-                }
-                .cart-remove-btn-full {
-                    background: transparent;
+                .ali-action-btn {
+                    background: none;
                     border: none;
                     color: #999;
                     cursor: pointer;
-                    padding: 6px;
-                    border-radius: 8px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    transition: all 0.2s ease;
+                    padding: 0;
                 }
-                .cart-remove-btn-full:hover {
-                    color: #ef4444;
-                    background: rgba(239, 68, 68, 0.05);
+                .ali-action-btn:hover {
+                    color: #222;
                 }
 
-                /* ===== RIGHT COLUMN: SUMMARY CARD ===== */
-                .cart-summary-column {
-                    display: flex;
-                    flex-direction: column;
+                .ali-item-variant {
+                    font-size: 12px;
+                    color: #999;
+                    margin-top: 6px;
+                    background: #f7f7f7;
+                    display: inline-block;
+                    padding: 2px 6px;
+                    border-radius: 4px;
+                    align-self: flex-start;
                 }
-                .cart-summary-card-full {
-                    background: #ffffff;
-                    border: 1px solid rgba(0, 0, 0, 0.06);
-                    border-radius: 28px;
-                    padding: 36px;
-                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+                .ali-chevron {
+                    margin-left: 4px;
+                    font-size: 10px;
                 }
-                .summary-card-title {
-                    font-size: 18px;
-                    font-weight: 800;
-                    color: #1d1d1f;
-                    margin: 0 0 24px;
-                    letter-spacing: -0.2px;
-                }
-                .summary-card-details {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 16px;
-                    margin-bottom: 28px;
-                }
-                .summary-row-full {
+
+                .ali-item-price-row {
                     display: flex;
                     justify-content: space-between;
-                    font-size: 14px;
+                    align-items: flex-end;
+                    margin-top: 12px;
                 }
-                .summary-row-full .label {
+                .ali-price-block {
+                    display: flex;
+                    align-items: center;
+                    flex-wrap: wrap;
+                    gap: 8px;
+                }
+                .ali-current-price {
+                    font-size: 16px;
+                    font-weight: 700;
+                    color: #222;
+                }
+                .ali-original-price {
+                    font-size: 12px;
+                    color: #999;
+                    text-decoration: line-through;
+                }
+                .ali-discount-tag {
+                    font-size: 11px;
+                    color: #e5103a;
+                    background: #ffebee;
+                    padding: 2px 6px;
+                    border-radius: 10px;
+                    font-weight: 600;
+                }
+
+                /* QTY CONTROLS */
+                .ali-qty-controls {
+                    display: flex;
+                    align-items: center;
+                    border: 1px solid #ddd;
+                    border-radius: 16px;
+                    overflow: hidden;
+                    height: 28px;
+                }
+                .ali-qty-btn {
+                    background: #fff;
+                    border: none;
+                    width: 28px;
+                    height: 100%;
+                    font-size: 16px;
+                    cursor: pointer;
                     color: #666;
                 }
-                .summary-row-full .value {
-                    color: #1d1d1f;
+                .ali-qty-btn:hover {
+                    background: #f0f0f0;
+                }
+                .ali-qty-val {
+                    font-size: 13px;
+                    width: 30px;
+                    text-align: center;
                     font-weight: 600;
-                }
-                .summary-row-full .free-shipping {
-                    color: #15803d;
-                    font-weight: 700;
-                    background: rgba(22, 163, 74, 0.08);
-                    padding: 2px 8px;
-                    border-radius: 6px;
-                }
-                .summary-divider-full {
-                    height: 1px;
-                    background: rgba(0, 0, 0, 0.06);
-                }
-                .total-row {
-                    align-items: center;
-                }
-                .total-row .label {
-                    font-size: 16px;
-                    font-weight: 800;
-                    color: #1d1d1f;
-                }
-                .grand-total {
-                    font-size: 24px;
-                    font-weight: 800;
-                    color: #aa841c;
+                    border-left: 1px solid #ddd;
+                    border-right: 1px solid #ddd;
+                    line-height: 28px;
                 }
 
-                .cart-checkout-btn-full {
-                    width: 100%;
+                .ali-item-shipping {
+                    font-size: 12px;
+                    color: #999;
+                    margin-top: 8px;
+                }
+                .ali-item-store {
+                    font-size: 12px;
+                    color: #999;
+                    margin-top: 2px;
+                }
+
+                /* RIGHT COLUMN */
+                .ali-cart-right {
+                    width: 320px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 16px;
+                    position: sticky;
+                    top: 20px;
+                }
+                
+                .ali-summary-card, .ali-payment-card, .ali-protection-card {
+                    background: #fff;
+                    border-radius: 8px;
+                    padding: 24px;
+                }
+
+                .ali-summary-title {
+                    font-size: 18px;
+                    font-weight: 700;
+                    margin: 0 0 20px 0;
+                    color: #222;
+                }
+                
+                .ali-summary-thumbnails {
+                    display: flex;
+                    gap: 8px;
+                    margin-bottom: 20px;
+                }
+                .ali-thumb {
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 4px;
+                    object-fit: cover;
+                    border: 1px solid #eee;
+                }
+                .ali-thumb-more {
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 4px;
+                    background: #f0f0f0;
                     display: flex;
                     align-items: center;
                     justify-content: center;
+                    font-size: 12px;
+                    color: #666;
+                }
+
+                .ali-summary-rows {
+                    display: flex;
+                    flex-direction: column;
                     gap: 12px;
-                    background: linear-gradient(135deg, #1d1d1f 0%, #000000 100%);
+                    margin-bottom: 24px;
+                }
+                .ali-summary-row {
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 13px;
+                    color: #666;
+                }
+                .ali-red-text {
+                    color: #e5103a;
+                }
+                .ali-subtotal-row {
+                    color: #222;
+                    font-weight: 700;
+                }
+                .ali-shipping-row {
+                    color: #222;
+                    font-weight: 700;
+                }
+                .ali-total-row {
+                    margin-top: 8px;
+                    align-items: center;
+                }
+                .ali-total-row span:first-child {
+                    color: #222;
+                    font-weight: 700;
+                    font-size: 14px;
+                }
+                .ali-huge-total {
+                    font-size: 20px;
+                    font-weight: 800;
+                    color: #222;
+                }
+
+                .ali-checkout-btn {
+                    width: 100%;
+                    background: #e5103a;
                     color: #fff;
+                    border: none;
+                    border-radius: 24px;
+                    padding: 14px;
+                    font-size: 16px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    transition: background 0.2s;
+                }
+                .ali-checkout-btn:hover {
+                    background: #c90e33;
+                }
+
+                .ali-payment-title {
                     font-size: 14px;
                     font-weight: 700;
-                    padding: 18px 24px;
-                    border-radius: 16px;
-                    border: none;
-                    cursor: pointer;
-                    letter-spacing: 0.5px;
-                    text-transform: uppercase;
-                    transition: all 0.25s ease;
-                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+                    margin: 0 0 16px 0;
+                    color: #222;
                 }
-                .cart-checkout-btn-full:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
-                }
-                .cart-checkout-btn-full:active {
-                    transform: translateY(0);
-                }
-
-                .cart-back-shop-btn {
-                    width: 100%;
-                    background: transparent;
-                    border: none;
-                    color: #888;
-                    font-size: 13px;
-                    font-weight: 600;
-                    cursor: pointer;
-                    margin-top: 16px;
-                    transition: color 0.2s ease;
-                }
-                .cart-back-shop-btn:hover {
-                    color: #aa841c;
-                }
-
-                .trust-badges-row {
+                .ali-payment-icons {
                     display: flex;
-                    justify-content: center;
-                    gap: 16px;
-                    margin-top: 24px;
-                    border-top: 1px solid rgba(0, 0, 0, 0.05);
-                    padding-top: 20px;
+                    gap: 12px;
                 }
-                .badge-item {
-                    font-size: 11px;
-                    color: #888;
-                    font-weight: 600;
+                .ali-pay-icon {
+                    background: #f9f9f9;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    border: 1px solid #eee;
+                    font-size: 12px;
                 }
 
-                /* ===== EMPTY STATE FULL ===== */
+                .ali-protection-content {
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 10px;
+                    font-size: 13px;
+                    color: #222;
+                    line-height: 1.4;
+                }
+                .ali-check-icon {
+                    margin-top: 2px;
+                    flex-shrink: 0;
+                }
+
+                /* EMPTY STATE */
                 .cart-empty-full {
                     display: flex;
                     flex-direction: column;
                     align-items: center;
                     justify-content: center;
-                    flex: 1;
                     padding: 80px 20px;
-                    text-align: center;
+                    background: #fff;
+                    border-radius: 8px;
                 }
-                .cart-empty-full .cart-empty-icon {
-                    width: 96px;
-                    height: 96px;
+                .cart-empty-icon {
+                    width: 80px;
+                    height: 80px;
                     border-radius: 50%;
-                    background: rgba(0, 0, 0, 0.02);
-                    border: 1px dashed rgba(0, 0, 0, 0.1);
+                    background: #f5f5f5;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    color: #999;
-                    margin-bottom: 24px;
+                    color: #ccc;
+                    margin-bottom: 20px;
                 }
-                .cart-empty-full .cart-empty-title {
-                    font-size: 22px;
-                    font-weight: 800;
-                    color: #1d1d1f;
-                    margin: 0 0 10px;
+                .cart-empty-title {
+                    font-size: 18px;
+                    font-weight: 700;
+                    color: #222;
+                    margin: 0 0 20px 0;
                 }
-                .cart-empty-full .cart-empty-sub {
-                    font-size: 14px;
-                    color: #777;
-                    margin: 0 0 32px;
-                }
-                .cart-empty-full .cart-continue-btn {
-                    background: linear-gradient(135deg, #d4af37, #aa841c);
+                .cart-continue-btn {
+                    padding: 12px 32px;
+                    background: #e5103a;
                     color: #fff;
-                    padding: 14px 32px;
-                    border-radius: 12px;
-                    font-size: 14px;
-                    font-weight: 800;
                     border: none;
+                    border-radius: 20px;
+                    font-size: 14px;
+                    font-weight: 600;
                     cursor: pointer;
-                    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.25);
-                    transition: all 0.25s ease;
-                }
-                .cart-empty-full .cart-continue-btn:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 8px 20px rgba(212, 175, 55, 0.4);
                 }
 
-                /* ===== KEYFRAME ANIMATIONS ===== */
                 @keyframes overlayIn {
                     from { opacity: 0; }
                     to { opacity: 1; }
                 }
-                @keyframes drawerSlideInUp {
-                    from { transform: translateY(100%); opacity: 0; }
-                    to { transform: translateY(0); opacity: 1; }
-                }
-                @keyframes itemFadeInUp {
-                    from { opacity: 0; transform: translateY(15px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
 
-                /* ===== RESPONSIVE ===== */
                 @media (max-width: 900px) {
-                    .cart-grid {
-                        grid-template-columns: 1fr;
-                        overflow-y: auto;
-                        padding: 24px 20px;
-                        gap: 24px;
+                    .ali-cart-grid {
+                        flex-direction: column;
                     }
-                    .cart-items-column {
-                        height: auto;
-                        overflow: visible;
-                        padding-right: 0;
-                    }
-                    .cart-close-btn .close-text {
-                        display: none;
-                    }
-                    .cart-header {
-                        padding: 16px 20px;
-                    }
-                }
-                
-                @media (max-width: 600px) {
-                    .cart-grid {
-                        padding: 16px 12px;
-                        gap: 16px;
-                    }
-                    .cart-item-full {
-                        padding: 12px;
-                        gap: 12px;
-                        border-radius: 16px;
-                    }
-                    .cart-item-img-full {
-                        width: 70px;
-                        height: 90px;
-                        border-radius: 10px;
-                    }
-                    .cart-item-name-full {
-                        font-size: 14px;
-                    }
-                    .cart-item-footer-row {
-                        margin-top: 10px;
-                    }
-                    .cart-qty-btn-full {
-                        width: 28px;
-                        height: 26px;
-                    }
-                    .cart-qty-value-full {
-                        min-width: 20px;
-                        font-size: 12px;
-                    }
-                    .cart-item-subtotal-full {
-                        font-size: 14px;
-                    }
-                    .cart-summary-card-full {
-                        padding: 24px;
-                        border-radius: 20px;
-                    }
-                    .grand-total {
-                        font-size: 20px;
-                    }
-                    .cart-checkout-btn-full {
-                        padding: 16px 20px;
+                    .ali-cart-right {
+                        width: 100%;
+                        position: static;
                     }
                 }
             `}</style>
