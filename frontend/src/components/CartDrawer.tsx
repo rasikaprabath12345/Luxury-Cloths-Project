@@ -1,11 +1,13 @@
 "use client";
 
 import { useCart } from "../context/CartContext";
+import { useWishlist } from "../context/WishlistContext";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function CartDrawer({ onClose }: { onClose: () => void }) {
     const { cartItems, updateQuantity, removeFromCart } = useCart();
+    const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
     const router = useRouter();
     const [removingId, setRemovingId] = useState<number | null>(null);
 
@@ -150,14 +152,33 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                                                     <div className="ali-item-details">
                                                         <div className="ali-item-title-row">
                                                             <h4 className="ali-item-title">{item.name}</h4>
-                                                            <div className="ali-item-actions">
-                                                                <button className="ali-action-btn">
-                                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                                                              <div className="ali-item-actions">
+                                                                <button 
+                                                                    className="ali-action-btn"
+                                                                    onClick={() => {
+                                                                        if (isInWishlist(item.id)) {
+                                                                            removeFromWishlist(item.id);
+                                                                        } else {
+                                                                            addToWishlist(item);
+                                                                        }
+                                                                    }}
+                                                                    title={isInWishlist(item.id) ? "Remove from wishlist" : "Add to wishlist"}
+                                                                >
+                                                                    <svg 
+                                                                        width="18" 
+                                                                        height="18" 
+                                                                        viewBox="0 0 24 24" 
+                                                                        fill={isInWishlist(item.id) ? "#e5103a" : "none"} 
+                                                                        stroke={isInWishlist(item.id) ? "#e5103a" : "currentColor"} 
+                                                                        strokeWidth="2"
+                                                                    >
+                                                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                                                    </svg>
                                                                 </button>
                                                                 <button className="ali-action-btn" onClick={() => handleRemove(item.id)}>
                                                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                                                                 </button>
-                                                            </div>
+                                                              </div>
                                                         </div>
 
                                                         <div className="ali-item-variant">
@@ -260,26 +281,29 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                 .cart-overlay {
                     position: fixed;
                     inset: 0;
-                    z-index: 9999;
+                    z-index: 40; /* Below Navbar z-index (50) */
                     background: #f5f5f5; /* Grey background matching image */
-                    overflow-y: auto;
+                    overflow: hidden;
+                    padding-top: 98px; /* Offset for the fixed Navbar */
                     animation: overlayIn 0.2s ease forwards;
                 }
 
                 .cart-drawer-full.ali-style-cart {
                     width: 100%;
-                    min-height: 100vh;
+                    height: 100%;
                     display: flex;
                     flex-direction: column;
                     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                    overflow: hidden;
                 }
 
                 .global-close-header {
                     background: #fff;
-                    padding: 12px 40px;
+                    padding: 12px 24px;
                     display: flex;
                     justify-content: flex-end;
                     border-bottom: 1px solid #eaeaea;
+                    flex-shrink: 0;
                 }
                 .global-close-btn {
                     display: flex;
@@ -298,12 +322,13 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                     max-width: 1200px;
                     margin: 0 auto;
                     width: 100%;
-                    padding: 30px 20px;
+                    padding: 16px 20px;
+                    overflow-y: auto;
                 }
 
                 .ali-cart-grid {
                     display: flex;
-                    gap: 20px;
+                    gap: 16px;
                     align-items: flex-start;
                 }
 
@@ -312,28 +337,28 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                     flex: 1;
                     display: flex;
                     flex-direction: column;
-                    gap: 16px;
+                    gap: 12px;
                 }
 
                 /* CARDS */
                 .ali-card {
                     background: #fff;
                     border-radius: 8px;
-                    padding: 24px;
+                    padding: 16px;
                 }
 
                 /* HEADER CARD */
                 .ali-cart-title {
-                    font-size: 24px;
+                    font-size: 20px;
                     font-weight: 700;
                     color: #222;
-                    margin: 0 0 20px 0;
+                    margin: 0 0 12px 0;
                 }
                 .ali-select-all-row {
                     display: flex;
                     align-items: center;
                     gap: 16px;
-                    margin-bottom: 20px;
+                    margin-bottom: 12px;
                 }
                 .ali-checkbox-label {
                     display: flex;
@@ -368,17 +393,17 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                 .ali-brand-day-banner {
                     background: #0066ff;
                     border-radius: 6px;
-                    padding: 12px 16px;
+                    padding: 8px 12px;
                     display: flex;
                     align-items: center;
                     color: #fff;
-                    font-size: 14px;
+                    font-size: 13px;
                     cursor: pointer;
                 }
                 .ali-banner-logo {
                     font-weight: 800;
                     margin-right: 12px;
-                    font-size: 16px;
+                    font-size: 14px;
                 }
                 .ali-banner-logo em {
                     font-style: italic;
@@ -397,7 +422,7 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                     padding: 0;
                 }
                 .ali-seller-header {
-                    padding: 20px 24px;
+                    padding: 12px 16px;
                     border-bottom: 1px solid #f0f0f0;
                     display: flex;
                     align-items: center;
@@ -413,22 +438,22 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                 }
                 .ali-item-row {
                     display: flex;
-                    padding: 24px;
-                    gap: 16px;
+                    padding: 16px;
+                    gap: 12px;
                     border-bottom: 1px solid #f0f0f0;
                 }
                 .ali-item-row:last-child {
                     border-bottom: none;
                 }
                 .item-checkbox {
-                    margin-top: 40px;
+                    margin-top: 30px;
                 }
 
                 /* ITEM IMAGE */
                 .ali-item-img-container {
                     position: relative;
-                    width: 100px;
-                    height: 100px;
+                    width: 80px;
+                    height: 80px;
                     border-radius: 6px;
                     overflow: hidden;
                     background: #f9f9f9;
@@ -446,9 +471,9 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                     right: 0;
                     background: rgba(0,0,0,0.6);
                     color: #fff;
-                    font-size: 11px;
+                    font-size: 10px;
                     text-align: center;
-                    padding: 2px 0;
+                    padding: 1px 0;
                 }
 
                 /* ITEM DETAILS */
@@ -461,10 +486,10 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                     display: flex;
                     justify-content: space-between;
                     align-items: flex-start;
-                    gap: 16px;
+                    gap: 12px;
                 }
                 .ali-item-title {
-                    font-size: 14px;
+                    font-size: 13px;
                     color: #222;
                     margin: 0;
                     line-height: 1.4;
@@ -476,7 +501,7 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                 }
                 .ali-item-actions {
                     display: flex;
-                    gap: 12px;
+                    gap: 10px;
                 }
                 .ali-action-btn {
                     background: none;
@@ -490,47 +515,47 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                 }
 
                 .ali-item-variant {
-                    font-size: 12px;
+                    font-size: 11px;
                     color: #999;
-                    margin-top: 6px;
+                    margin-top: 4px;
                     background: #f7f7f7;
                     display: inline-block;
-                    padding: 2px 6px;
+                    padding: 1px 4px;
                     border-radius: 4px;
                     align-self: flex-start;
                 }
                 .ali-chevron {
                     margin-left: 4px;
-                    font-size: 10px;
+                    font-size: 9px;
                 }
 
                 .ali-item-price-row {
                     display: flex;
                     justify-content: space-between;
                     align-items: flex-end;
-                    margin-top: 12px;
+                    margin-top: 8px;
                 }
                 .ali-price-block {
                     display: flex;
                     align-items: center;
                     flex-wrap: wrap;
-                    gap: 8px;
+                    gap: 6px;
                 }
                 .ali-current-price {
-                    font-size: 16px;
+                    font-size: 15px;
                     font-weight: 700;
                     color: #222;
                 }
                 .ali-original-price {
-                    font-size: 12px;
+                    font-size: 11px;
                     color: #999;
                     text-decoration: line-through;
                 }
                 .ali-discount-tag {
-                    font-size: 11px;
+                    font-size: 10px;
                     color: #e5103a;
                     background: #ffebee;
-                    padding: 2px 6px;
+                    padding: 1px 4px;
                     border-radius: 10px;
                     font-weight: 600;
                 }
@@ -540,16 +565,16 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                     display: flex;
                     align-items: center;
                     border: 1px solid #ddd;
-                    border-radius: 16px;
+                    border-radius: 14px;
                     overflow: hidden;
-                    height: 28px;
+                    height: 24px;
                 }
                 .ali-qty-btn {
                     background: #fff;
                     border: none;
-                    width: 28px;
+                    width: 24px;
                     height: 100%;
-                    font-size: 16px;
+                    font-size: 14px;
                     cursor: pointer;
                     color: #666;
                 }
@@ -557,24 +582,26 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                     background: #f0f0f0;
                 }
                 .ali-qty-val {
-                    font-size: 13px;
-                    width: 30px;
+                    font-size: 12px;
+                    width: 24px;
                     text-align: center;
                     font-weight: 600;
                     border-left: 1px solid #ddd;
                     border-right: 1px solid #ddd;
-                    line-height: 28px;
+                    line-height: 24px;
+                    color: #222;
+                    background: #fff;
                 }
 
                 .ali-item-shipping {
-                    font-size: 12px;
+                    font-size: 11px;
                     color: #999;
-                    margin-top: 8px;
+                    margin-top: 4px;
                 }
                 .ali-item-store {
-                    font-size: 12px;
+                    font-size: 11px;
                     color: #999;
-                    margin-top: 2px;
+                    margin-top: 1px;
                 }
 
                 /* RIGHT COLUMN */
@@ -582,58 +609,58 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                     width: 320px;
                     display: flex;
                     flex-direction: column;
-                    gap: 16px;
+                    gap: 12px;
                     position: sticky;
-                    top: 20px;
+                    top: 0;
                 }
                 
                 .ali-summary-card, .ali-payment-card, .ali-protection-card {
                     background: #fff;
                     border-radius: 8px;
-                    padding: 24px;
+                    padding: 16px;
                 }
 
                 .ali-summary-title {
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: 700;
-                    margin: 0 0 20px 0;
+                    margin: 0 0 12px 0;
                     color: #222;
                 }
                 
                 .ali-summary-thumbnails {
                     display: flex;
                     gap: 8px;
-                    margin-bottom: 20px;
+                    margin-bottom: 12px;
                 }
                 .ali-thumb {
-                    width: 40px;
-                    height: 40px;
+                    width: 36px;
+                    height: 36px;
                     border-radius: 4px;
                     object-fit: cover;
                     border: 1px solid #eee;
                 }
                 .ali-thumb-more {
-                    width: 40px;
-                    height: 40px;
+                    width: 36px;
+                    height: 36px;
                     border-radius: 4px;
                     background: #f0f0f0;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: 12px;
+                    font-size: 11px;
                     color: #666;
                 }
 
                 .ali-summary-rows {
                     display: flex;
                     flex-direction: column;
-                    gap: 12px;
-                    margin-bottom: 24px;
+                    gap: 8px;
+                    margin-bottom: 16px;
                 }
                 .ali-summary-row {
                     display: flex;
                     justify-content: space-between;
-                    font-size: 13px;
+                    font-size: 12px;
                     color: #666;
                 }
                 .ali-red-text {
@@ -648,16 +675,16 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                     font-weight: 700;
                 }
                 .ali-total-row {
-                    margin-top: 8px;
+                    margin-top: 6px;
                     align-items: center;
                 }
                 .ali-total-row span:first-child {
                     color: #222;
                     font-weight: 700;
-                    font-size: 14px;
+                    font-size: 13px;
                 }
                 .ali-huge-total {
-                    font-size: 20px;
+                    font-size: 18px;
                     font-weight: 800;
                     color: #222;
                 }
@@ -667,9 +694,9 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                     background: #e5103a;
                     color: #fff;
                     border: none;
-                    border-radius: 24px;
-                    padding: 14px;
-                    font-size: 16px;
+                    border-radius: 20px;
+                    padding: 10px;
+                    font-size: 15px;
                     font-weight: 700;
                     cursor: pointer;
                     transition: background 0.2s;
@@ -679,28 +706,28 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                 }
 
                 .ali-payment-title {
-                    font-size: 14px;
+                    font-size: 13px;
                     font-weight: 700;
-                    margin: 0 0 16px 0;
+                    margin: 0 0 10px 0;
                     color: #222;
                 }
                 .ali-payment-icons {
                     display: flex;
-                    gap: 12px;
+                    gap: 10px;
                 }
                 .ali-pay-icon {
                     background: #f9f9f9;
-                    padding: 4px 8px;
+                    padding: 3px 6px;
                     border-radius: 4px;
                     border: 1px solid #eee;
-                    font-size: 12px;
+                    font-size: 11px;
                 }
 
                 .ali-protection-content {
                     display: flex;
                     align-items: flex-start;
-                    gap: 10px;
-                    font-size: 13px;
+                    gap: 8px;
+                    font-size: 12px;
                     color: #222;
                     line-height: 1.4;
                 }
@@ -715,34 +742,34 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                     flex-direction: column;
                     align-items: center;
                     justify-content: center;
-                    padding: 80px 20px;
+                    padding: 60px 20px;
                     background: #fff;
                     border-radius: 8px;
                 }
                 .cart-empty-icon {
-                    width: 80px;
-                    height: 80px;
+                    width: 64px;
+                    height: 64px;
                     border-radius: 50%;
                     background: #f5f5f5;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     color: #ccc;
-                    margin-bottom: 20px;
+                    margin-bottom: 16px;
                 }
                 .cart-empty-title {
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: 700;
                     color: #222;
-                    margin: 0 0 20px 0;
+                    margin: 0 0 16px 0;
                 }
                 .cart-continue-btn {
-                    padding: 12px 32px;
+                    padding: 10px 28px;
                     background: #e5103a;
                     color: #fff;
                     border: none;
-                    border-radius: 20px;
-                    font-size: 14px;
+                    border-radius: 18px;
+                    font-size: 13px;
                     font-weight: 600;
                     cursor: pointer;
                 }
