@@ -335,13 +335,13 @@ export default function HomePage() {
     const catName = p.category?.name?.toLowerCase() || "";
     const catSlug = p.category?.slug?.toLowerCase() || "";
     if (newArrivalsFilter === "Women") {
-      return catName.includes("women") || catName.includes("girl") || catSlug === "women" || p.categoryId === 7 || p.categoryId === 2;
+      return catName.includes("women") || catName.includes("girl") || catName.includes("lady") || catSlug.includes("women") || catSlug.includes("girl") || p.categoryId === 7 || p.categoryId === 2;
     }
     if (newArrivalsFilter === "Men") {
-      return (catName.includes("men") || catName.includes("boy") || catSlug === "men" || catSlug === "mens-luxury" || p.categoryId === 8 || p.categoryId === 1) && !catName.includes("women");
+      return (catName.includes("men") || catName.includes("boy") || catName.includes("gent") || catSlug.includes("men") || catSlug.includes("boy") || p.categoryId === 8 || p.categoryId === 1) && !catName.includes("women");
     }
     if (newArrivalsFilter === "Kids") {
-      return catName.includes("child") || catName.includes("kids") || catName.includes("children") || catSlug === "children" || catSlug === "kids" || p.categoryId === 9 || p.categoryId === 3;
+      return catName.includes("child") || catName.includes("kids") || catName.includes("children") || catName.includes("baby") || catSlug.includes("child") || catSlug.includes("kids") || catSlug.includes("children") || catSlug.includes("baby") || p.categoryId === 9 || p.categoryId === 3;
     }
     return true;
   }).slice(0, 10);
@@ -691,7 +691,7 @@ export default function HomePage() {
         ) : products.filter(p => {
           const catName = p.category?.name?.toLowerCase() || "";
           const catSlug = p.category?.slug?.toLowerCase() || "";
-          return catName.includes("women") || catName.includes("girl") || catSlug === "women" || p.categoryId === 7 || p.categoryId === 2;
+          return catName.includes("women") || catName.includes("girl") || catName.includes("lady") || catSlug.includes("women") || catSlug.includes("girl") || p.categoryId === 7 || p.categoryId === 2;
         }).length === 0 ? (
           <div style={{ ...glass.card, padding: 40, textAlign: "center", color: "#8E8E93", fontSize: 14 }}>
             No women's products yet. Check back soon.
@@ -700,7 +700,7 @@ export default function HomePage() {
           <ProductSlider products={products.filter(p => {
             const catName = p.category?.name?.toLowerCase() || "";
             const catSlug = p.category?.slug?.toLowerCase() || "";
-            return catName.includes("women") || catName.includes("girl") || catSlug === "women" || p.categoryId === 7 || p.categoryId === 2;
+            return catName.includes("women") || catName.includes("girl") || catName.includes("lady") || catSlug.includes("women") || catSlug.includes("girl") || p.categoryId === 7 || p.categoryId === 2;
           }).slice(0, 10)} />
         )}
       </section>
@@ -727,7 +727,7 @@ export default function HomePage() {
         ) : products.filter(p => {
           const catName = p.category?.name?.toLowerCase() || "";
           const catSlug = p.category?.slug?.toLowerCase() || "";
-          return (catName.includes("men") || catName.includes("boy") || catSlug === "men" || catSlug === "mens-luxury" || p.categoryId === 8 || p.categoryId === 1) && !catName.includes("women");
+          return (catName.includes("men") || catName.includes("boy") || catName.includes("gent") || catSlug.includes("men") || catSlug.includes("boy") || p.categoryId === 8 || p.categoryId === 1) && !catName.includes("women");
         }).length === 0 ? (
           <div style={{ ...glass.card, padding: 40, textAlign: "center", color: "#8E8E93", fontSize: 14 }}>
             No men's products yet. Check back soon.
@@ -736,7 +736,7 @@ export default function HomePage() {
           <ProductSlider products={products.filter(p => {
             const catName = p.category?.name?.toLowerCase() || "";
             const catSlug = p.category?.slug?.toLowerCase() || "";
-            return (catName.includes("men") || catName.includes("boy") || catSlug === "men" || catSlug === "mens-luxury" || p.categoryId === 8 || p.categoryId === 1) && !catName.includes("women");
+            return (catName.includes("men") || catName.includes("boy") || catName.includes("gent") || catSlug.includes("men") || catSlug.includes("boy") || p.categoryId === 8 || p.categoryId === 1) && !catName.includes("women");
           }).slice(0, 10)} />
         )}
       </section>
@@ -763,7 +763,7 @@ export default function HomePage() {
         ) : products.filter(p => {
           const catName = p.category?.name?.toLowerCase() || "";
           const catSlug = p.category?.slug?.toLowerCase() || "";
-          return catName.includes("child") || catName.includes("kids") || catName.includes("children") || catSlug === "children" || catSlug === "kids" || p.categoryId === 9 || p.categoryId === 3;
+          return catName.includes("child") || catName.includes("kids") || catName.includes("children") || catName.includes("baby") || catSlug.includes("child") || catSlug.includes("kids") || catSlug.includes("children") || catSlug.includes("baby") || p.categoryId === 9 || p.categoryId === 3;
         }).length === 0 ? (
           <div style={{ ...glass.card, padding: 40, textAlign: "center", color: "#8E8E93", fontSize: 14 }}>
             No children's products yet. Check back soon.
@@ -772,7 +772,7 @@ export default function HomePage() {
           <ProductSlider products={products.filter(p => {
             const catName = p.category?.name?.toLowerCase() || "";
             const catSlug = p.category?.slug?.toLowerCase() || "";
-            return catName.includes("child") || catName.includes("kids") || catName.includes("children") || catSlug === "children" || catSlug === "kids" || p.categoryId === 9 || p.categoryId === 3;
+            return catName.includes("child") || catName.includes("kids") || catName.includes("children") || catName.includes("baby") || catSlug.includes("child") || catSlug.includes("kids") || catSlug.includes("children") || catSlug.includes("baby") || p.categoryId === 9 || p.categoryId === 3;
           }).slice(0, 10)} />
         )}
       </section>
