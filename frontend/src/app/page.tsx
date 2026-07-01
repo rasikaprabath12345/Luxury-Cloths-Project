@@ -271,9 +271,9 @@ function ProductSlider({ products }: { products: Product[] }) {
 
 // ─── DATA ─────────────────────────────────────────────────────────────────────
 const categories = [
-  { name: "Womenswear", sub: "For Her", count: "85+", image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=800&auto=format&fit=crop" },
-  { name: "Menswear", sub: "For Him", count: "120+", image: "https://images.unsplash.com/photo-1488161628813-04466f872be2?q=80&w=800&auto=format&fit=crop" },
-  { name: "Children's Wear", sub: "For Kids", count: "35+", image: "https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?q=80&w=800&auto=format&fit=crop" },
+  { name: "Womenswear", sub: "For Her", count: "85+", image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=800&auto=format&fit=crop", href: "/storefront/shop?category=women" },
+  { name: "Menswear", sub: "For Him", count: "120+", image: "https://images.unsplash.com/photo-1488161628813-04466f872be2?q=80&w=800&auto=format&fit=crop", href: "/storefront/shop?category=men" },
+  { name: "Children's Wear", sub: "For Kids", count: "35+", image: "https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?q=80&w=800&auto=format&fit=crop", href: "/storefront/shop?category=children" },
 ];
 
 const trust = [
@@ -332,14 +332,16 @@ export default function HomePage() {
 
   const filteredNewArrivals = products.filter(p => {
     if (newArrivalsFilter === "All") return true;
+    const catName = p.category?.name?.toLowerCase() || "";
+    const catSlug = p.category?.slug?.toLowerCase() || "";
     if (newArrivalsFilter === "Women") {
-      return p.category?.name?.toLowerCase().includes("women") || p.category?.name?.toLowerCase().includes("girl") || p.categoryId === 2;
+      return catName.includes("women") || catName.includes("girl") || catSlug === "women" || p.categoryId === 7 || p.categoryId === 2;
     }
     if (newArrivalsFilter === "Men") {
-      return (p.category?.name?.toLowerCase().includes("men") || p.category?.name?.toLowerCase().includes("boy") || p.categoryId === 1) && !p.category?.name?.toLowerCase().includes("women");
+      return (catName.includes("men") || catName.includes("boy") || catSlug === "men" || catSlug === "mens-luxury" || p.categoryId === 8 || p.categoryId === 1) && !catName.includes("women");
     }
     if (newArrivalsFilter === "Kids") {
-      return p.category?.name?.toLowerCase().includes("child") || p.category?.name?.toLowerCase().includes("kids") || p.category?.name?.toLowerCase().includes("children") || p.categoryId === 3;
+      return catName.includes("child") || catName.includes("kids") || catName.includes("children") || catSlug === "children" || catSlug === "kids" || p.categoryId === 9 || p.categoryId === 3;
     }
     return true;
   }).slice(0, 10);
@@ -445,7 +447,7 @@ export default function HomePage() {
           </p>
 
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
-            <Link href="/storefront/product"
+            <Link href="/storefront/shop"
               style={{
                 background: "rgba(255,255,255,0.95)", color: "#1C1C1E",
                 fontWeight: 700, fontSize: 13, padding: "10px 24px",
@@ -613,10 +615,12 @@ export default function HomePage() {
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
           {categories.map((cat, i) => (
-            <div key={i} style={{
+            <Link key={i} href={cat.href} style={{
               position: "relative", height: 280, borderRadius: 24, overflow: "hidden",
               cursor: "pointer", boxShadow: "0 2px 24px rgba(0,0,0,0.10)",
               transition: "transform 0.3s ease, box-shadow 0.3s ease",
+              display: "block",
+              textDecoration: "none",
             }}
               onMouseEnter={e => {
                 (e.currentTarget as HTMLElement).style.transform = "translateY(-4px)";
@@ -660,7 +664,7 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </section>
@@ -675,7 +679,7 @@ export default function HomePage() {
             }}>Sophisticated Styles</p>
             <h2 style={{ margin: 0, fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em" }}>Women's Collection 👚</h2>
           </div>
-          <Link href="/storefront/product" style={{ fontSize: 13, fontWeight: 600, color: "#007AFF", textDecoration: "none" }}>
+          <Link href="/storefront/shop?category=women" style={{ fontSize: 13, fontWeight: 600, color: "#007AFF", textDecoration: "none" }}>
             View All Women's Wear →
           </Link>
         </div>
@@ -684,12 +688,20 @@ export default function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {[1, 2, 3, 4, 5].map(n => <ProductSkeleton key={n} />)}
           </div>
-        ) : products.filter(p => p.category?.name?.toLowerCase().includes("women") || p.category?.name?.toLowerCase().includes("girl") || p.categoryId === 2).length === 0 ? (
+        ) : products.filter(p => {
+          const catName = p.category?.name?.toLowerCase() || "";
+          const catSlug = p.category?.slug?.toLowerCase() || "";
+          return catName.includes("women") || catName.includes("girl") || catSlug === "women" || p.categoryId === 7 || p.categoryId === 2;
+        }).length === 0 ? (
           <div style={{ ...glass.card, padding: 40, textAlign: "center", color: "#8E8E93", fontSize: 14 }}>
             No women's products yet. Check back soon.
           </div>
         ) : (
-          <ProductSlider products={products.filter(p => p.category?.name?.toLowerCase().includes("women") || p.category?.name?.toLowerCase().includes("girl") || p.categoryId === 2).slice(0, 10)} />
+          <ProductSlider products={products.filter(p => {
+            const catName = p.category?.name?.toLowerCase() || "";
+            const catSlug = p.category?.slug?.toLowerCase() || "";
+            return catName.includes("women") || catName.includes("girl") || catSlug === "women" || p.categoryId === 7 || p.categoryId === 2;
+          }).slice(0, 10)} />
         )}
       </section>
 
@@ -703,7 +715,7 @@ export default function HomePage() {
             }}>Tailored Precision</p>
             <h2 style={{ margin: 0, fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em" }}>Men's Collection 👕</h2>
           </div>
-          <Link href="/storefront/product" style={{ fontSize: 13, fontWeight: 600, color: "#007AFF", textDecoration: "none" }}>
+          <Link href="/storefront/shop?category=men" style={{ fontSize: 13, fontWeight: 600, color: "#007AFF", textDecoration: "none" }}>
             View All Men's Wear →
           </Link>
         </div>
@@ -712,12 +724,20 @@ export default function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {[1, 2, 3, 4, 5].map(n => <ProductSkeleton key={n} />)}
           </div>
-        ) : products.filter(p => (p.category?.name?.toLowerCase().includes("men") || p.category?.name?.toLowerCase().includes("boy") || p.categoryId === 1) && !p.category?.name?.toLowerCase().includes("women")).length === 0 ? (
+        ) : products.filter(p => {
+          const catName = p.category?.name?.toLowerCase() || "";
+          const catSlug = p.category?.slug?.toLowerCase() || "";
+          return (catName.includes("men") || catName.includes("boy") || catSlug === "men" || catSlug === "mens-luxury" || p.categoryId === 8 || p.categoryId === 1) && !catName.includes("women");
+        }).length === 0 ? (
           <div style={{ ...glass.card, padding: 40, textAlign: "center", color: "#8E8E93", fontSize: 14 }}>
             No men's products yet. Check back soon.
           </div>
         ) : (
-          <ProductSlider products={products.filter(p => (p.category?.name?.toLowerCase().includes("men") || p.category?.name?.toLowerCase().includes("boy") || p.categoryId === 1) && !p.category?.name?.toLowerCase().includes("women")).slice(0, 10)} />
+          <ProductSlider products={products.filter(p => {
+            const catName = p.category?.name?.toLowerCase() || "";
+            const catSlug = p.category?.slug?.toLowerCase() || "";
+            return (catName.includes("men") || catName.includes("boy") || catSlug === "men" || catSlug === "mens-luxury" || p.categoryId === 8 || p.categoryId === 1) && !catName.includes("women");
+          }).slice(0, 10)} />
         )}
       </section>
 
@@ -731,7 +751,7 @@ export default function HomePage() {
             }}>Playful & Durable</p>
             <h2 style={{ margin: 0, fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em" }}>Children's Collection 🧸</h2>
           </div>
-          <Link href="/storefront/product" style={{ fontSize: 13, fontWeight: 600, color: "#007AFF", textDecoration: "none" }}>
+          <Link href="/storefront/shop?category=children" style={{ fontSize: 13, fontWeight: 600, color: "#007AFF", textDecoration: "none" }}>
             View All Children's Wear →
           </Link>
         </div>
@@ -740,12 +760,20 @@ export default function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {[1, 2, 3, 4, 5].map(n => <ProductSkeleton key={n} />)}
           </div>
-        ) : products.filter(p => p.category?.name?.toLowerCase().includes("child") || p.category?.name?.toLowerCase().includes("kids") || p.category?.name?.toLowerCase().includes("children") || p.categoryId === 3).length === 0 ? (
+        ) : products.filter(p => {
+          const catName = p.category?.name?.toLowerCase() || "";
+          const catSlug = p.category?.slug?.toLowerCase() || "";
+          return catName.includes("child") || catName.includes("kids") || catName.includes("children") || catSlug === "children" || catSlug === "kids" || p.categoryId === 9 || p.categoryId === 3;
+        }).length === 0 ? (
           <div style={{ ...glass.card, padding: 40, textAlign: "center", color: "#8E8E93", fontSize: 14 }}>
             No children's products yet. Check back soon.
           </div>
         ) : (
-          <ProductSlider products={products.filter(p => p.category?.name?.toLowerCase().includes("child") || p.category?.name?.toLowerCase().includes("kids") || p.category?.name?.toLowerCase().includes("children") || p.categoryId === 3).slice(0, 10)} />
+          <ProductSlider products={products.filter(p => {
+            const catName = p.category?.name?.toLowerCase() || "";
+            const catSlug = p.category?.slug?.toLowerCase() || "";
+            return catName.includes("child") || catName.includes("kids") || catName.includes("children") || catSlug === "children" || catSlug === "kids" || p.categoryId === 9 || p.categoryId === 3;
+          }).slice(0, 10)} />
         )}
       </section>
 

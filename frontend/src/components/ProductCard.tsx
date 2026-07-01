@@ -38,7 +38,7 @@ export function ProductSkeleton() {
 export default function ProductCard({ product }: { product: Product }) {
   const { addToCart } = useCart();
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
-  
+
   const hasDiscount = product.discount && product.discount > 0;
   const originalPrice = product.price;
   const discountAmount = hasDiscount ? (originalPrice * (product.discount || 0)) / 100 : 0;
@@ -94,7 +94,7 @@ export default function ProductCard({ product }: { product: Product }) {
             </span>
           </div>
         )}
-        
+
         {/* Wishlist Button */}
         <button
           onClick={handleWishlistToggle}
@@ -169,7 +169,7 @@ export default function ProductCard({ product }: { product: Product }) {
               </span>
             )}
           </div>
-          <button 
+          <button
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -183,12 +183,12 @@ export default function ProductCard({ product }: { product: Product }) {
               alert(`${product.name} added to cart! 🛒`);
             }}
             style={{
-            background: "linear-gradient(135deg, #1C1C1E, #3C3C43)",
-            border: "none", borderRadius: 12, padding: "8px 14px",
-            fontSize: 11, fontWeight: 600, color: "#fff", cursor: "pointer",
-            transition: "background 0.2s, transform 0.1s",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-          }}
+              background: "linear-gradient(135deg, #1C1C1E, #3C3C43)",
+              border: "none", borderRadius: 12, padding: "8px 14px",
+              fontSize: 11, fontWeight: 600, color: "#fff", cursor: "pointer",
+              transition: "background 0.2s, transform 0.1s",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+            }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, #007AFF, #5856D6)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 12px rgba(0,122,255,0.3)"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, #1C1C1E, #3C3C43)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 8px rgba(0,0,0,0.15)"; }}>
             Add to Bag

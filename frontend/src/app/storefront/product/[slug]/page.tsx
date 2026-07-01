@@ -42,10 +42,10 @@ export default function ProductDetailPage() {
       try {
         const res = await productsAPI.getProductBySlug(slug);
         const data = res.data;
-        
+
         // Map backend product to ProductDetail UI interface
         const sizesArr = data.sizes ? data.sizes.split(",").map((s: string) => s.trim()) : [];
-        const colorsArr = data.variants && data.variants.length > 0 
+        const colorsArr = data.variants && data.variants.length > 0
           ? Array.from(new Set(data.variants.map((v: any) => v.color).filter(Boolean))) as string[]
           : [];
         const imagesArr = data.images && data.images.length > 0
@@ -160,9 +160,8 @@ export default function ProductDetailPage() {
                   <button
                     key={idx}
                     onClick={() => setCurrentImageIndex(idx)}
-                    className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
-                      currentImageIndex === idx ? "border-blue-600" : "border-gray-200"
-                    }`}
+                    className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${currentImageIndex === idx ? "border-blue-600" : "border-gray-200"
+                      }`}
                   >
                     <Image
                       src={image}
@@ -191,9 +190,8 @@ export default function ProductDetailPage() {
                 {Array.from({ length: 5 }).map((_, i) => (
                   <svg
                     key={i}
-                    className={`w-5 h-5 ${
-                      i < Math.floor(product.rating) ? "text-yellow-400" : "text-gray-300"
-                    }`}
+                    className={`w-5 h-5 ${i < Math.floor(product.rating) ? "text-yellow-400" : "text-gray-300"
+                      }`}
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -219,9 +217,8 @@ export default function ProductDetailPage() {
                 )}
               </div>
               <p
-                className={`text-sm font-semibold ${
-                  product.stock > 0 ? "text-green-600" : "text-red-600"
-                }`}
+                className={`text-sm font-semibold ${product.stock > 0 ? "text-green-600" : "text-red-600"
+                  }`}
               >
                 {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
               </p>
@@ -241,11 +238,10 @@ export default function ProductDetailPage() {
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
-                      className={`py-2 border-2 rounded-lg font-semibold transition-colors ${
-                        selectedSize === size
+                      className={`py-2 border-2 rounded-lg font-semibold transition-colors ${selectedSize === size
                           ? "border-blue-600 bg-blue-50 text-blue-600"
                           : "border-gray-300 bg-white text-gray-900 hover:border-blue-600"
-                      }`}
+                        }`}
                     >
                       {size}
                     </button>
@@ -265,11 +261,10 @@ export default function ProductDetailPage() {
                     <button
                       key={color}
                       onClick={() => setSelectedColor(color)}
-                      className={`px-4 py-2 border-2 rounded-full font-semibold transition-colors ${
-                        selectedColor === color
+                      className={`px-4 py-2 border-2 rounded-full font-semibold transition-colors ${selectedColor === color
                           ? "border-blue-600 bg-blue-50 text-blue-600"
                           : "border-gray-300 bg-white text-gray-900 hover:border-blue-600"
-                      }`}
+                        }`}
                     >
                       {color}
                     </button>

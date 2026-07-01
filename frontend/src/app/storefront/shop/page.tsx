@@ -33,16 +33,22 @@ function ShopContent() {
   const filteredProducts = products.filter((product: any) => {
     // Filter by Category
     if (categoryFilter) {
-      const slug = product.category?.slug?.toLowerCase();
-      const name = product.category?.name?.toLowerCase();
-      const catMatch = slug === categoryFilter.toLowerCase() || name?.includes(categoryFilter.toLowerCase());
+      const slug = product.category?.slug?.toLowerCase() || "";
+      const name = product.category?.name?.toLowerCase() || "";
+      const filterLower = categoryFilter.toLowerCase();
+      
+      let isMatch = false;
+      if (filterLower === "women") {
+        isMatch = name.includes("women") || name.includes("girl") || slug === "women" || product.categoryId === 7 || product.categoryId === 2;
+      } else if (filterLower === "men") {
+        isMatch = (name.includes("men") || name.includes("boy") || slug === "men" || slug === "mens-luxury" || product.categoryId === 8 || product.categoryId === 1) && !name.includes("women");
+      } else if (filterLower === "children" || filterLower === "kids") {
+        isMatch = name.includes("child") || name.includes("kids") || name.includes("children") || slug === "children" || slug === "kids" || product.categoryId === 9 || product.categoryId === 3;
+      } else {
+        isMatch = slug === filterLower || name.includes(filterLower);
+      }
 
-      // Additional logic for common categories mapping
-      if (categoryFilter === "women" && (name?.includes("women") || name?.includes("girl") || product.categoryId === 2)) return true;
-      if (categoryFilter === "men" && ((name?.includes("men") || name?.includes("boy") || product.categoryId === 1) && !name?.includes("women"))) return true;
-      if (categoryFilter === "children" && (name?.includes("child") || name?.includes("kids") || product.categoryId === 3)) return true;
-
-      if (!catMatch) return false;
+      if (!isMatch) return false;
     }
 
     // Filter by Type (Offers/Sale or New)

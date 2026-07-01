@@ -115,7 +115,7 @@ export default function CartPage() {
 
   const handlePlaceOrder = async () => {
     if (cartItems.length === 0) return;
-    
+
     // Check local storage for user token/info, standard auth
     const savedUserStr = localStorage.getItem("luxury_user");
     const token = localStorage.getItem("luxury_token");
@@ -319,11 +319,11 @@ export default function CartPage() {
               </div>
             </div>
             {cartItems.length > 0 && (
-              <button 
+              <button
                 onClick={clearCart}
                 style={{
-                  background: "transparent", border: "none", color: "#FF3B30", 
-                  fontSize: 13, fontWeight: 600, cursor: "pointer", 
+                  background: "transparent", border: "none", color: "#FF3B30",
+                  fontSize: 13, fontWeight: 600, cursor: "pointer",
                   display: "flex", alignItems: "center", gap: 6,
                   padding: "6px 12px", borderRadius: 8, transition: "background 0.2s"
                 }}
@@ -337,7 +337,7 @@ export default function CartPage() {
 
         {cartItems.length === 0 ? (
           /* Empty Bag State Card */
-          <div style={{ 
+          <div style={{
             ...glass.card, padding: "80px 40px", textAlign: "center",
             display: "flex", flexDirection: "column", alignItems: "center", gap: 24,
             maxWidth: 580, margin: "60px auto", boxShadow: "0 8px 40px rgba(0,0,0,0.04)"
@@ -368,7 +368,7 @@ export default function CartPage() {
           </div>
         ) : (
           <div className="cart-grid-container">
-            
+
             {/* LEFT COLUMN: SELECTED ITEMS */}
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -403,8 +403,8 @@ export default function CartPage() {
                       className="cart-item-card"
                     >
                       {/* Image container with zoom hover */}
-                      <div style={{ 
-                        position: "relative", 
+                      <div style={{
+                        position: "relative",
                         flexShrink: 0,
                         borderRadius: 16,
                         overflow: "hidden",
@@ -445,7 +445,7 @@ export default function CartPage() {
                               margin: 0, lineHeight: 1.3, whiteSpace: "nowrap",
                               overflow: "hidden", textOverflow: "ellipsis"
                             }}>{item.name}</h3>
-                            
+
                             <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
                               {item.size && (
                                 <span style={{
@@ -463,7 +463,7 @@ export default function CartPage() {
                               )}
                             </div>
                           </div>
-                          
+
                           <button
                             onClick={() => removeItem(item.id)}
                             style={{
@@ -483,7 +483,7 @@ export default function CartPage() {
                         </div>
 
                         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, marginTop: 14 }}>
-                          
+
                           {/* Premium quantity adjustment buttons */}
                           <div style={{
                             display: "flex", alignItems: "center",
@@ -841,7 +841,7 @@ export default function CartPage() {
                     <span style={{ color: "#8E8E93" }}>Subtotal ({totalItems} items)</span>
                     <span style={{ color: "#1C1C1E", fontWeight: 600 }}>Rs. {subTotal.toLocaleString()}</span>
                   </div>
-                  
+
                   {couponApplied && (
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
                       <span style={{ color: "#15803D", fontWeight: 500 }}>Discount ({isFirstOrder ? "First Order Offer" : "LUXURY10"})</span>
@@ -904,7 +904,7 @@ export default function CartPage() {
                     fontSize: 10, fontWeight: 700, color: "#8E8E93",
                     letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12
                   }}>Payment Method</p>
-                  
+
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     {[
                       { value: "BankTransfer", label: "Bank Transfer", sub: "Verify & place order, then upload slip" },
@@ -987,7 +987,7 @@ export default function CartPage() {
                         <label style={{ fontSize: 10, fontWeight: 700, color: "#8E8E93", letterSpacing: "0.02em", textTransform: "uppercase", display: "block", marginBottom: 8 }}>
                           Bank Receipt / Deposit Slip
                         </label>
-                        
+
                         <input
                           type="file"
                           id="slip-upload-input"
