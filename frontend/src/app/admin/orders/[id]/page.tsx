@@ -10,6 +10,9 @@ interface OrderItem { id: number; productName: string; quantity: number; price: 
 interface Order {
   id: number; orderDate: string; totalAmount: number; status: string;
   paymentMethod: string; paymentSlipUrl?: string; userId: number; items: OrderItem[];
+  firstName?: string; lastName?: string; email?: string; phone?: string;
+  country?: string; state?: string; city?: string; postalCode?: string;
+  address?: string; orderNote?: string; shippingAddress?: string;
 }
 
 const STATUS_OPTIONS = ["Pending", "Approved", "Shipped", "Delivered", "Cancelled"];
@@ -57,7 +60,7 @@ export default function AdminOrderDetailPage() {
   };
 
   const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
+    `Rs. ${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   const getStatusStep = (status: string) => {
     const steps = ["pending", "approved", "shipped", "delivered"];
@@ -133,35 +136,79 @@ export default function AdminOrderDetailPage() {
               </div>
             </div>
 
-            {/* Info Card */}
-            <div className="card">
-              <h2 className="card-heading">Order Information</h2>
-              <div className="info-list">
-                <div className="info-item">
-                  <span className="info-label">Update Status</span>
-                  <select
-                    value={order.status} onChange={(e) => handleStatusChange(e.target.value)}
-                    disabled={updating} className="status-select"
-                  >
-                    {STATUS_OPTIONS.map((s) => (<option key={s} value={s}>{s}</option>))}
-                  </select>
-                </div>
-                <div className="info-item">
-                  <span className="info-label">Payment Method</span>
-                  <span className="info-value capitalize">{order.paymentMethod || "—"}</span>
-                </div>
-                <div className="info-item">
-                  <span className="info-label">Customer ID</span>
-                  <span className="info-value mono">#{order.userId}</span>
-                </div>
-                {order.paymentSlipUrl && (
+            {/* Right Column: Info Card & Shipping Card */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              {/* Info Card */}
+              <div className="card">
+                <h2 className="card-heading">Order Information</h2>
+                <div className="info-list">
                   <div className="info-item">
-                    <span className="info-label">Payment Receipt</span>
-                    <a href={order.paymentSlipUrl} target="_blank" rel="noopener noreferrer" className="receipt-btn">
-                      🖼️ View Receipt
-                    </a>
+                    <span className="info-label">Update Status</span>
+                    <select
+                      value={order.status} onChange={(e) => handleStatusChange(e.target.value)}
+                      disabled={updating} className="status-select"
+                    >
+                      {STATUS_OPTIONS.map((s) => (<option key={s} value={s}>{s}</option>))}
+                    </select>
                   </div>
-                )}
+                  <div className="info-item">
+                    <span className="info-label">Payment Method</span>
+                    <span className="info-value capitalize">{order.paymentMethod || "—"}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Customer ID</span>
+                    <span className="info-value mono">#{order.userId}</span>
+                  </div>
+                  {order.paymentSlipUrl && (
+                    <div className="info-item">
+                      <span className="info-label">Payment Receipt</span>
+                      <a href={order.paymentSlipUrl} target="_blank" rel="noopener noreferrer" className="receipt-btn">
+                        🖼️ View Receipt
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Shipping & Contact Card */}
+              <div className="card">
+                <h2 className="card-heading">Shipping & Contact Details</h2>
+                <div className="info-list">
+                  <div className="info-item">
+                    <span className="info-label">Customer Name</span>
+                    <span className="info-value">{order.firstName} {order.lastName}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Email Address</span>
+                    <span className="info-value">{order.email || "—"}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Phone Number</span>
+                    <span className="info-value">{order.phone || "—"}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Delivery Address</span>
+                    <span className="info-value" style={{ lineHeight: "1.5" }}>
+                      {order.address}<br />
+                      {order.city && `${order.city}, `}{order.state && `${order.state}, `}{order.country || ""}<br />
+                      {order.postalCode && `Postal Code: ${order.postalCode}`}
+                    </span>
+                  </div>
+                  {order.shippingAddress && order.shippingAddress !== order.address && (
+                    <div className="info-item">
+                      <span className="info-label">Alternative Shipping Address</span>
+                      <span className="info-value">{order.shippingAddress}</span>
+                    </div>
+                  )}
+                  {order.orderNote && (
+                    <div className="info-item">
+                      <span className="info-label">Order Note</span>
+                      <span className="info-value" style={{ fontStyle: "italic", color: "#475569" }}>
+                        "{order.orderNote}"
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

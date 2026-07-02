@@ -6,7 +6,12 @@ import { showToast } from "@/lib/adminUtils";
 import Link from "next/link";
 
 interface OrderItem { id: number; productName: string; quantity: number; price: number; }
-interface Order { id: number; orderDate: string; totalAmount: number; status: string; items: OrderItem[]; }
+interface Order {
+  id: number; orderDate: string; totalAmount: number; status: string; items: OrderItem[];
+  firstName?: string; lastName?: string; email?: string; phone?: string;
+  country?: string; state?: string; city?: string; postalCode?: string;
+  address?: string; orderNote?: string; shippingAddress?: string;
+}
 
 const STATUS_OPTIONS = ["Pending", "Approved", "Shipped", "Delivered", "Cancelled"];
 
@@ -49,7 +54,7 @@ export default function AdminOrdersPage() {
   };
 
   const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
+    `Rs. ${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   const filteredOrders = orders.filter((order) => {
     const matchesStatus = statusFilter === "" || order.status?.toLowerCase() === statusFilter.toLowerCase();
@@ -146,18 +151,50 @@ export default function AdminOrdersPage() {
 
                   {isExpanded && (
                     <div className="order-details">
-                      <div className="details-header">
-                        <span className="details-label">Order Items</span>
-                        <Link href={`/admin/orders/${order.id}`} className="details-link">Full Details →</Link>
-                      </div>
-                      <div className="items-list">
-                        {order.items?.map((item) => (
-                          <div key={item.id} className="item-row">
-                            <span className="item-name">{item.productName}</span>
-                            <span className="item-qty">×{item.quantity}</span>
-                            <span className="item-price">{formatCurrency(item.price * item.quantity)}</span>
+                      <div className="order-expanded-content">
+                        <div className="expanded-col-items">
+                          <div className="details-header">
+                            <span className="details-label">Order Items</span>
                           </div>
-                        ))}
+                          <div className="items-list">
+                            {order.items?.map((item) => (
+                              <div key={item.id} className="item-row">
+                                <span className="item-name">{item.productName}</span>
+                                <span className="item-qty">×{item.quantity}</span>
+                                <span className="item-price">{formatCurrency(item.price * item.quantity)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="expanded-col-shipping">
+                          <div className="details-header">
+                            <span className="details-label">Delivery & Contact</span>
+                            <Link href={`/admin/orders/${order.id}`} className="details-link">Full Details →</Link>
+                          </div>
+                          <div className="shipping-info-box">
+                            <div className="shipping-info-item">
+                              <span className="shipping-info-label">Customer:</span>
+                              <span className="shipping-info-value">{order.firstName} {order.lastName}</span>
+                            </div>
+                            <div className="shipping-info-item">
+                              <span className="shipping-info-label">Phone:</span>
+                              <span className="shipping-info-value">{order.phone || "—"}</span>
+                            </div>
+                            <div className="shipping-info-item">
+                              <span className="shipping-info-label">Address:</span>
+                              <span className="shipping-info-value">
+                                {order.address || "—"}{order.city && `, ${order.city}`}{order.postalCode && ` (${order.postalCode})`}
+                              </span>
+                            </div>
+                            {order.orderNote && (
+                              <div className="shipping-info-item">
+                                <span className="shipping-info-label">Note:</span>
+                                <span className="shipping-info-value italic">"{order.orderNote}"</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -247,7 +284,21 @@ export default function AdminOrdersPage() {
         .item-qty { color: #64748b; min-width: 40px; text-align: center; }
         .item-price { font-family: 'SF Mono', monospace; color: #475569; min-width: 80px; text-align: right; }
 
-        @keyframes slideDown { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 500px; } }
+        .order-expanded-content { display: flex; gap: 24px; padding-top: 8px; }
+        .expanded-col-items { flex: 1.2; min-width: 280px; }
+        .expanded-col-shipping { flex: 1; min-width: 260px; border-left: 1px dashed #e2e8f0; padding-left: 24px; }
+        .shipping-info-box { display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: #334155; }
+        .shipping-info-item { display: flex; flex-direction: column; gap: 2px; }
+        .shipping-info-label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+        .shipping-info-value { font-weight: 500; color: #334155; line-height: 1.4; }
+        .shipping-info-value.italic { font-style: italic; color: #64748b; }
+
+        @media (max-width: 768px) {
+          .order-expanded-content { flex-direction: column; gap: 18px; }
+          .expanded-col-shipping { border-left: none; padding-left: 0; border-top: 1px dashed #e2e8f0; padding-top: 18px; }
+        }
+
+        @keyframes slideDown { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 800px; } }
 
         @media (max-width: 640px) {
           .order-main { flex-wrap: wrap; }
