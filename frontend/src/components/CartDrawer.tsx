@@ -4,6 +4,7 @@ import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { showStorefrontToast } from "@/utils/toast";
 
 export default function CartDrawer({ onClose }: { onClose: () => void }) {
     const { cartItems, updateQuantity, removeFromCart } = useCart();
@@ -54,6 +55,16 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
         } else {
             setSelectedItems(cartItems.map((i: any) => i.id));
         }
+    };
+
+    const handleDeleteSelected = () => {
+        if (selectedItems.length === 0) {
+            showStorefrontToast("No items selected to delete", "error");
+            return;
+        }
+        selectedItems.forEach(id => removeFromCart(id));
+        setSelectedItems([]);
+        showStorefrontToast("Selected items removed from cart", "success");
     };
 
     const selectedCartItems = cartItems.filter((i: any) => selectedItems.includes(i.id));
@@ -107,7 +118,7 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                                             />
                                             <span className="ali-checkbox-text">Select all items</span>
                                         </label>
-                                        <button className="ali-delete-selected-btn">Delete selected items</button>
+                                        <button className="ali-delete-selected-btn" onClick={handleDeleteSelected}>Delete selected items</button>
                                     </div>
                                     <div className="ali-brand-day-banner">
                                         <span className="ali-banner-logo">Brand<em>Day</em></span>
