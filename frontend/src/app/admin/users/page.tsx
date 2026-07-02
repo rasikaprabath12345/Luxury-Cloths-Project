@@ -127,12 +127,23 @@ export default function AdminUsersPage() {
                     {user.role?.toLowerCase() === "admin" ? "🛡️" : "👤"} {user.role}
                   </span>
                 </div>
-                <button
-                  className={`role-btn ${user.role?.toLowerCase() === "admin" ? "demote-btn" : "promote-btn"}`}
-                  onClick={() => handleRoleChange(user.id, user.role, user.fullName)}
-                >
-                  {user.role?.toLowerCase() === "admin" ? "Demote" : "Promote"}
-                </button>
+                {user.role?.toLowerCase() === "admin" ? (
+                  <button
+                    className="role-btn demote-btn"
+                    onClick={() => handleRoleChange(user.id, user.role, user.fullName)}
+                  >
+                    Demote
+                  </button>
+                ) : (
+                  <button
+                    className="role-btn promote-btn"
+                    style={{ opacity: 0.5, cursor: "not-allowed" }}
+                    title="Admins are not allowed to promote other users to Admin"
+                    disabled
+                  >
+                    Promote
+                  </button>
+                )}
               </div>
             ))}
           </div>

@@ -263,6 +263,11 @@ namespace backend.Controllers
                 return Unauthorized("Only admins can perform this action.");
             }
 
+            if (string.Equals(dto.Role, "Admin", System.StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest("Admins are not allowed to promote users to Admin role.");
+            }
+
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
             if (user == null)
             {

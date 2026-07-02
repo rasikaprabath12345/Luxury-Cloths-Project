@@ -169,7 +169,7 @@ export default function ProductDetailPage() {
         {/* Main Product Grid */}
         <div style={{
           display: "grid",
-          gridTemplateColumns: "0.5fr 1fr",
+          gridTemplateColumns: "0.36fr 1fr",
           gap: 20,
           alignItems: "start",
         }} className="product-detail-grid">
