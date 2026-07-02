@@ -14,6 +14,10 @@ namespace backend.Models
         // Admin ද නැත්නම් Customer ද කියලා අඳුරගන්න
         public string Role { get; set; } = "Customer"; 
         
+        // Google OAuth fields
+        public string? GoogleId { get; set; }
+        public bool IsGoogleUser { get; set; } = false;
+
         // Password reset fields
         public string? PasswordResetToken { get; set; }
         public DateTime? PasswordResetExpiry { get; set; }

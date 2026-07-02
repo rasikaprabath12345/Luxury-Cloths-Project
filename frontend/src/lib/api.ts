@@ -47,6 +47,10 @@ export const authAPI = {
     return apiClient.post('/Auth/login', data);
   },
 
+  googleLogin: async (data: { email: string; fullName: string; avatar?: string; googleId?: string }) => {
+    return apiClient.post('/Auth/google-login', data);
+  },
+
   forgotPassword: async (data: { email: string }) => {
     return apiClient.post('/Auth/forgot-password', data);
   },

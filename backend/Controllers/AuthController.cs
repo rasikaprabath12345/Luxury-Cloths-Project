@@ -79,6 +79,61 @@ namespace backend.Controllers
             });
         }
 
+        // 2b. GOOGLE LOGIN ENDPOINT
+        [HttpPost("google-login")]
+        public async Task<IActionResult> GoogleLogin(GoogleLoginDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Email))
+                return BadRequest("Email is required.");
+
+            var email = dto.Email.ToLower();
+
+            // Existing user check
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+
+            if (user == null)
+            {
+                // New user - Google account සමඟ create කිරීම
+                var randomPassword = Guid.NewGuid().ToString();
+                user = new User
+                {
+                    FullName = dto.FullName ?? email,
+                    Email = email,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(randomPassword),
+                    Avatar = dto.Avatar ?? string.Empty,
+                    GoogleId = dto.GoogleId,
+                    IsGoogleUser = true,
+                    Role = "Customer",
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+            }
+            else
+            {
+                // Existing user - Google info update
+                if (!string.IsNullOrEmpty(dto.GoogleId))
+                    user.GoogleId = dto.GoogleId;
+                if (!string.IsNullOrEmpty(dto.Avatar) && string.IsNullOrEmpty(user.Avatar))
+                    user.Avatar = dto.Avatar;
+                user.IsGoogleUser = true;
+                user.UpdatedAt = DateTime.UtcNow;
+                _context.Users.Update(user);
+                await _context.SaveChangesAsync();
+            }
+
+            var token = _tokenService.CreateToken(user);
+
+            return Ok(new LoginResponseDto
+            {
+                Id = user.Id,
+                FullName = user.FullName,
+                Email = user.Email,
+                Role = user.Role,
+                Token = token
+            });
+        }
+
         // 3. FORGOT PASSWORD ENDPOINT
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordDto dto)

@@ -5,6 +5,7 @@ import "./globals.css";
 import { CartProvider } from "../context/CartContext";
 import { WishlistProvider } from "../context/WishlistContext";
 import { AuthProvider } from "../context/AuthContext";
+import NextAuthProvider from "../components/NextAuthProvider";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import ChatButtons from '@/components/ChatButtons';
@@ -48,6 +49,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-white">
+        <NextAuthProvider>
         <AuthProvider>
           <WishlistProvider>
             <CartProvider>
@@ -69,6 +71,7 @@ export default function RootLayout({
             </CartProvider>
           </WishlistProvider>
         </AuthProvider>
+        </NextAuthProvider>
       </body>
     </html>
   );

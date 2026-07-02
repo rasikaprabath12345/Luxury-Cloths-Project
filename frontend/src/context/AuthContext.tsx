@@ -1,5 +1,6 @@
 "use client";
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { signIn as nextAuthSignIn, signOut as nextAuthSignOut, useSession } from "next-auth/react";
 import { authAPI } from "@/lib/api";
 
 export interface User {
@@ -22,6 +23,7 @@ interface AuthContextType {
     // Auth methods
     register: (fullName: string, email: string, password: string) => Promise<void>;
     login: (email: string, password: string) => Promise<void>;
+    googleLogin: () => Promise<void>;
     logout: () => Promise<void>;
     forgotPassword: (email: string) => Promise<void>;
     resetPassword: (email: string, token: string, newPassword: string, confirmPassword: string) => Promise<void>;
@@ -38,6 +40,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const { data: session } = useSession();
+
+    // Sync NextAuth session (Google Sign-In) to local state & localStorage
+    useEffect(() => {
+        const syncGoogleSession = async () => {
+            if (session && (session as any).backendToken) {
+                const userData: User = {
+                    id: (session as any).backendId,
+                    fullName: (session as any).fullName || session.user?.name || "",
+                    email: session.user?.email || "",
+                    role: ((session as any).role || "customer").toLowerCase() as "admin" | "customer",
+                };
+                setUser(userData);
+                setToken((session as any).backendToken);
+                localStorage.setItem("luxury_user", JSON.stringify(userData));
+                localStorage.setItem("luxury_token", (session as any).backendToken);
+            }
+        };
+        syncGoogleSession();
+    }, [session]);
 
     // Initialize auth from localStorage on mount
     useEffect(() => {
@@ -116,6 +138,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    // Google Login
+    const googleLogin = async () => {
+        // NextAuth Google provider trigger
+        await nextAuthSignIn("google", { callbackUrl: "/" });
+    };
+
     // Logout
     const logout = async () => {
         try {
@@ -127,6 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setToken(null);
             localStorage.removeItem("luxury_user");
             localStorage.removeItem("luxury_token");
+            await nextAuthSignOut({ redirect: false });
         }
     };
 
@@ -238,6 +267,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         token,
         register,
         login,
+        googleLogin,
         logout,
         forgotPassword,
         resetPassword,

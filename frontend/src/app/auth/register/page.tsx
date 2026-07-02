@@ -11,7 +11,8 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { register } = useAuth();
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const { register, googleLogin } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -326,6 +327,70 @@ export default function RegisterPage() {
                 Sign In
               </Link>
             </div>
+
+            {/* OR Divider */}
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", margin: "4px 0" }}>
+              <div style={{ flex: 1, height: "1px", background: "rgba(0,0,0,0.1)" }} />
+              <span style={{ fontSize: "10px", fontWeight: 600, color: "#AEAEB2", letterSpacing: "1px", textTransform: "uppercase" }}>or</span>
+              <div style={{ flex: 1, height: "1px", background: "rgba(0,0,0,0.1)" }} />
+            </div>
+
+            {/* Google Sign-Up Button */}
+            <button
+              id="google-signup-btn"
+              type="button"
+              disabled={isGoogleLoading}
+              onClick={async () => {
+                setIsGoogleLoading(true);
+                try {
+                  await googleLogin();
+                } catch (err: any) {
+                  setError(err.message || "Google sign up failed");
+                  setIsGoogleLoading(false);
+                }
+              }}
+              style={{
+                background: "#fff",
+                border: "1.5px solid rgba(0,0,0,0.12)",
+                borderRadius: "6px",
+                padding: "10px 12px",
+                color: "#3c4043",
+                fontSize: "12px",
+                fontWeight: 600,
+                letterSpacing: "0.5px",
+                cursor: isGoogleLoading ? "not-allowed" : "pointer",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+                transition: "all 0.2s ease",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "10px",
+                width: "100%",
+                opacity: isGoogleLoading ? 0.7 : 1,
+              }}
+              onMouseEnter={(e) => {
+                if (!isGoogleLoading) {
+                  e.currentTarget.style.boxShadow = "0 3px 10px rgba(0,0,0,0.12)";
+                  e.currentTarget.style.borderColor = "rgba(0,0,0,0.2)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.06)";
+                e.currentTarget.style.borderColor = "rgba(0,0,0,0.12)";
+              }}
+            >
+              {isGoogleLoading ? (
+                <span className="spinner-dark" />
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20-7.5 20-21 0-1.4-.2-2.7-.5-4z" fill="#FFC107"/>
+                  <path d="M6.3 14.7l7 5.1C15.2 16.3 19.3 13 24 13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 5.1 29.6 3 24 3c-7.6 0-14.2 4.2-17.7 10.7z" fill="#FF3D00"/>
+                  <path d="M24 45c5.5 0 10.4-1.9 14.3-5.1l-6.6-5.6C29.8 35.9 27 37 24 37c-6 0-10.6-3-11.8-8.3l-7 5.4C8.1 40.6 15.4 45 24 45z" fill="#4CAF50"/>
+                  <path d="M44.5 20H24v8.5h11.8c-.6 2.9-2.3 5.4-4.7 7.1l6.6 5.6C41.7 37.9 45 31.6 45 24c0-1.4-.2-2.7-.5-4z" fill="#1976D2"/>
+                </svg>
+              )}
+              <span>{isGoogleLoading ? "Signing up..." : "Continue with Google"}</span>
+            </button>
           </form>
         </div>
       </div>
@@ -344,6 +409,15 @@ export default function RegisterPage() {
           display: inline-block;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner-dark {
+          width: 14px;
+          height: 14px;
+          border: 2px solid rgba(0,0,0,0.15);
+          border-top-color: #3c4043;
+          border-radius: 50%;
+          animation: spin 0.6s linear infinite;
+          display: inline-block;
+        }
         @keyframes scaleIn {
           from { opacity: 0; transform: scale(0.96); }
           to { opacity: 1; transform: scale(1); }
