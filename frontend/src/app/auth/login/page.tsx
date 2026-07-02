@@ -7,15 +7,57 @@ import Link from "next/link";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  // Field errors
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const { login, googleLogin } = useAuth();
   const router = useRouter();
 
+  const validateEmail = (val: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!val.trim()) {
+      setEmailError("Email address is required.");
+      return false;
+    }
+    if (!emailRegex.test(val.trim())) {
+      setEmailError("Please enter a valid email address.");
+      return false;
+    }
+    setEmailError("");
+    return true;
+  };
+
+  const validatePassword = (val: string) => {
+    if (!val) {
+      setPasswordError("Password is required.");
+      return false;
+    }
+    if (val.length < 6) {
+      setPasswordError("Password must be at least 6 characters.");
+      return false;
+    }
+    setPasswordError("");
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    // Validate fields before submitting
+    const isEmailValid = validateEmail(email);
+    const isPassValid = validatePassword(password);
+
+    if (!isEmailValid || !isPassValid) {
+      setError("Please fix all errors in the form before logging in.");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -64,16 +106,16 @@ export default function LoginPage() {
         border: "1px solid rgba(255, 255, 255, 0.85)",
         borderRadius: "24px",
         boxShadow: "0 20px 50px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)",
-        marginTop: "-40px",
+        marginTop: "20px",
         width: "100%",
-        maxWidth: "840px",
+        maxWidth: "720px",
         zIndex: 1,
         display: "grid",
         gridTemplateColumns: "1fr 1.2fr",
         overflow: "hidden",
         animation: "scaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
       }} className="auth-card">
-        
+
         {/* Left Side: Visual Editorial Panel */}
         <div style={{
           position: "relative",
@@ -99,10 +141,10 @@ export default function LoginPage() {
               color: "#fff",
               textShadow: "0 2px 8px rgba(0,0,0,0.3)"
             }}>LUXURY.lk</h2>
-            <p style={{ 
-              fontSize: "11px", 
-              color: "rgba(255,255,255,0.7)", 
-              marginTop: "6px", 
+            <p style={{
+              fontSize: "11px",
+              color: "rgba(255,255,255,0.7)",
+              marginTop: "6px",
               letterSpacing: "1.5px",
               textTransform: "uppercase",
               fontWeight: 500
@@ -112,29 +154,29 @@ export default function LoginPage() {
 
         {/* Right Side: Form Panel */}
         <div style={{
-          padding: "36px 44px",
+          padding: "24px 30px",
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
         }} className="auth-form-panel">
-          <div style={{ marginBottom: "20px" }}>
+          <div style={{ marginBottom: "14px" }}>
             <h3 style={{
               fontFamily: "var(--font-playfair), serif",
-              fontSize: "20px", fontWeight: 700, color: "#1C1C1E",
+              fontSize: "19px", fontWeight: 700, color: "#1C1C1E",
               margin: 0, letterSpacing: "1.5px"
             }}>Welcome Back</h3>
-            <p style={{ fontSize: "11.5px", color: "#8E8E93", marginTop: "4px", letterSpacing: "0.2px" }}>
+            <p style={{ fontSize: "11px", color: "#8E8E93", marginTop: "2px", letterSpacing: "0.2px" }}>
               Sign in to experience luxury fashion.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             {error && (
               <div style={{
                 background: "rgba(255, 59, 48, 0.06)",
                 border: "1px solid rgba(255, 59, 48, 0.15)",
                 borderRadius: "8px",
-                padding: "8px 12px",
+                padding: "6px 10px",
                 fontSize: "11.5px",
                 fontWeight: 500,
                 color: "#FF3B30",
@@ -156,10 +198,14 @@ export default function LoginPage() {
                 required
                 placeholder="your@email.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  validateEmail(e.target.value);
+                }}
+                onBlur={(e) => validateEmail(e.target.value)}
                 style={{
                   border: "none",
-                  borderBottom: "1px solid rgba(0,0,0,0.12)",
+                  borderBottom: emailError ? "1.5px solid #FF3B30" : "1px solid rgba(0,0,0,0.12)",
                   borderRadius: "0px",
                   background: "transparent",
                   padding: "8px 0px",
@@ -170,6 +216,7 @@ export default function LoginPage() {
                 }}
                 className="luxury-input-line"
               />
+              {emailError && <span style={{ color: "#FF3B30", fontSize: "10px", marginTop: "2px", fontWeight: 500 }}>{emailError}</span>}
             </div>
 
             {/* Password field */}
@@ -181,10 +228,14 @@ export default function LoginPage() {
                 required
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  validatePassword(e.target.value);
+                }}
+                onBlur={(e) => validatePassword(e.target.value)}
                 style={{
                   border: "none",
-                  borderBottom: "1px solid rgba(0,0,0,0.12)",
+                  borderBottom: passwordError ? "1.5px solid #FF3B30" : "1px solid rgba(0,0,0,0.12)",
                   borderRadius: "0px",
                   background: "transparent",
                   padding: "8px 0px",
@@ -195,6 +246,7 @@ export default function LoginPage() {
                 }}
                 className="luxury-input-line"
               />
+              {passwordError && <span style={{ color: "#FF3B30", fontSize: "10px", marginTop: "2px", fontWeight: 500 }}>{passwordError}</span>}
             </div>
 
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "11.5px" }}>
@@ -320,10 +372,10 @@ export default function LoginPage() {
                 <span className="spinner-dark" />
               ) : (
                 <svg width="18" height="18" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20-7.5 20-21 0-1.4-.2-2.7-.5-4z" fill="#FFC107"/>
-                  <path d="M6.3 14.7l7 5.1C15.2 16.3 19.3 13 24 13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 5.1 29.6 3 24 3c-7.6 0-14.2 4.2-17.7 10.7z" fill="#FF3D00"/>
-                  <path d="M24 45c5.5 0 10.4-1.9 14.3-5.1l-6.6-5.6C29.8 35.9 27 37 24 37c-6 0-10.6-3-11.8-8.3l-7 5.4C8.1 40.6 15.4 45 24 45z" fill="#4CAF50"/>
-                  <path d="M44.5 20H24v8.5h11.8c-.6 2.9-2.3 5.4-4.7 7.1l6.6 5.6C41.7 37.9 45 31.6 45 24c0-1.4-.2-2.7-.5-4z" fill="#1976D2"/>
+                  <path d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20-7.5 20-21 0-1.4-.2-2.7-.5-4z" fill="#FFC107" />
+                  <path d="M6.3 14.7l7 5.1C15.2 16.3 19.3 13 24 13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 5.1 29.6 3 24 3c-7.6 0-14.2 4.2-17.7 10.7z" fill="#FF3D00" />
+                  <path d="M24 45c5.5 0 10.4-1.9 14.3-5.1l-6.6-5.6C29.8 35.9 27 37 24 37c-6 0-10.6-3-11.8-8.3l-7 5.4C8.1 40.6 15.4 45 24 45z" fill="#4CAF50" />
+                  <path d="M44.5 20H24v8.5h11.8c-.6 2.9-2.3 5.4-4.7 7.1l6.6 5.6C41.7 37.9 45 31.6 45 24c0-1.4-.2-2.7-.5-4z" fill="#1976D2" />
                 </svg>
               )}
               <span>{isGoogleLoading ? "Signing in..." : "Continue with Google"}</span>

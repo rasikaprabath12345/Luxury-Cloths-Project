@@ -5,15 +5,38 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
+  
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { forgotPassword } = useAuth();
 
+  const validateEmail = (val: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!val.trim()) {
+      setEmailError("Email address is required.");
+      return false;
+    }
+    if (!emailRegex.test(val.trim())) {
+      setEmailError("Please enter a valid email address.");
+      return false;
+    }
+    setEmailError("");
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSuccess("");
+
+    const isEmailValid = validateEmail(email);
+    if (!isEmailValid) {
+      setError("Please fix the email validation error.");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -63,8 +86,9 @@ export default function ForgotPasswordPage() {
         border: "1px solid rgba(255, 255, 255, 0.85)",
         borderRadius: "24px",
         boxShadow: "0 20px 50px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)",
+        marginTop: "20px",
         width: "100%",
-        maxWidth: "840px",
+        maxWidth: "720px",
         zIndex: 1,
         display: "grid",
         gridTemplateColumns: "1fr 1.2fr",
@@ -110,30 +134,30 @@ export default function ForgotPasswordPage() {
 
         {/* Right Side: Form Panel */}
         <div style={{
-          padding: "36px 44px",
+          padding: "24px 30px",
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
         }} className="auth-form-panel">
-          <div style={{ marginBottom: "20px" }}>
+          <div style={{ marginBottom: "14px" }}>
             <h3 style={{
               fontFamily: "var(--font-playfair), serif",
-              fontSize: "20px", fontWeight: 700, color: "#1C1C1E",
+              fontSize: "19px", fontWeight: 700, color: "#1C1C1E",
               margin: 0, letterSpacing: "1.5px"
             }}>Reset Password</h3>
-            <p style={{ fontSize: "11.5px", color: "#8E8E93", marginTop: "4px", letterSpacing: "0.2px" }}>
+            <p style={{ fontSize: "11px", color: "#8E8E93", marginTop: "2px", letterSpacing: "0.2px" }}>
               Enter email to receive security reset instructions.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             {error && (
               <div style={{
                 background: "rgba(255, 59, 48, 0.06)",
                 border: "1px solid rgba(255, 59, 48, 0.15)",
                 borderRadius: "8px",
-                padding: "8px 12px",
-                fontSize: "11.5px",
+                padding: "6px 10px",
+                fontSize: "11px",
                 fontWeight: 500,
                 color: "#FF3B30",
                 display: "flex",
@@ -172,10 +196,14 @@ export default function ForgotPasswordPage() {
                 required
                 placeholder="your@email.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  validateEmail(e.target.value);
+                }}
+                onBlur={(e) => validateEmail(e.target.value)}
                 style={{
                   border: "none",
-                  borderBottom: "1px solid rgba(0,0,0,0.12)",
+                  borderBottom: emailError ? "1.5px solid #FF3B30" : "1px solid rgba(0,0,0,0.12)",
                   borderRadius: "0px",
                   background: "transparent",
                   padding: "8px 0px",
@@ -186,6 +214,7 @@ export default function ForgotPasswordPage() {
                 }}
                 className="luxury-input-line"
               />
+              {emailError && <span style={{ color: "#FF3B30", fontSize: "10px", marginTop: "2px", fontWeight: 500 }}>{emailError}</span>}
             </div>
 
             <button

@@ -9,23 +9,93 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  
+  // Field errors
+  const [fullNameError, setFullNameError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const { register, googleLogin } = useAuth();
   const router = useRouter();
 
+  // Helper validation functions
+  const validateFullName = (val: string) => {
+    if (!val.trim()) {
+      setFullNameError("Full name is required.");
+      return false;
+    }
+    if (val.trim().length < 3) {
+      setFullNameError("Name must be at least 3 characters.");
+      return false;
+    }
+    setFullNameError("");
+    return true;
+  };
+
+  const validateEmail = (val: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!val.trim()) {
+      setEmailError("Email address is required.");
+      return false;
+    }
+    if (!emailRegex.test(val.trim())) {
+      setEmailError("Please enter a valid email address.");
+      return false;
+    }
+    setEmailError("");
+    return true;
+  };
+
+  const validatePassword = (val: string) => {
+    if (!val) {
+      setPasswordError("Password is required.");
+      return false;
+    }
+    if (val.length < 6) {
+      setPasswordError("Password must be at least 6 characters.");
+      return false;
+    }
+    if (!/[A-Z]/.test(val)) {
+      setPasswordError("Must contain at least one uppercase letter (A-Z).");
+      return false;
+    }
+    if (!/[0-9]/.test(val)) {
+      setPasswordError("Must contain at least one number (0-9).");
+      return false;
+    }
+    setPasswordError("");
+    return true;
+  };
+
+  const validateConfirmPassword = (confirmVal: string, passVal: string) => {
+    if (!confirmVal) {
+      setConfirmPasswordError("Please confirm your password.");
+      return false;
+    }
+    if (confirmVal !== passVal) {
+      setConfirmPasswordError("Passwords do not match.");
+      return false;
+    }
+    setConfirmPasswordError("");
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
+    // Perform all validations
+    const isNameValid = validateFullName(fullName);
+    const isEmailValid = validateEmail(email);
+    const isPassValid = validatePassword(password);
+    const isConfirmValid = validateConfirmPassword(confirmPassword, password);
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+    if (!isNameValid || !isEmailValid || !isPassValid || !isConfirmValid) {
+      setError("Please fix all errors in the form before submitting.");
       return;
     }
 
@@ -77,9 +147,9 @@ export default function RegisterPage() {
         border: "1px solid rgba(255, 255, 255, 0.85)",
         borderRadius: "24px",
         boxShadow: "0 20px 50px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)",
-        marginTop: "-40px",
+        marginTop: "20px",
         width: "100%",
-        maxWidth: "880px",
+        maxWidth: "760px",
         zIndex: 1,
         display: "grid",
         gridTemplateColumns: "1fr 1.3fr",
@@ -125,30 +195,30 @@ export default function RegisterPage() {
 
         {/* Right Side: Form Panel */}
         <div style={{
-          padding: "36px 44px",
+          padding: "24px 30px",
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
         }} className="auth-form-panel">
-          <div style={{ marginBottom: "16px" }}>
+          <div style={{ marginBottom: "12px" }}>
             <h3 style={{
               fontFamily: "var(--font-playfair), serif",
-              fontSize: "20px", fontWeight: 700, color: "#1C1C1E",
+              fontSize: "19px", fontWeight: 700, color: "#1C1C1E",
               margin: 0, letterSpacing: "1.5px"
             }}>Create Account</h3>
-            <p style={{ fontSize: "11.5px", color: "#8E8E93", marginTop: "4px", letterSpacing: "0.2px" }}>
+            <p style={{ fontSize: "11px", color: "#8E8E93", marginTop: "2px", letterSpacing: "0.2px" }}>
               Experience personalized luxury recommendations.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             {error && (
               <div style={{
                 background: "rgba(255, 59, 48, 0.06)",
                 border: "1px solid rgba(255, 59, 48, 0.15)",
                 borderRadius: "8px",
-                padding: "8px 12px",
-                fontSize: "11.5px",
+                padding: "6px 10px",
+                fontSize: "11px",
                 fontWeight: 500,
                 color: "#FF3B30",
                 display: "flex",
@@ -170,10 +240,14 @@ export default function RegisterPage() {
                   required
                   placeholder="Ashan Silva"
                   value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
+                  onChange={(e) => {
+                    setFullName(e.target.value);
+                    validateFullName(e.target.value);
+                  }}
+                  onBlur={(e) => validateFullName(e.target.value)}
                   style={{
                     border: "none",
-                    borderBottom: "1px solid rgba(0,0,0,0.12)",
+                    borderBottom: fullNameError ? "1.5px solid #FF3B30" : "1px solid rgba(0,0,0,0.12)",
                     borderRadius: "0px",
                     background: "transparent",
                     padding: "8px 0px",
@@ -184,6 +258,7 @@ export default function RegisterPage() {
                   }}
                   className="luxury-input-line"
                 />
+                {fullNameError && <span style={{ color: "#FF3B30", fontSize: "10px", marginTop: "2px", fontWeight: 500 }}>{fullNameError}</span>}
               </div>
 
               {/* Email field */}
@@ -195,10 +270,14 @@ export default function RegisterPage() {
                   required
                   placeholder="your@email.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    validateEmail(e.target.value);
+                  }}
+                  onBlur={(e) => validateEmail(e.target.value)}
                   style={{
                     border: "none",
-                    borderBottom: "1px solid rgba(0,0,0,0.12)",
+                    borderBottom: emailError ? "1.5px solid #FF3B30" : "1px solid rgba(0,0,0,0.12)",
                     borderRadius: "0px",
                     background: "transparent",
                     padding: "8px 0px",
@@ -209,6 +288,7 @@ export default function RegisterPage() {
                   }}
                   className="luxury-input-line"
                 />
+                {emailError && <span style={{ color: "#FF3B30", fontSize: "10px", marginTop: "2px", fontWeight: 500 }}>{emailError}</span>}
               </div>
 
               {/* Password field */}
@@ -220,10 +300,15 @@ export default function RegisterPage() {
                   required
                   placeholder="•••••• (min 6)"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    validatePassword(e.target.value);
+                    if (confirmPassword) validateConfirmPassword(confirmPassword, e.target.value);
+                  }}
+                  onBlur={(e) => validatePassword(e.target.value)}
                   style={{
                     border: "none",
-                    borderBottom: "1px solid rgba(0,0,0,0.12)",
+                    borderBottom: passwordError ? "1.5px solid #FF3B30" : "1px solid rgba(0,0,0,0.12)",
                     borderRadius: "0px",
                     background: "transparent",
                     padding: "8px 0px",
@@ -234,6 +319,7 @@ export default function RegisterPage() {
                   }}
                   className="luxury-input-line"
                 />
+                {passwordError && <span style={{ color: "#FF3B30", fontSize: "10px", marginTop: "2px", fontWeight: 500 }}>{passwordError}</span>}
               </div>
 
               {/* Confirm Password field */}
@@ -245,10 +331,14 @@ export default function RegisterPage() {
                   required
                   placeholder="••••••"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    validateConfirmPassword(e.target.value, password);
+                  }}
+                  onBlur={(e) => validateConfirmPassword(e.target.value, password)}
                   style={{
                     border: "none",
-                    borderBottom: "1px solid rgba(0,0,0,0.12)",
+                    borderBottom: confirmPasswordError ? "1.5px solid #FF3B30" : "1px solid rgba(0,0,0,0.12)",
                     borderRadius: "0px",
                     background: "transparent",
                     padding: "8px 0px",
@@ -259,6 +349,7 @@ export default function RegisterPage() {
                   }}
                   className="luxury-input-line"
                 />
+                {confirmPasswordError && <span style={{ color: "#FF3B30", fontSize: "10px", marginTop: "2px", fontWeight: 500 }}>{confirmPasswordError}</span>}
               </div>
             </div>
 

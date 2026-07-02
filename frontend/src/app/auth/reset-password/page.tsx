@@ -7,6 +7,11 @@ import Link from "next/link";
 function ResetPasswordForm() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  // Field errors
+  const [newPasswordError, setNewPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -18,6 +23,40 @@ function ResetPasswordForm() {
   const token = searchParams.get("token") || "";
   const email = searchParams.get("email") || "";
 
+  const validatePassword = (val: string) => {
+    if (!val) {
+      setNewPasswordError("Password is required.");
+      return false;
+    }
+    if (val.length < 6) {
+      setNewPasswordError("Password must be at least 6 characters.");
+      return false;
+    }
+    if (!/[A-Z]/.test(val)) {
+      setNewPasswordError("Must contain at least one uppercase letter (A-Z).");
+      return false;
+    }
+    if (!/[0-9]/.test(val)) {
+      setNewPasswordError("Must contain at least one number (0-9).");
+      return false;
+    }
+    setNewPasswordError("");
+    return true;
+  };
+
+  const validateConfirmPassword = (confirmVal: string, passVal: string) => {
+    if (!confirmVal) {
+      setConfirmPasswordError("Please confirm your password.");
+      return false;
+    }
+    if (confirmVal !== passVal) {
+      setConfirmPasswordError("Passwords do not match.");
+      return false;
+    }
+    setConfirmPasswordError("");
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -28,13 +67,11 @@ function ResetPasswordForm() {
       return;
     }
 
-    if (newPassword !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
+    const isPassValid = validatePassword(newPassword);
+    const isConfirmValid = validateConfirmPassword(confirmPassword, newPassword);
 
-    if (newPassword.length < 6) {
-      setError("Password must be at least 6 characters");
+    if (!isPassValid || !isConfirmValid) {
+      setError("Please fix all errors in the form before submitting.");
       return;
     }
 
@@ -61,8 +98,9 @@ function ResetPasswordForm() {
       border: "1px solid rgba(255, 255, 255, 0.85)",
       borderRadius: "24px",
       boxShadow: "0 20px 50px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)",
+      marginTop: "20px",
       width: "100%",
-      maxWidth: "840px",
+      maxWidth: "720px",
       zIndex: 1,
       display: "grid",
       gridTemplateColumns: "1fr 1.2fr",
@@ -108,30 +146,30 @@ function ResetPasswordForm() {
 
       {/* Right Side: Form Panel */}
       <div style={{
-        padding: "36px 44px",
+        padding: "24px 30px",
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
       }} className="auth-form-panel">
-        <div style={{ marginBottom: "20px" }}>
+        <div style={{ marginBottom: "14px" }}>
           <h3 style={{
             fontFamily: "var(--font-playfair), serif",
-            fontSize: "20px", fontWeight: 700, color: "#1C1C1E",
+            fontSize: "19px", fontWeight: 700, color: "#1C1C1E",
             margin: 0, letterSpacing: "1.5px"
           }}>New Password</h3>
-          <p style={{ fontSize: "11.5px", color: "#8E8E93", marginTop: "4px", letterSpacing: "0.2px" }}>
+          <p style={{ fontSize: "11px", color: "#8E8E93", marginTop: "2px", letterSpacing: "0.2px" }}>
             Enter your new password below.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           {error && (
             <div style={{
               background: "rgba(255, 59, 48, 0.06)",
               border: "1px solid rgba(255, 59, 48, 0.15)",
               borderRadius: "8px",
-              padding: "8px 12px",
-              fontSize: "11.5px",
+              padding: "6px 10px",
+              fontSize: "11px",
               fontWeight: 500,
               color: "#FF3B30",
               display: "flex",
@@ -170,10 +208,15 @@ function ResetPasswordForm() {
               required
               placeholder="•••••••• (min 6 characters)"
               value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
+              onChange={(e) => {
+                setNewPassword(e.target.value);
+                validatePassword(e.target.value);
+                if (confirmPassword) validateConfirmPassword(confirmPassword, e.target.value);
+              }}
+              onBlur={(e) => validatePassword(e.target.value)}
               style={{
                 border: "none",
-                borderBottom: "1px solid rgba(0,0,0,0.12)",
+                borderBottom: newPasswordError ? "1.5px solid #FF3B30" : "1px solid rgba(0,0,0,0.12)",
                 borderRadius: "0px",
                 background: "transparent",
                 padding: "8px 0px",
@@ -184,6 +227,7 @@ function ResetPasswordForm() {
               }}
               className="luxury-input-line"
             />
+            {newPasswordError && <span style={{ color: "#FF3B30", fontSize: "10px", marginTop: "2px", fontWeight: 500 }}>{newPasswordError}</span>}
           </div>
 
           {/* Confirm Password field */}
@@ -195,10 +239,14 @@ function ResetPasswordForm() {
               required
               placeholder="••••••••"
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                validateConfirmPassword(e.target.value, newPassword);
+              }}
+              onBlur={(e) => validateConfirmPassword(e.target.value, newPassword)}
               style={{
                 border: "none",
-                borderBottom: "1px solid rgba(0,0,0,0.12)",
+                borderBottom: confirmPasswordError ? "1.5px solid #FF3B30" : "1px solid rgba(0,0,0,0.12)",
                 borderRadius: "0px",
                 background: "transparent",
                 padding: "8px 0px",
@@ -209,6 +257,7 @@ function ResetPasswordForm() {
               }}
               className="luxury-input-line"
             />
+            {confirmPasswordError && <span style={{ color: "#FF3B30", fontSize: "10px", marginTop: "2px", fontWeight: 500 }}>{confirmPasswordError}</span>}
           </div>
 
           <button
