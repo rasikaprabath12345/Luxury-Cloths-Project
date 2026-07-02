@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
@@ -425,8 +425,8 @@ export default function ProductDetailPage() {
                   fontFamily: "var(--font-montserrat)",
                   boxShadow: product.stock === 0 ? "none" : "0 4px 20px rgba(28,28,30,0.3)",
                 }}
-                onMouseEnter={e => { if (product.stock > 0) { e.currentTarget.style.background = "linear-gradient(135deg, #007AFF, #5856D6)"; e.currentTarget.style.boxShadow = "0 6px 24px rgba(0,122,255,0.35)"; }}}
-                onMouseLeave={e => { if (product.stock > 0) { e.currentTarget.style.background = "linear-gradient(135deg, #1C1C1E, #3C3C43)"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(28,28,30,0.3)"; }}}
+                onMouseEnter={e => { if (product.stock > 0) { e.currentTarget.style.background = "linear-gradient(135deg, #007AFF, #5856D6)"; e.currentTarget.style.boxShadow = "0 6px 24px rgba(0,122,255,0.35)"; } }}
+                onMouseLeave={e => { if (product.stock > 0) { e.currentTarget.style.background = "linear-gradient(135deg, #1C1C1E, #3C3C43)"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(28,28,30,0.3)"; } }}
               >
                 <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                   <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
