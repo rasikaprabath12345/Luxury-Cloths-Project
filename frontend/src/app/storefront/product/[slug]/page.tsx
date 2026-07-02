@@ -35,6 +35,7 @@ export default function ProductDetailPage() {
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [quantity, setQuantity] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -74,6 +75,26 @@ export default function ProductDetailPage() {
 
         if (sizesArr.length > 0) setSelectedSize(sizesArr[0]);
         if (colorsArr.length > 0) setSelectedColor(colorsArr[0]);
+
+        // Fetch related products from same category
+        try {
+          const allRes = await productsAPI.getAllProducts();
+          const all = allRes.data;
+          const related = all
+            .filter((p: any) => p.slug !== slug && p.categoryId === data.categoryId)
+            .slice(0, 4);
+          // If not enough from same category, pad with other products
+          if (related.length < 4) {
+            const others = all
+              .filter((p: any) => p.slug !== slug && p.categoryId !== data.categoryId)
+              .slice(0, 4 - related.length);
+            setRelatedProducts([...related, ...others]);
+          } else {
+            setRelatedProducts(related);
+          }
+        } catch {
+          // silently ignore related products fetch failure
+        }
 
       } catch (error) {
         console.error("Failed to fetch product by slug:", error);
@@ -524,28 +545,75 @@ export default function ProductDetailPage() {
         `}</style>
 
         {/* Related Products Section */}
-        <div className="mt-16 border-t pt-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8">Related Products</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="group cursor-pointer"
-              >
-                <div className="relative w-full aspect-square bg-gray-100 rounded-lg overflow-hidden mb-3">
-                  <img
-                    src="https://images.unsplash.com/photo-1595777707802-52b966efb60f?w=400"
-                    alt="Related product"
-                    style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.3s ease" }}
-                    onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.05)")}
-                    onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")}
-                  />
-                </div>
-                <h3 className="font-semibold text-gray-900">Related Product {i}</h3>
-                <p className="text-blue-600 font-bold">$199.99</p>
-              </div>
-            ))}
-          </div>
+        <div style={{ marginTop: 64, borderTop: "1px solid #F2F2F7", paddingTop: 48 }}>
+          <h2 style={{ fontSize: 22, fontWeight: 700, color: "#1C1C1E", marginBottom: 24, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>You May Also Like</h2>
+          {relatedProducts.length === 0 ? (
+            <p style={{ color: "#8E8E93", fontSize: 14 }}>No related products found.</p>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }} className="related-grid">
+              {relatedProducts.map((rp: any) => {
+                const rpImage = rp.images?.[0]?.imageUrl || rp.imageUrl || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop";
+                const rpPrice = rp.price;
+                const rpDiscounted = rp.discount > 0 ? rpPrice - (rpPrice * rp.discount / 100) : rpPrice;
+                const rpSlug = rp.slug;
+                return (
+                  <Link key={rp.id} href={`/storefront/product/${rpSlug}`} style={{ textDecoration: "none" }}>
+                    <div
+                      style={{
+                        background: "#fff",
+                        borderRadius: 8,
+                        overflow: "hidden",
+                        border: "1px solid #F2F2F7",
+                        transition: "box-shadow 0.2s ease, transform 0.2s ease",
+                        cursor: "pointer",
+                      }}
+                      onMouseEnter={e => {
+                        (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 24px rgba(0,0,0,0.1)";
+                        (e.currentTarget as HTMLElement).style.transform = "translateY(-3px)";
+                      }}
+                      onMouseLeave={e => {
+                        (e.currentTarget as HTMLElement).style.boxShadow = "none";
+                        (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
+                      }}
+                    >
+                      {/* Image */}
+                      <div style={{ width: "100%", aspectRatio: "3/4", overflow: "hidden", background: "#F2F2F7" }}>
+                        <img
+                          src={rpImage}
+                          alt={rp.name}
+                          style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.4s ease" }}
+                          onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.06)")}
+                          onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")}
+                          onError={e => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600"; }}
+                        />
+                      </div>
+                      {/* Info */}
+                      <div style={{ padding: "12px 14px" }}>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: "#1C1C1E", margin: "0 0 6px", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>{rp.name}</p>
+                        <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                          <span style={{ fontSize: 15, fontWeight: 800, color: "#FF2D55" }}>
+                            Rs. {rpDiscounted.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                          {rp.discount > 0 && (
+                            <span style={{ fontSize: 11, color: "#8E8E93", textDecoration: "line-through" }}>
+                              Rs. {rpPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                          )}
+                        </div>
+                        {rp.category?.name && (
+                          <p style={{ fontSize: 11, color: "#8E8E93", margin: "4px 0 0" }}>{rp.category.name}</p>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+          <style>{`
+            @media (max-width: 768px) { .related-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+            @media (max-width: 480px) { .related-grid { grid-template-columns: 1fr !important; } }
+          `}</style>
         </div>
       </div>
     </main>
