@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
@@ -418,9 +418,9 @@ export default function ProductDetailPage() {
                   }}
                 >+</button>
               </div>
-                <span style={{ fontSize: 12, color: product.stock > 0 ? "#30D158" : "#FF3B30", fontWeight: 600 }}>
-                  {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
-                </span>
+              <span style={{ fontSize: 12, color: product.stock > 0 ? "#30D158" : "#FF3B30", fontWeight: 600 }}>
+                {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
+              </span>
             </div>
 
             {/* CTA Buttons */}
