@@ -5,6 +5,9 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { productsAPI } from "@/lib/api";
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 
 interface ProductDetail {
   id: string;
@@ -28,6 +31,9 @@ export default function ProductDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const { addToCart } = useCart();
+  const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
 
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -391,8 +397,7 @@ export default function ProductDetailPage() {
                   style={{ width: 36, height: "100%", border: "none", background: "none", cursor: "pointer", fontSize: 16, color: "#1C1C1E", fontWeight: 300 }}
                 >+</button>
               </div>
-
-              <span style={{ fontSize: 12, color: "#30D158", fontWeight: 600 }}>{product.stock} in stock</span>
+                <span style={{ fontSize: 12, color: "#30D158", fontWeight: 600 }}>{product.stock} in stock</span>
             </div>
 
             {/* CTA Buttons */}
@@ -401,6 +406,11 @@ export default function ProductDetailPage() {
               <button
                 disabled={product.stock === 0}
                 onClick={() => {
+                  if (!isAuthenticated) {
+                    alert("Please login or signup to add items to your cart.");
+                    router.push("/auth/login");
+                    return;
+                  }
                   addToCart({
                     id: parseInt(product.id),
                     name: product.name,
@@ -408,7 +418,7 @@ export default function ProductDetailPage() {
                     imageUrl: product.images?.[0] || "",
                     description: product.description,
                   }, quantity, selectedSize, selectedColor);
-                  alert(`${quantity} Ã— ${product.name} added to cart! ðŸ›’`);
+                  alert(`${quantity} × ${product.name} added to cart! 🛒`);
                 }}
                 style={{
                   flex: 1, height: 50,
@@ -438,6 +448,28 @@ export default function ProductDetailPage() {
 
               {/* Wishlist */}
               <button
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    alert("Please login or signup to add items to your wishlist.");
+                    router.push("/auth/login");
+                    return;
+                  }
+                  const isWish = isInWishlist(parseInt(product.id));
+                  if (isWish) {
+                    removeFromWishlist(parseInt(product.id));
+                    alert(`${product.name} removed from wishlist!`);
+                  } else {
+                    addToWishlist({
+                      id: parseInt(product.id),
+                      name: product.name,
+                      price: product.price,
+                      slug: product.slug,
+                      imageUrl: product.images?.[0] || "",
+                      description: product.description,
+                    });
+                    alert(`${product.name} added to wishlist!`);
+                  }
+                }}
                 style={{
                   width: 50, height: 50,
                   background: "rgba(255,255,255,0.80)",
@@ -453,7 +485,14 @@ export default function ProductDetailPage() {
                 onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,45,85,0.08)"; e.currentTarget.style.borderColor = "#FF2D55"; }}
                 onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.80)"; e.currentTarget.style.borderColor = "rgba(255,45,85,0.25)"; }}
               >
-                <svg width={18} height={18} viewBox="0 0 24 24" fill="#FF2D55" stroke="#FF2D55" strokeWidth={1.5}>
+                <svg
+                  width={18}
+                  height={18}
+                  viewBox="0 0 24 24"
+                  fill={isInWishlist(parseInt(product.id)) ? "#FF2D55" : "none"}
+                  stroke="#FF2D55"
+                  strokeWidth={1.5}
+                >
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                 </svg>
               </button>

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { glass } from "@/utils/theme";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
+import { useAuth } from "@/context/AuthContext";
 
 // Note: Ensure that we define the Product interface compatible with what's used
 export interface Product {
@@ -52,6 +53,7 @@ export function ProductSkeleton() {
 export default function ProductCard({ product }: { product: Product }) {
   const { addToCart } = useCart();
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
+  const { isAuthenticated } = useAuth();
 
   const hasDiscount = product.discount && product.discount > 0;
   const originalPrice = product.price;
@@ -67,6 +69,11 @@ export default function ProductCard({ product }: { product: Product }) {
   const handleWishlistToggle = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!isAuthenticated) {
+      alert("Please login or signup to add items to your wishlist.");
+      window.location.href = "/auth/login";
+      return;
+    }
     if (inWishlist) {
       removeFromWishlist(product.id);
     } else {
@@ -140,19 +147,17 @@ export default function ProductCard({ product }: { product: Product }) {
 
           {/* Out of Stock Badge */}
           {isOutOfStock && (
-            <>
-              <div style={{
-                position: "absolute", inset: 0, background: "rgba(0,0,0,0.35)",
-                zIndex: 4, display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <span style={{
-                  background: "rgba(220,38,38,0.95)", color: "#fff",
-                  fontSize: 12, fontWeight: 800, letterSpacing: "0.05em",
-                  padding: "8px 18px", borderRadius: 10, textTransform: "uppercase",
-                  boxShadow: "0 4px 12px rgba(220,38,38,0.4)",
-                }}>Out of Stock</span>
-              </div>
-            </>
+            <div style={{
+              position: "absolute", top: 12, left: 12,
+              background: "#FF3B30", backdropFilter: "blur(8px)",
+              borderRadius: 8, padding: "4px 10px",
+              boxShadow: "0 2px 8px rgba(255,59,48,0.4)",
+              zIndex: 5,
+            }}>
+              <span style={{ fontSize: 10, fontWeight: 800, color: "#fff", textTransform: "uppercase" }}>
+                Out of Stock
+              </span>
+            </div>
           )}
 
           {/* Wishlist Button */}
@@ -262,6 +267,11 @@ export default function ProductCard({ product }: { product: Product }) {
                 e.preventDefault();
                 e.stopPropagation();
                 if (isOutOfStock) return;
+                if (!isAuthenticated) {
+                  alert("Please login or signup to add items to your cart.");
+                  window.location.href = "/auth/login";
+                  return;
+                }
                 addToCart({
                   id: product.id,
                   name: product.name,
