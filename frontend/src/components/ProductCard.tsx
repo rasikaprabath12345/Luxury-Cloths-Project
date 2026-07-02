@@ -29,9 +29,9 @@ export interface Product {
 
 export function ProductSkeleton() {
   return (
-    <div style={{ ...glass.card, padding: 0, overflow: "hidden", height: 420 }}
+    <div style={{ ...glass.card, padding: 0, overflow: "hidden", height: 465 }}
       className="animate-pulse flex flex-col">
-      <div style={{ height: 270, background: "rgba(120,120,128,0.08)" }} />
+      <div style={{ height: 260, background: "rgba(120,120,128,0.08)" }} />
       <div style={{ padding: "16px", flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
         <div style={{ height: 14, background: "rgba(120,120,128,0.12)", borderRadius: 8, width: "60%" }} />
         <div style={{ height: 11, background: "rgba(120,120,128,0.08)", borderRadius: 8 }} />
@@ -69,10 +69,21 @@ export default function ProductCard({ product }: { product: Product }) {
   // Split sizes by comma
   const sizesList = product.sizes ? product.sizes.split(",").map(s => s.trim()) : [];
 
+  // Deterministic ratings and soldCount based on product.id
+  const rating = (4.0 + (product.id * 7) % 10 / 10).toFixed(1);
+  const ratingNum = parseFloat(rating);
+  const soldCount = ((product.id * 17) % 90 + 10) * 10;
+  const totalSoldText = soldCount >= 1000 ? `${(soldCount / 1000).toFixed(1)}k+` : `${soldCount}+`;
+
+  // Promo calculations (in LKR formatting)
+  const promoOff = Math.round(finalPrice * 0.1);
+  const promoMin = Math.round(originalPrice * 1.5);
+  const shopperSave = Math.round(finalPrice * 0.05);
+
   return (
     <div style={{
       ...glass.card, padding: 0, overflow: "hidden",
-      display: "flex", flexDirection: "column", height: 445,
+      display: "flex", flexDirection: "column", height: 465,
       transition: "transform 0.3s ease, box-shadow 0.3s ease", cursor: "pointer",
     }}
       onMouseEnter={e => {
@@ -145,58 +156,82 @@ export default function ProductCard({ product }: { product: Product }) {
       </div>
 
       <div style={{ padding: "14px 16px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-        <div>
-          <span style={{ fontSize: 9, fontWeight: 700, color: "#007AFF", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-            {product.category?.name || "Premium Collection"}
-          </span>
+        <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+
+          {/* Badges + Title */}
           <h3 style={{
-            margin: "4px 0 0", fontSize: 13.5, fontWeight: 700, color: "#1C1C1E",
-            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
+            margin: 0, fontSize: 13.5, fontWeight: 700, color: "#1C1C1E",
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+            display: "flex", alignItems: "center", gap: "6px"
           }}>
-            {product.name}
+            <span style={{
+              background: "#FFD60A", color: "#000", fontSize: 9, fontWeight: 800,
+              padding: "2px 6px", borderRadius: 4, textTransform: "uppercase", flexShrink: 0
+            }}>Choice</span>
+            <span style={{
+              background: "#FF2D55", color: "#fff", fontSize: 9, fontWeight: 800,
+              padding: "2px 6px", borderRadius: 4, textTransform: "uppercase", flexShrink: 0
+            }}>Sale</span>
+            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {product.name}
+            </span>
           </h3>
-          <p style={{
-            margin: "2px 0 0", fontSize: 11, color: "#8E8E93",
-            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
-          }}>
-            {product.description || "Ceylon luxury fabrics and modern fit."}
-          </p>
 
-          {/* Sizes */}
-          {sizesList.length > 0 && (
-            <div style={{ display: "flex", gap: "4px", marginTop: "8px", flexWrap: "wrap" }}>
-              {sizesList.map((size, idx) => (
-                <span key={idx} style={{
-                  fontSize: 9, fontWeight: 700, background: "rgba(120,120,128,0.08)",
-                  color: "#48484A", padding: "2px 6px", borderRadius: 4
-                }}>
-                  {size}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          paddingTop: 10, borderTop: "0.5px solid rgba(0,0,0,0.06)", marginTop: "6px"
-        }}>
-          <div>
-            {hasDiscount ? (
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <span style={{ fontSize: 11, textDecoration: "line-through", color: "#8E8E93", lineHeight: 1 }}>
-                  Rs. {originalPrice.toLocaleString()}
-                </span>
-                <span style={{ fontSize: 15, fontWeight: 800, color: "#FF3B30", marginTop: 2 }}>
-                  Rs. {finalPrice.toLocaleString()}
-                </span>
-              </div>
-            ) : (
-              <span style={{ fontSize: 15, fontWeight: 800, color: "#1C1C1E" }}>
-                Rs. {originalPrice.toLocaleString()}
+          {/* Price display row - Red/Pink and bold, with optional original price crossed out next to it */}
+          <div style={{ display: "flex", alignItems: "baseline", gap: "6px", flexWrap: "wrap", marginTop: "1px" }}>
+            <span style={{ fontSize: 16, fontWeight: 800, color: "#FF2D55" }}>
+              LKR{finalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+            {hasDiscount && (
+              <span style={{ fontSize: 11, textDecoration: "line-through", color: "#8E8E93" }}>
+                LKR{originalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             )}
           </div>
+
+          {/* Rating & Sold Row */}
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span style={{ color: "#1C1C1E", fontSize: 10, display: "flex", gap: "1px" }}>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <span key={i}>{i < Math.round(ratingNum) ? "★" : "☆"}</span>
+              ))}
+            </span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: "#1C1C1E" }}>
+              {rating}
+            </span>
+            <span style={{ fontSize: 11, color: "#E5E5EA" }}>|</span>
+            <span style={{ fontSize: 11, color: "#8E8E93" }}>
+              {totalSoldText} sold
+            </span>
+          </div>
+
+          {/* Promo & Shopper Discount Tags */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginTop: "2px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <span style={{
+                background: "rgba(255, 45, 85, 0.1)", color: "#FF2D55", fontSize: 9,
+                fontWeight: 800, padding: "1px 5px", borderRadius: 3, display: "inline-flex",
+                alignItems: "center", height: 14
+              }}>
+                %
+              </span>
+              <span style={{ fontSize: 10, fontWeight: 600, color: "#FF2D55" }}>
+                LKR{promoOff.toLocaleString(undefined, { minimumFractionDigits: 2 })} off on LKR{promoMin.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <span style={{ fontSize: 10, display: "inline-flex", alignItems: "center", height: 14 }}>⚡</span>
+              <span style={{ fontSize: 10, fontWeight: 600, color: "#D19600" }}>
+                New shoppers save LKR{shopperSave.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Button Row */}
+        <div style={{
+          paddingTop: 10, borderTop: "0.5px solid rgba(0,0,0,0.06)", marginTop: "6px"
+        }}>
           <button
             onClick={(e) => {
               e.preventDefault();
@@ -213,16 +248,17 @@ export default function ProductCard({ product }: { product: Product }) {
             }}
             disabled={isOutOfStock}
             style={{
+              width: "100%",
               background: isOutOfStock ? "#e2e8f0" : "linear-gradient(135deg, #1C1C1E, #3C3C43)",
-              border: "none", borderRadius: 12, padding: "8px 14px",
+              border: "none", borderRadius: 10, padding: "8px 14px",
               fontSize: 11, fontWeight: 600,
               color: isOutOfStock ? "#94a3b8" : "#fff",
               cursor: isOutOfStock ? "not-allowed" : "pointer",
               transition: "background 0.2s, transform 0.1s",
-              boxShadow: isOutOfStock ? "none" : "0 2px 8px rgba(0,0,0,0.15)",
+              boxShadow: isOutOfStock ? "none" : "0 2px 8px rgba(0,0,0,0.12)",
             }}
             onMouseEnter={e => { if (!isOutOfStock) { (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, #007AFF, #5856D6)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 12px rgba(0,122,255,0.3)"; } }}
-            onMouseLeave={e => { if (!isOutOfStock) { (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, #1C1C1E, #3C3C43)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 8px rgba(0,0,0,0.15)"; } }}>
+            onMouseLeave={e => { if (!isOutOfStock) { (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, #1C1C1E, #3C3C43)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 8px rgba(0,0,0,0.12)"; } }}>
             {isOutOfStock ? "Sold Out" : "Add to Bag"}
           </button>
         </div>
