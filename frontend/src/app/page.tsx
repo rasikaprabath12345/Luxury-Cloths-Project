@@ -8,7 +8,7 @@ import ProductCard, { Product, ProductSkeleton } from "@/components/ProductCard"
 
 // ─── CUSTOM HERO IMAGE ──────────────────────────────────────────────────────
 // Change this to your own image (local path inside /public or full URL)
-const HERO_IMAGE = "/qw.jpg"; // e.g. "/images/hero-bg.jpg" or "https://example.com/my-image.jpg"
+// const HERO_IMAGE = "/qw.jpg"; // e.g. "/images/hero-bg.jpg" or "https://example.com/my-image.jpg"
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -317,10 +317,25 @@ export default function HomePage() {
   const [user, setUser] = useState<User | null>(null);
   const [activeCategory, setActiveCategory] = useState<"Women" | "Men" | "Kids">("Women");
   const [newArrivalsFilter, setNewArrivalsFilter] = useState<"All" | "Women" | "Men" | "Kids">("All");
+  const [heroImage, setHeroImage] = useState("/qw.jpg");
 
   const heroRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { setUser(null); }, []);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await axios.get("http://localhost:5226/api/Settings");
+        if (response.data && response.data.heroImage) {
+          setHeroImage(response.data.heroImage);
+        }
+      } catch (err) {
+        console.error("Could not fetch settings", err);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -404,7 +419,7 @@ export default function HomePage() {
         {/* ─── Hero Image (custom) ──────────────────────────────────────── */}
         <img
           className="hero-bg"
-          src={HERO_IMAGE}
+          src={heroImage}
           alt=""
           style={{
             position: "absolute", inset: 0, width: "100%", height: "100%",

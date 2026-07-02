@@ -223,4 +223,16 @@ export const stockAPI = {
   },
 };
 
+// SETTINGS ENDPOINTS
+export const settingsAPI = {
+  getSettings: async () => {
+    return apiClient.get('/Settings');
+  },
+
+  updateSettings: async (data: { heroImage: string }) => {
+    return apiClient.post('/Settings', data);
+  },
+};
+
 export default apiClient;
+
