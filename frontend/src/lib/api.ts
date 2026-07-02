@@ -83,7 +83,7 @@ export const authAPI = {
   logout: async () => {
     return apiClient.post('/Auth/logout');
   },
-  
+
   getAllUsers: async () => {
     return apiClient.get('/Auth/users');
   },

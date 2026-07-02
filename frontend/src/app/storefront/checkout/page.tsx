@@ -198,8 +198,8 @@ export default function CartPage() {
       }
     } catch (error: any) {
       console.error("Order failed:", error);
-      const errorMsg = typeof error.response?.data === "string" 
-        ? error.response.data 
+      const errorMsg = typeof error.response?.data === "string"
+        ? error.response.data
         : (error.response?.data?.message || "Order failed. Please try again.");
       alert(errorMsg);
     } finally {
