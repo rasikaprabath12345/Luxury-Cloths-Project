@@ -55,74 +55,89 @@ export default function ProfilePage() {
   };
 
   if (authLoading) {
-    return <div className="text-center">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="w-8 h-8 border-4 border-[#aa841c] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
   }
 
   return (
     <div className="max-w-2xl">
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_4px_25px_rgba(0,0,0,0.02)] overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-800 px-6 py-8 text-white">
-          <h1 className="text-3xl font-bold">Your Profile</h1>
-          <p className="text-blue-100 mt-2">Manage your personal information</p>
+        <div className="bg-[#1C1C1E] px-8 py-10 text-white relative overflow-hidden border-b border-gray-800">
+          <div className="absolute right-0 top-0 w-64 h-64 bg-[#aa841c]/5 rounded-full blur-3xl pointer-events-none"></div>
+          <span className="text-[10px] font-bold tracking-widest text-[#aa841c] uppercase block mb-1.5 font-montserrat">
+            Member Area
+          </span>
+          <h1 className="text-3xl font-bold font-playfair tracking-tight">Your Profile</h1>
+          <p className="text-gray-400 mt-1.5 text-xs font-montserrat font-light">
+            Manage and update your personal identity details
+          </p>
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-8">
           {error && (
-            <div className="rounded-md bg-red-50 p-4 mb-6">
-              <div className="text-sm font-medium text-red-800">{error}</div>
+            <div className="rounded-xl bg-red-50 border border-red-100 p-4 mb-6 flex items-center gap-2.5 font-montserrat text-sm text-red-800 font-medium">
+              <span className="text-red-500">⚠️</span>
+              <span>{error}</span>
             </div>
           )}
 
           {success && (
-            <div className="rounded-md bg-green-50 p-4 mb-6">
-              <div className="text-sm font-medium text-green-800">{success}</div>
+            <div className="rounded-xl bg-green-50 border border-green-100 p-4 mb-6 flex items-center gap-2.5 font-montserrat text-sm text-green-800 font-medium">
+              <span className="text-green-600">✨</span>
+              <span>{success}</span>
             </div>
           )}
 
-          {/* Profile Info */}
-          <div className="flex items-center justify-between mb-8">
+          {/* Profile Info Row */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-10 pb-8 border-b border-gray-50">
             <div className="flex items-center space-x-4">
               {user?.avatar ? (
-                <Image
-                  src={user.avatar}
-                  alt={user.fullName}
-                  width={80}
-                  height={80}
-                  className="w-20 h-20 rounded-full object-cover"
-                />
+                <div className="relative w-20 h-20 rounded-full overflow-hidden border border-[#aa841c]/25 p-0.5 shadow-sm flex-shrink-0">
+                  <Image
+                    src={user.avatar}
+                    alt={user.fullName || "User Avatar"}
+                    fill
+                    className="rounded-full object-cover"
+                  />
+                </div>
               ) : (
-                <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center">
-                  <span className="text-blue-600 font-bold text-2xl">
-                    {user?.fullName?.charAt(0) || "U"}
-                  </span>
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#aa841c] to-[#d4af37] text-white flex items-center justify-center font-bold text-2xl shadow-sm flex-shrink-0">
+                  {user?.fullName?.charAt(0).toUpperCase() || "U"}
                 </div>
               )}
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h2 className="text-2xl font-bold font-playfair text-[#1C1C1E]">
                   {user?.fullName}
                 </h2>
-                <p className="text-gray-600">{user?.email}</p>
-                <p className="text-sm text-gray-500 mt-1">
-                  Member since {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "Unknown"}
+                <p className="text-sm font-montserrat text-gray-500">{user?.email}</p>
+                <p className="text-[11px] font-montserrat text-gray-400 mt-1">
+                  Member since {user?.createdAt ? new Date(user.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long" }) : "Recently"}
                 </p>
               </div>
             </div>
 
             <button
-              onClick={() => setIsEditing(!isEditing)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
+              onClick={() => {
+                setIsEditing(!isEditing);
+                setError("");
+                setSuccess("");
+              }}
+              className="px-5 py-2.5 bg-[#1C1C1E] text-white rounded-xl hover:bg-[#aa841c] font-semibold text-xs tracking-wider uppercase font-montserrat transition-all duration-300 shadow-sm align-self-start sm:align-self-auto"
             >
-              {isEditing ? "Cancel" : "Edit"}
+              {isEditing ? "Cancel" : "Edit Profile"}
             </button>
           </div>
 
-          {/* Form */}
+          {/* Form / Details */}
           {isEditing ? (
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6 font-montserrat">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-bold tracking-wider text-gray-500 uppercase mb-2">
                   Full Name
                 </label>
                 <input
@@ -130,13 +145,14 @@ export default function ProfilePage() {
                   name="fullName"
                   value={formData.fullName}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#aa841c]/10 focus:border-[#aa841c] text-sm text-gray-900 transition-all duration-200"
+                  placeholder="John Doe"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-bold tracking-wider text-gray-500 uppercase mb-2">
                   Phone Number
                 </label>
                 <input
@@ -144,12 +160,13 @@ export default function ProfilePage() {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#aa841c]/10 focus:border-[#aa841c] text-sm text-gray-900 transition-all duration-200"
+                  placeholder="+94 77 123 4567"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-bold tracking-wider text-gray-500 uppercase mb-2">
                   Avatar URL
                 </label>
                 <input
@@ -157,7 +174,7 @@ export default function ProfilePage() {
                   name="avatar"
                   value={formData.avatar}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#aa841c]/10 focus:border-[#aa841c] text-sm text-gray-900 transition-all duration-200"
                   placeholder="https://example.com/avatar.jpg"
                 />
               </div>
@@ -165,35 +182,41 @@ export default function ProfilePage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium"
+                className="w-full py-3.5 px-4 bg-[#1C1C1E] text-white rounded-xl hover:bg-[#aa841c] disabled:opacity-50 font-bold text-xs tracking-wider uppercase transition-all duration-300 shadow-md shadow-[#1C1C1E]/5"
               >
-                {isLoading ? "Saving..." : "Save Changes"}
+                {isLoading ? "Saving Changes..." : "Save Changes"}
               </button>
             </form>
           ) : (
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-sm font-medium text-gray-700">Email</h3>
-                <p className="mt-1 text-gray-900">{user?.email}</p>
+            <div className="space-y-6 font-montserrat">
+              <div className="pb-4 border-b border-gray-50">
+                <h3 className="text-xs font-bold tracking-wider text-gray-400 uppercase">Email Address</h3>
+                <p className="mt-1.5 text-base text-[#1C1C1E] font-medium">{user?.email}</p>
               </div>
 
-              <div>
-                <h3 className="text-sm font-medium text-gray-700">Phone Number</h3>
-                <p className="mt-1 text-gray-900">{user?.phone || "Not provided"}</p>
+              <div className="pb-4 border-b border-gray-50">
+                <h3 className="text-xs font-bold tracking-wider text-gray-400 uppercase">Phone Number</h3>
+                <p className="mt-1.5 text-base text-[#1C1C1E] font-medium">{user?.phone || "Not provided"}</p>
               </div>
 
-              <div>
-                <h3 className="text-sm font-medium text-gray-700">Account Role</h3>
-                <p className="mt-1 text-gray-900 capitalize">{user?.role}</p>
+              <div className="pb-4">
+                <h3 className="text-xs font-bold tracking-wider text-gray-400 uppercase">Account Status</h3>
+                <div className="flex items-center gap-2 mt-1.5">
+                  <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                  <p className="text-sm text-[#aa841c] font-bold capitalize tracking-wide">{user?.role || "Customer"}</p>
+                </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* Footer */}
-        <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
-          <p className="text-sm text-gray-600">
-            Need to change your password? Go to <a href="/account/settings" className="text-blue-600 hover:underline">Settings</a>
+        {/* Footer info link */}
+        <div className="bg-[#F9F8F6]/50 px-8 py-5 border-t border-gray-100 font-montserrat">
+          <p className="text-xs text-gray-500 font-medium">
+            Need to update your security settings? Go to{" "}
+            <a href="/account/settings" className="text-[#aa841c] hover:underline font-bold transition-colors">
+              Account Settings
+            </a>
           </p>
         </div>
       </div>

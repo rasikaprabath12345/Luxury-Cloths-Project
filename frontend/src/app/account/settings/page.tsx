@@ -57,36 +57,52 @@ export default function SettingsPage() {
     }
   };
 
+  if (authLoading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="w-8 h-8 border-4 border-[#aa841c] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-2xl">
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_4px_25px_rgba(0,0,0,0.02)] overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-800 px-6 py-8 text-white">
-          <h1 className="text-3xl font-bold">Account Settings</h1>
-          <p className="text-blue-100 mt-2">Manage your account security</p>
+        <div className="bg-[#1C1C1E] px-8 py-10 text-white relative overflow-hidden border-b border-gray-800">
+          <div className="absolute right-0 top-0 w-64 h-64 bg-[#aa841c]/5 rounded-full blur-3xl pointer-events-none"></div>
+          <span className="text-[10px] font-bold tracking-widest text-[#aa841c] uppercase block mb-1.5 font-montserrat">
+            Security Area
+          </span>
+          <h1 className="text-3xl font-bold font-playfair tracking-tight">Account Settings</h1>
+          <p className="text-gray-400 mt-1.5 text-xs font-montserrat font-light">
+            Manage your account security configurations
+          </p>
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-8 font-montserrat">
           {/* Change Password Section */}
           <div>
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Change Password</h2>
+            <h2 className="text-xl font-bold font-playfair text-[#1C1C1E] mb-6">Change Password</h2>
 
             {error && (
-              <div className="rounded-md bg-red-50 p-4 mb-6">
-                <div className="text-sm font-medium text-red-800">{error}</div>
+              <div className="rounded-xl bg-red-50 border border-red-100 p-4 mb-6 flex items-center gap-2.5 text-sm text-red-800 font-medium">
+                <span className="text-red-500">⚠️</span>
+                <span>{error}</span>
               </div>
             )}
 
             {success && (
-              <div className="rounded-md bg-green-50 p-4 mb-6">
-                <div className="text-sm font-medium text-green-800">{success}</div>
+              <div className="rounded-xl bg-green-50 border border-green-100 p-4 mb-6 flex items-center gap-2.5 text-sm text-green-800 font-medium">
+                <span className="text-green-600">✨</span>
+                <span>{success}</span>
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-bold tracking-wider text-gray-500 uppercase mb-2">
                   Current Password
                 </label>
                 <input
@@ -94,13 +110,13 @@ export default function SettingsPage() {
                   name="currentPassword"
                   value={formData.currentPassword}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#aa841c]/10 focus:border-[#aa841c] text-sm text-gray-900 transition-all duration-200"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-bold tracking-wider text-gray-500 uppercase mb-2">
                   New Password
                 </label>
                 <input
@@ -108,17 +124,17 @@ export default function SettingsPage() {
                   name="newPassword"
                   value={formData.newPassword}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#aa841c]/10 focus:border-[#aa841c] text-sm text-gray-900 transition-all duration-200"
                   required
                   minLength={6}
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-[11px] text-gray-400 mt-1.5 font-light">
                   Password must be at least 6 characters long
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-bold tracking-wider text-gray-500 uppercase mb-2">
                   Confirm New Password
                 </label>
                 <input
@@ -126,7 +142,7 @@ export default function SettingsPage() {
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#aa841c]/10 focus:border-[#aa841c] text-sm text-gray-900 transition-all duration-200"
                   required
                 />
               </div>
@@ -134,7 +150,7 @@ export default function SettingsPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium"
+                className="w-full py-3.5 px-4 bg-[#1C1C1E] text-white rounded-xl hover:bg-[#aa841c] disabled:opacity-50 font-bold text-xs tracking-wider uppercase transition-all duration-300 shadow-md shadow-[#1C1C1E]/5"
               >
                 {isLoading ? "Updating..." : "Change Password"}
               </button>
@@ -142,26 +158,26 @@ export default function SettingsPage() {
           </div>
 
           {/* Security Tips */}
-          <div className="mt-12 pt-8 border-t border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Security Tips
+          <div className="mt-12 pt-8 border-t border-gray-100">
+            <h3 className="text-base font-bold font-playfair text-[#1C1C1E] mb-4">
+              Security Best Practices
             </h3>
-            <ul className="space-y-2 text-sm text-gray-600">
+            <ul className="space-y-3 text-xs text-gray-500 font-medium">
               <li className="flex items-start">
-                <span className="text-blue-600 mr-3">✓</span>
-                Use a strong password with a mix of letters, numbers, and symbols
+                <span className="text-[#aa841c] font-bold mr-3">✓</span>
+                Use a strong password combining letters, numbers, and symbols.
               </li>
               <li className="flex items-start">
-                <span className="text-blue-600 mr-3">✓</span>
-                Don't use the same password across multiple accounts
+                <span className="text-[#aa841c] font-bold mr-3">✓</span>
+                Avoid reusing the same password across multiple online accounts.
               </li>
               <li className="flex items-start">
-                <span className="text-blue-600 mr-3">✓</span>
-                Change your password periodically (at least every 3 months)
+                <span className="text-[#aa841c] font-bold mr-3">✓</span>
+                Refresh your credentials periodically to keep your account safe.
               </li>
               <li className="flex items-start">
-                <span className="text-blue-600 mr-3">✓</span>
-                Never share your password with anyone
+                <span className="text-[#aa841c] font-bold mr-3">✓</span>
+                Never share or store your plain credentials on unverified platforms.
               </li>
             </ul>
           </div>

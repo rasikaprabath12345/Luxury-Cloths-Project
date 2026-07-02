@@ -493,7 +493,7 @@ export default function HomePage() {
               onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")}>
               Shop Collection
             </Link>
-            <Link href="/storefront/new-arrivals"
+            <Link href="/storefront/shop?filter=new"
               style={{
                 background: "rgba(255,255,255,0.12)", color: "#fff",
                 fontWeight: 600, fontSize: 13, padding: "10px 24px",
