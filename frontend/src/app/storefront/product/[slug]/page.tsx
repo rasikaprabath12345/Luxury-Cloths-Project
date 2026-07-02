@@ -139,212 +139,224 @@ export default function ProductDetailPage() {
     : 0;
 
   return (
-    <main className="min-h-screen bg-white pt-8 pb-16">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+    <main style={{ minHeight: "100vh", background: "#F9F8F6", paddingTop: 8, paddingBottom: 40 }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 16px" }}>
+
         {/* Breadcrumb */}
         <nav style={{
-          fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-          fontSize: 12,
+          fontFamily: "var(--font-montserrat), 'Montserrat', sans-serif",
+          fontSize: 11,
           color: "#8E8E93",
           display: "flex",
-          gap: 6,
+          gap: 8,
           alignItems: "center",
-          marginBottom: 24,
+          marginBottom: 16,
+          letterSpacing: "0.04em",
+          textTransform: "uppercase",
           flexWrap: "wrap",
         }}>
-          <Link href="/" style={{ textDecoration: "none", color: "#8E8E93" }}>Home</Link>
-          <span>/</span>
-          <Link href="/storefront/shop" style={{ textDecoration: "none", color: "#8E8E93" }}>Women's Wear</Link>
-          <span>/</span>
-          <span style={{ color: "#8E8E93" }}>{product.category}</span>
-          <span>/</span>
-          <span style={{ color: "#1C1C1E", fontWeight: 500 }}>{product.name}</span>
+          <Link href="/" style={{ textDecoration: "none", color: "#8E8E93", transition: "color 0.2s" }}
+            onMouseEnter={e => (e.currentTarget.style.color = "#aa841c")}
+            onMouseLeave={e => (e.currentTarget.style.color = "#8E8E93")}>Home</Link>
+          <span style={{ color: "#C7C7CC" }}>â€º</span>
+          <Link href="/storefront/shop" style={{ textDecoration: "none", color: "#8E8E93", transition: "color 0.2s" }}
+            onMouseEnter={e => (e.currentTarget.style.color = "#aa841c")}
+            onMouseLeave={e => (e.currentTarget.style.color = "#8E8E93")}>{product.category}</Link>
+          <span style={{ color: "#C7C7CC" }}>â€º</span>
+          <span style={{ color: "#1C1C1E", fontWeight: 600 }}>{product.name}</span>
         </nav>
 
+        {/* Main Product Grid */}
         <div style={{
           display: "grid",
-          gridTemplateColumns: "1.1fr 1fr",
-          gap: 40,
+          gridTemplateColumns: "0.5fr 1fr",
+          gap: 20,
           alignItems: "start",
-          fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
         }} className="product-detail-grid">
-          
-          {/* Left Column: Image Gallery */}
-          <div style={{ display: "flex", gap: 16 }} className="product-images-gallery">
-            {/* Main Image Box */}
-            <div style={{
-              flex: 1,
-              position: "relative",
-              aspectRatio: "3/4",
-              background: "#F2F2F7",
-              borderRadius: 4,
-              overflow: "hidden",
-            }}>
-              <img
-                src={product.images[currentImageIndex]}
-                alt={product.name}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-              {discount > 0 && (
-                <span style={{
-                  position: "absolute",
-                  top: 12,
-                  left: 12,
-                  background: "#FF3B30",
-                  color: "#fff",
-                  fontSize: 11,
-                  fontWeight: 700,
-                  padding: "3px 8px",
-                  borderRadius: 4,
-                }}>-{discount}% OFF</span>
-              )}
-            </div>
 
-            {/* Thumbnails Stack (stacked vertically on the right of the main image) */}
+          {/* â”€â”€ LEFT: Image Gallery â”€â”€ */}
+          <div style={{ display: "flex", gap: 12 }} className="product-images-gallery">
+
+            {/* Thumbnails (left side vertical stack) */}
             {product.images.length > 1 && (
-              <div style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 10,
-                width: 80,
-                flexShrink: 0,
-              }} className="thumbnails-column">
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, width: 56, flexShrink: 0 }} className="thumbnails-column">
                 {product.images.map((image, idx) => (
                   <button
                     key={idx}
                     onClick={() => setCurrentImageIndex(idx)}
                     style={{
-                      width: 80,
-                      height: 106,
+                      width: 56,
+                      height: 100,
                       padding: 0,
-                      border: currentImageIndex === idx ? "2px solid #aa841c" : "1px solid #E2E8F0",
-                      background: "none",
-                      borderRadius: 4,
+                      border: currentImageIndex === idx ? "2px solid #aa841c" : "1.5px solid rgba(0,0,0,0.08)",
+                      borderRadius: 10,
                       overflow: "hidden",
                       cursor: "pointer",
-                      transition: "border 0.2s ease",
+                      background: "rgba(255,255,255,0.72)",
+                      backdropFilter: "blur(12px)",
+                      transition: "border 0.2s ease, box-shadow 0.2s ease",
+                      boxShadow: currentImageIndex === idx ? "0 0 0 3px rgba(170,132,28,0.15)" : "0 2px 8px rgba(0,0,0,0.06)",
                     }}
                   >
-                    <img
-                      src={image}
-                      alt={`Thumbnail ${idx + 1}`}
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                    />
+                    <img src={image} alt={`View ${idx + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   </button>
                 ))}
               </div>
             )}
+
+            {/* Main Image */}
+            <div style={{
+              flex: 1,
+              position: "relative",
+              aspectRatio: "3/4",
+              borderRadius: 20,
+              overflow: "hidden",
+              background: "rgba(255,255,255,0.72)",
+              backdropFilter: "blur(28px) saturate(180%)",
+              border: "1px solid rgba(255,255,255,0.85)",
+              boxShadow: "0 8px 48px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9)",
+            }}>
+              <img
+                src={product.images[currentImageIndex]}
+                alt={product.name}
+                style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease" }}
+                onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.03)")}
+                onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")}
+              />
+              {discount > 0 && (
+                <span style={{
+                  position: "absolute", top: 16, left: 16,
+                  background: "linear-gradient(135deg, #FF3B30, #FF2D55)",
+                  color: "#fff",
+                  fontSize: 11, fontWeight: 800,
+                  padding: "5px 12px",
+                  borderRadius: 100,
+                  fontFamily: "var(--font-montserrat), 'Montserrat', sans-serif",
+                  letterSpacing: "0.05em",
+                  boxShadow: "0 4px 12px rgba(255,59,48,0.35)",
+                }}>-{discount}% OFF</span>
+              )}
+            </div>
           </div>
 
-          {/* Right Column: Product Info & Actions */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 20, textAlign: "left" }}>
-            {/* Stock Status */}
+          {/* â”€â”€ RIGHT: Product Info â”€â”€ */}
+          <div style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 0,
+            fontFamily: "var(--font-montserrat), 'Montserrat', sans-serif",
+          }}>
+            {/* Category pill */}
             <span style={{
-              fontSize: 14,
-              fontWeight: 600,
-              color: product.stock > 0 ? "#4CD964" : "#FF3B30",
-            }}>
-              {product.stock > 0 ? "In Stock" : "Out of Stock"}
-            </span>
+              display: "inline-block",
+              background: "rgba(170,132,28,0.10)",
+              color: "#aa841c",
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              padding: "4px 12px",
+              borderRadius: 100,
+              marginBottom: 10,
+              width: "fit-content",
+            }}>{product.category}</span>
 
             {/* Title */}
             <h1 style={{
-              fontSize: 28,
-              fontWeight: 700,
+              fontFamily: "var(--font-playfair), 'Playfair Display', serif",
+              fontSize: 18,
+              fontWeight: 800,
               color: "#1C1C1E",
-              margin: 0,
-              lineHeight: 1.2,
+              margin: "0 0 4px",
+              lineHeight: 1.25,
             }}>{product.name}</h1>
 
-            {/* Product Reference */}
-            <span style={{
-              fontSize: 12,
-              color: "#8E8E93",
-              marginTop: -8,
-            }}>
-              Product Ref. 0114173001{String(product.id).padStart(3, "0")} -{String(product.id).padStart(2, "0")}
-            </span>
-
-            {/* Price */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, margin: "6px 0" }}>
+            {/* Stock badge */}
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
               <span style={{
-                fontSize: 26,
-                fontWeight: 800,
-                color: "#E53E3E", // Red price color matching the screenshot
+                width: 7, height: 7, borderRadius: "50%",
+                background: product.stock > 0 ? "#30D158" : "#FF3B30",
+                display: "inline-block",
+                boxShadow: product.stock > 0 ? "0 0 0 2px rgba(48,209,88,0.2)" : "0 0 0 2px rgba(255,59,48,0.2)",
+              }} />
+              <span style={{
+                fontSize: 12, fontWeight: 600,
+                color: product.stock > 0 ? "#30D158" : "#FF3B30",
+                letterSpacing: "0.04em",
               }}>
-                Rs. {product.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {product.stock > 0 ? `In Stock · ${product.stock} left` : "Out of Stock"}
               </span>
-              
-              {/* Installments calculations */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 4 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#3C3C43" }}>
-                  <span>or pay in</span>
-                  <span style={{ fontWeight: 700 }}>3 X Rs. {(product.price / 3).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                  <span>with</span>
-                  <span style={{
-                    background: "linear-gradient(135deg, #00F0FF, #7000FF)",
-                    color: "#fff",
-                    fontSize: 9,
-                    fontWeight: 800,
-                    padding: "2px 6px",
-                    borderRadius: 3,
-                    letterSpacing: "0.05em",
-                    lineHeight: 1,
-                  }}>KOKO</span>
-                </div>
+            </div>
 
-                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#3C3C43" }}>
+            {/* Price block */}
+            <div style={{
+              background: "rgba(255,255,255,0.72)",
+              backdropFilter: "blur(20px)",
+              border: "1px solid rgba(255,255,255,0.85)",
+              borderRadius: 16,
+              padding: "10px 14px",
+              marginBottom: 12,
+              boxShadow: "0 2px 16px rgba(0,0,0,0.05)",
+            }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 10 }}>
+                <span style={{ fontSize: 18, fontWeight: 900, color: "#FF2D55", fontFamily: "var(--font-montserrat)" }}>
+                  Rs. {product.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+                {product.originalPrice && (
+                  <span style={{ fontSize: 15, color: "#C7C7CC", textDecoration: "line-through" }}>
+                    Rs. {product.originalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                )}
+              </div>
+
+              {/* Installments */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#636366" }}>
                   <span>or pay in</span>
-                  <span style={{ fontWeight: 700 }}>3 X Rs. {(product.price / 3).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span style={{ fontWeight: 700, color: "#1C1C1E" }}>3 Ã— Rs. {(product.price / 3).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   <span>with</span>
-                  <span style={{
-                    background: "#1C1C1E",
-                    color: "#fff",
-                    fontSize: 9,
-                    fontWeight: 800,
-                    padding: "2px 6px",
-                    borderRadius: 3,
-                    letterSpacing: "0.05em",
-                    lineHeight: 1,
-                  }}>MINTPAY</span>
+                  <span style={{ background: "linear-gradient(135deg, #00F0FF, #7000FF)", color: "#fff", fontSize: 8, fontWeight: 900, padding: "2px 7px", borderRadius: 4, letterSpacing: "0.08em" }}>KOKO</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#636366" }}>
+                  <span>or pay in</span>
+                  <span style={{ fontWeight: 700, color: "#1C1C1E" }}>3 Ã— Rs. {(product.price / 3).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span>with</span>
+                  <span style={{ background: "#1C1C1E", color: "#fff", fontSize: 8, fontWeight: 900, padding: "2px 7px", borderRadius: 4, letterSpacing: "0.08em" }}>MINTPAY</span>
                 </div>
               </div>
             </div>
 
+            {/* Divider */}
+            <div style={{ height: "0.5px", background: "rgba(0,0,0,0.07)", marginBottom: 20 }} />
+
             {/* Size Selector */}
             {product.sizes && product.sizes.length > 0 && (
-              <div style={{ borderTop: "0.5px solid rgba(0,0,0,0.08)", paddingTop: 16 }}>
+              <div style={{ marginBottom: 20 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: "#1C1C1E" }}>Size</span>
-                  <button style={{
-                    background: "none",
-                    border: "none",
-                    fontSize: 12,
-                    color: "#aa841c",
-                    textDecoration: "underline",
-                    cursor: "pointer",
-                    padding: 0,
-                  }}>Size Guide &gt;</button>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#1C1C1E", letterSpacing: "0.08em", textTransform: "uppercase" }}>Size</span>
+                  <button style={{ background: "none", border: "none", fontSize: 11, color: "#aa841c", cursor: "pointer", fontWeight: 600, letterSpacing: "0.04em", padding: 0, fontFamily: "var(--font-montserrat)" }}>
+                    Size Guide â€º
+                  </button>
                 </div>
-                <div style={{ display: "flex", gap: 8 }}>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {product.sizes.map((size) => (
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
                       style={{
-                        width: 44,
-                        height: 38,
-                        border: selectedSize === size ? "2px solid #1C1C1E" : "1px solid #E2E8F0",
-                        background: "#fff",
-                        color: "#1C1C1E",
-                        fontSize: 13,
-                        fontWeight: 600,
-                        borderRadius: 4,
+                        minWidth: 46,
+                        height: 40,
+                        paddingInline: 10,
+                        border: selectedSize === size ? "2px solid #aa841c" : "1.5px solid rgba(0,0,0,0.12)",
+                        background: selectedSize === size ? "rgba(170,132,28,0.08)" : "rgba(255,255,255,0.72)",
+                        color: selectedSize === size ? "#aa841c" : "#1C1C1E",
+                        fontSize: 12, fontWeight: 700,
+                        borderRadius: 10,
                         cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        transition: "all 0.15s ease",
+                        backdropFilter: "blur(12px)",
+                        transition: "all 0.18s ease",
+                        boxShadow: selectedSize === size ? "0 0 0 3px rgba(170,132,28,0.15)" : "0 1px 4px rgba(0,0,0,0.06)",
+                        fontFamily: "var(--font-montserrat)",
                       }}
                     >
                       {size}
@@ -354,93 +366,38 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            {/* QTY selector & stock count */}
-            <div style={{ display: "flex", alignItems: "center", gap: 16, borderTop: "0.5px solid rgba(0,0,0,0.08)", paddingTop: 16 }}>
-              <span style={{ fontSize: 14, fontWeight: 700, color: "#1C1C1E" }}>QTY</span>
-              
-              {/* Customized QTY Input Box with stacked buttons on right */}
+            {/* QTY + Stock */}
+            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 24 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#1C1C1E" }}>Qty</span>
+
               <div style={{
                 display: "flex",
                 alignItems: "center",
-                border: "1px solid #1C1C1E",
-                borderRadius: 4,
-                height: 38,
+                border: "1.5px solid rgba(0,0,0,0.12)",
+                borderRadius: 10,
                 overflow: "hidden",
+                background: "rgba(255,255,255,0.72)",
+                backdropFilter: "blur(12px)",
+                height: 40,
               }}>
-                <input
-                  type="number"
-                  value={quantity}
-                  onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                  style={{
-                    width: 44,
-                    height: "100%",
-                    border: "none",
-                    outline: "none",
-                    textAlign: "center",
-                    fontSize: 14,
-                    fontWeight: 600,
-                    color: "#1C1C1E",
-                  }}
-                />
-                <div style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  width: 20,
-                  height: "100%",
-                  borderLeft: "1px solid #1C1C1E",
-                }}>
-                  <button
-                    onClick={() => setQuantity(quantity + 1)}
-                    style={{
-                      flex: 1,
-                      border: "none",
-                      background: "#fff",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 10,
-                      fontWeight: 700,
-                      borderBottom: "0.5px solid #1C1C1E",
-                      padding: 0,
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.background = "#F2F2F7"}
-                    onMouseLeave={e => e.currentTarget.style.background = "#fff"}
-                  >
-                    +
-                  </button>
-                  <button
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    disabled={quantity <= 1}
-                    style={{
-                      flex: 1,
-                      border: "none",
-                      background: "#fff",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 10,
-                      fontWeight: 700,
-                      padding: 0,
-                      opacity: quantity <= 1 ? 0.4 : 1,
-                    }}
-                    onMouseEnter={e => { if (quantity > 1) e.currentTarget.style.background = "#F2F2F7"; }}
-                    onMouseLeave={e => e.currentTarget.style.background = "#fff"}
-                  >
-                    -
-                  </button>
-                </div>
+                <button
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  disabled={quantity <= 1}
+                  style={{ width: 36, height: "100%", border: "none", background: "none", cursor: "pointer", fontSize: 16, color: quantity <= 1 ? "#C7C7CC" : "#1C1C1E", fontWeight: 300 }}
+                >âˆ’</button>
+                <span style={{ minWidth: 32, textAlign: "center", fontSize: 14, fontWeight: 700, color: "#1C1C1E", fontFamily: "var(--font-montserrat)" }}>{quantity}</span>
+                <button
+                  onClick={() => setQuantity(quantity + 1)}
+                  style={{ width: 36, height: "100%", border: "none", background: "none", cursor: "pointer", fontSize: 16, color: "#1C1C1E", fontWeight: 300 }}
+                >+</button>
               </div>
 
-              {/* Stock Count */}
-              <span style={{ fontSize: 13, fontWeight: 600, color: "#4CD964" }}>
-                {product.stock} Stock
-              </span>
+              <span style={{ fontSize: 12, color: "#30D158", fontWeight: 600 }}>{product.stock} in stock</span>
             </div>
 
-            {/* Action Buttons Row */}
-            <div style={{ display: "flex", gap: 12, marginTop: 16 }}>
+            {/* CTA Buttons */}
+            <div style={{ display: "flex", gap: 12, marginBottom: 24 }}>
+              {/* Add to Cart */}
               <button
                 disabled={product.stock === 0}
                 onClick={() => {
@@ -451,170 +408,166 @@ export default function ProductDetailPage() {
                     imageUrl: product.images?.[0] || "",
                     description: product.description,
                   }, quantity, selectedSize, selectedColor);
-                  alert(`${quantity} × ${product.name} (${selectedSize}) added to cart! 🛒`);
+                  alert(`${quantity} Ã— ${product.name} added to cart! ðŸ›’`);
                 }}
                 style={{
-                  flex: 1,
-                  height: 48,
-                  background: "#FF3B30", // Red background matching cart button
-                  color: "#fff",
+                  flex: 1, height: 50,
+                  background: product.stock === 0 ? "#E5E5EA" : "linear-gradient(135deg, #1C1C1E 0%, #3C3C43 100%)",
+                  color: product.stock === 0 ? "#8E8E93" : "#fff",
                   border: "none",
-                  borderRadius: 4,
-                  fontSize: 14,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                  transition: "background 0.2s ease",
-                  opacity: product.stock === 0 ? 0.5 : 1,
+                  borderRadius: 14,
+                  fontSize: 13, fontWeight: 800,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  cursor: product.stock === 0 ? "not-allowed" : "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                  transition: "all 0.2s ease",
+                  fontFamily: "var(--font-montserrat)",
+                  boxShadow: product.stock === 0 ? "none" : "0 4px 20px rgba(28,28,30,0.3)",
                 }}
-                onMouseEnter={e => { if (product.stock > 0) e.currentTarget.style.background = "#E03126"; }}
-                onMouseLeave={e => { if (product.stock > 0) e.currentTarget.style.background = "#FF3B30"; }}
+                onMouseEnter={e => { if (product.stock > 0) { e.currentTarget.style.background = "linear-gradient(135deg, #007AFF, #5856D6)"; e.currentTarget.style.boxShadow = "0 6px 24px rgba(0,122,255,0.35)"; }}}
+                onMouseLeave={e => { if (product.stock > 0) { e.currentTarget.style.background = "linear-gradient(135deg, #1C1C1E, #3C3C43)"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(28,28,30,0.3)"; }}}
               >
-                <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                   <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
                   <line x1="3" y1="6" x2="21" y2="6" />
                   <path d="M16 10a4 4 0 0 1-8 0" />
                 </svg>
-                ADD TO CART
+                {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
               </button>
 
+              {/* Wishlist */}
               <button
                 style={{
-                  flex: 1,
-                  height: 48,
-                  background: "#fff",
-                  color: "#1C1C1E",
-                  border: "1px solid #D1D1D6",
-                  borderRadius: 4,
-                  fontSize: 14,
-                  fontWeight: 700,
+                  width: 50, height: 50,
+                  background: "rgba(255,255,255,0.80)",
+                  backdropFilter: "blur(20px)",
+                  border: "1.5px solid rgba(255,45,85,0.25)",
+                  borderRadius: 14,
                   cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
+                  display: "flex", alignItems: "center", justifyContent: "center",
                   transition: "all 0.2s ease",
+                  boxShadow: "0 2px 12px rgba(255,45,85,0.12)",
+                  flexShrink: 0,
                 }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = "#F2F2F7";
-                  e.currentTarget.style.borderColor = "#8E8E93";
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = "#fff";
-                  e.currentTarget.style.borderColor = "#D1D1D6";
-                }}
+                onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,45,85,0.08)"; e.currentTarget.style.borderColor = "#FF2D55"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.80)"; e.currentTarget.style.borderColor = "rgba(255,45,85,0.25)"; }}
               >
-                <svg width={16} height={16} viewBox="0 0 24 24" fill="#FF3B30" stroke="#FF3B30" strokeWidth={2.5}>
+                <svg width={18} height={18} viewBox="0 0 24 24" fill="#FF2D55" stroke="#FF2D55" strokeWidth={1.5}>
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                 </svg>
-                WISHLIST
               </button>
             </div>
 
-            {/* Description / Additional Info */}
-            <div style={{ borderTop: "0.5px solid rgba(0,0,0,0.08)", paddingTop: 20, marginTop: 10 }}>
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: "#1C1C1E", margin: "0 0 8px 0" }}>Description</h3>
-              <p style={{ fontSize: 14, color: "#3C3C43", lineHeight: 1.5, margin: 0 }}>{product.description}</p>
+            {/* Description */}
+            <div style={{
+              background: "rgba(255,255,255,0.72)",
+              backdropFilter: "blur(20px)",
+              border: "1px solid rgba(255,255,255,0.85)",
+              borderRadius: 16,
+              padding: "18px 20px",
+              boxShadow: "0 2px 16px rgba(0,0,0,0.04)",
+            }}>
+              <h3 style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.10em", textTransform: "uppercase", color: "#8E8E93", margin: "0 0 10px", fontFamily: "var(--font-montserrat)" }}>Description</h3>
+              <p style={{ fontSize: 14, color: "#3C3C43", lineHeight: 1.65, margin: 0, fontFamily: "var(--font-montserrat)" }}>{product.description}</p>
+
+              {product.material && (
+                <div style={{ marginTop: 14, paddingTop: 14, borderTop: "0.5px solid rgba(0,0,0,0.06)" }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.10em", textTransform: "uppercase", color: "#8E8E93" }}>Material Â· </span>
+                  <span style={{ fontSize: 13, color: "#1C1C1E", fontWeight: 500 }}>{product.material}</span>
+                </div>
+              )}
+
+              {product.care && product.care.length > 0 && (
+                <div style={{ marginTop: 10, paddingTop: 10, borderTop: "0.5px solid rgba(0,0,0,0.06)" }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.10em", textTransform: "uppercase", color: "#8E8E93", display: "block", marginBottom: 8 }}>Care</span>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    {product.care.map((c, i) => (
+                      <span key={i} style={{ fontSize: 11, background: "rgba(0,0,0,0.04)", padding: "3px 10px", borderRadius: 100, color: "#636366", fontWeight: 500 }}>{c}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* CSS styles to make grid responsive */}
+        {/* Responsive styles */}
         <style>{`
           @media (max-width: 768px) {
-            .product-detail-grid {
-              grid-template-columns: 1fr !important;
-              gap: 24px !important;
-            }
-            .product-images-gallery {
-              flex-direction: column-reverse !important;
-            }
-            .thumbnails-column {
-              flex-direction: row !important;
-              width: 100% !important;
-              overflow-x: auto;
-            }
-            .thumbnails-column button {
-              width: 60px !important;
-              height: 80px !important;
-            }
+            .product-detail-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
+            .product-images-gallery { flex-direction: column-reverse !important; }
+            .thumbnails-column { flex-direction: row !important; width: 100% !important; overflow-x: auto; }
+            .thumbnails-column button { width: 60px !important; height: 80px !important; }
           }
         `}</style>
 
-        {/* Related Products Section */}
-        <div style={{ marginTop: 64, borderTop: "1px solid #F2F2F7", paddingTop: 48 }}>
-          <h2 style={{ fontSize: 22, fontWeight: 700, color: "#1C1C1E", marginBottom: 24, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>You May Also Like</h2>
-          {relatedProducts.length === 0 ? (
-            <p style={{ color: "#8E8E93", fontSize: 14 }}>No related products found.</p>
-          ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }} className="related-grid">
+        {/* â”€â”€ YOU MAY ALSO LIKE â”€â”€ */}
+        {relatedProducts.length > 0 && (
+          <div style={{ marginTop: 72, paddingTop: 48, borderTop: "0.5px solid rgba(0,0,0,0.08)" }}>
+            <h2 style={{
+              fontFamily: "var(--font-playfair), 'Playfair Display', serif",
+              fontSize: 20, fontWeight: 800, color: "#1C1C1E",
+              marginBottom: 6,
+            }}>You May Also Like</h2>
+            <p style={{ fontSize: 12, color: "#8E8E93", marginBottom: 28, fontFamily: "var(--font-montserrat)", letterSpacing: "0.04em" }}>Curated picks from our collection</p>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20 }} className="related-grid">
               {relatedProducts.map((rp: any) => {
-                const rpImage = rp.images?.[0]?.imageUrl || rp.imageUrl || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop";
+                const rpImage = rp.images?.[0]?.imageUrl || rp.imageUrl || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600";
                 const rpPrice = rp.price;
                 const rpDiscounted = rp.discount > 0 ? rpPrice - (rpPrice * rp.discount / 100) : rpPrice;
-                const rpSlug = rp.slug;
                 return (
-                  <Link key={rp.id} href={`/storefront/product/${rpSlug}`} style={{ textDecoration: "none" }}>
+                  <Link key={rp.id} href={`/storefront/product/${rp.slug}`} style={{ textDecoration: "none" }}>
                     <div
                       style={{
-                        background: "#fff",
-                        borderRadius: 8,
+                        background: "rgba(255,255,255,0.72)",
+                        backdropFilter: "blur(28px) saturate(180%)",
+                        border: "1px solid rgba(255,255,255,0.85)",
+                        borderRadius: 20,
                         overflow: "hidden",
-                        border: "1px solid #F2F2F7",
-                        transition: "box-shadow 0.2s ease, transform 0.2s ease",
+                        boxShadow: "0 2px 20px rgba(0,0,0,0.06)",
+                        transition: "transform 0.3s ease, box-shadow 0.3s ease",
                         cursor: "pointer",
                       }}
-                      onMouseEnter={e => {
-                        (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 24px rgba(0,0,0,0.1)";
-                        (e.currentTarget as HTMLElement).style.transform = "translateY(-3px)";
-                      }}
-                      onMouseLeave={e => {
-                        (e.currentTarget as HTMLElement).style.boxShadow = "none";
-                        (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
-                      }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-6px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 16px 40px rgba(0,0,0,0.12)"; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 20px rgba(0,0,0,0.06)"; }}
                     >
-                      {/* Image */}
                       <div style={{ width: "100%", aspectRatio: "3/4", overflow: "hidden", background: "#F2F2F7" }}>
                         <img
                           src={rpImage}
                           alt={rp.name}
-                          style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.4s ease" }}
+                          style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease" }}
                           onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.06)")}
                           onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")}
                           onError={e => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600"; }}
                         />
                       </div>
-                      {/* Info */}
-                      <div style={{ padding: "12px 14px" }}>
-                        <p style={{ fontSize: 13, fontWeight: 600, color: "#1C1C1E", margin: "0 0 6px", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>{rp.name}</p>
+                      <div style={{ padding: "14px 16px" }}>
+                        <p style={{ fontSize: 13, fontWeight: 700, color: "#1C1C1E", margin: "0 0 6px", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", fontFamily: "var(--font-montserrat)" }}>{rp.name}</p>
+                        {rp.category?.name && <p style={{ fontSize: 10, color: "#8E8E93", margin: "0 0 8px", letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: "var(--font-montserrat)" }}>{rp.category.name}</p>}
                         <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                          <span style={{ fontSize: 15, fontWeight: 800, color: "#FF2D55" }}>
+                          <span style={{ fontSize: 15, fontWeight: 800, color: "#FF2D55", fontFamily: "var(--font-montserrat)" }}>
                             Rs. {rpDiscounted.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
                           {rp.discount > 0 && (
-                            <span style={{ fontSize: 11, color: "#8E8E93", textDecoration: "line-through" }}>
+                            <span style={{ fontSize: 11, color: "#C7C7CC", textDecoration: "line-through" }}>
                               Rs. {rpPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                           )}
                         </div>
-                        {rp.category?.name && (
-                          <p style={{ fontSize: 11, color: "#8E8E93", margin: "4px 0 0" }}>{rp.category.name}</p>
-                        )}
                       </div>
                     </div>
                   </Link>
                 );
               })}
             </div>
-          )}
-          <style>{`
-            @media (max-width: 768px) { .related-grid { grid-template-columns: repeat(2, 1fr) !important; } }
-            @media (max-width: 480px) { .related-grid { grid-template-columns: 1fr !important; } }
-          `}</style>
-        </div>
+            <style>{`
+              @media (max-width: 768px) { .related-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+              @media (max-width: 480px) { .related-grid { grid-template-columns: 1fr !important; } }
+            `}</style>
+          </div>
+        )}
       </div>
     </main>
   );
