@@ -64,6 +64,14 @@ export const authAPI = {
     return apiClient.post('/Auth/reset-password', data);
   },
 
+  verifyEmail: async (data: { email: string; code: string }) => {
+    return apiClient.post('/Auth/verify-email', data);
+  },
+
+  resendVerification: async (data: { email: string }) => {
+    return apiClient.post('/Auth/resend-verification', data);
+  },
+
   getProfile: async () => {
     return apiClient.get('/Auth/profile');
   },

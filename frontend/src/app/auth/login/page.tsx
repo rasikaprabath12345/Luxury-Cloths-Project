@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
@@ -8,6 +8,15 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  // OTP Verification States
+  const [showOtp, setShowOtp] = useState(false);
+  const [otpEmail, setOtpEmail] = useState("");
+  const [otpCode, setOtpCode] = useState(["", "", "", "", "", ""]);
+  const [otpError, setOtpError] = useState("");
+  const [otpSuccess, setOtpSuccess] = useState("");
+  const [timer, setTimer] = useState(60);
+  const [canResend, setCanResend] = useState(false);
+
   // Field errors
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
@@ -15,17 +24,33 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const { login, googleLogin } = useAuth();
+  const { login, googleLogin, verifyEmail, resendVerification } = useAuth();
   const router = useRouter();
 
+  // Input refs for OTP focus shifts
+  const otpRefs = useRef<HTMLInputElement[]>([]);
+
+  // OTP countdown timer
+  useEffect(() => {
+    let interval: any;
+    if (showOtp && timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    } else if (timer === 0) {
+      setCanResend(true);
+    }
+    return () => clearInterval(interval);
+  }, [showOtp, timer]);
+
   const validateEmail = (val: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
     if (!val.trim()) {
       setEmailError("Email address is required.");
       return false;
     }
     if (!emailRegex.test(val.trim())) {
-      setEmailError("Please enter a valid email address.");
+      setEmailError("Please enter a realistic and valid email address.");
       return false;
     }
     setEmailError("");
@@ -64,7 +89,79 @@ export default function LoginPage() {
       await login(email, password);
       router.push("/");
     } catch (err: any) {
-      setError(err.message || "Login failed");
+      if (err.message === "AccountNotVerified") {
+        setOtpEmail(email);
+        setShowOtp(true);
+        setTimer(60);
+        setCanResend(false);
+        setError("Your account is not verified yet. We have sent a verification code to your email.");
+      } else {
+        setError(err.message || "Login failed");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // OTP Handlers
+  const handleOtpChange = (index: number, val: string) => {
+    if (val && isNaN(Number(val))) return;
+
+    const newCode = [...otpCode];
+    newCode[index] = val.substring(val.length - 1);
+    setOtpCode(newCode);
+
+    if (val && index < 5) {
+      otpRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !otpCode[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleOtpVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setOtpError("");
+    setOtpSuccess("");
+
+    const fullCode = otpCode.join("");
+    if (fullCode.length < 6) {
+      setOtpError("Please enter all 6 digits of the OTP code.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await verifyEmail(otpEmail, fullCode);
+      setOtpSuccess("Email verified successfully! Logging you in...");
+      setTimeout(() => {
+        router.push("/");
+      }, 1500);
+    } catch (err: any) {
+      setOtpError(err.message || "Verification failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (!canResend) return;
+    setOtpError("");
+    setOtpSuccess("");
+    setIsLoading(true);
+
+    try {
+      await resendVerification(otpEmail);
+      setOtpSuccess("A new OTP code has been sent to your email.");
+      setTimer(60);
+      setCanResend(false);
+      setOtpCode(["", "", "", "", "", ""]);
+      otpRefs.current[0]?.focus();
+    } catch (err: any) {
+      setOtpError(err.message || "Resend failed");
     } finally {
       setIsLoading(false);
     }
@@ -159,228 +256,381 @@ export default function LoginPage() {
           flexDirection: "column",
           justifyContent: "center",
         }} className="auth-form-panel">
-          <div style={{ marginBottom: "14px" }}>
-            <h3 style={{
-              fontFamily: "var(--font-playfair), serif",
-              fontSize: "19px", fontWeight: 700, color: "#1C1C1E",
-              margin: 0, letterSpacing: "1.5px"
-            }}>Welcome Back</h3>
-            <p style={{ fontSize: "11px", color: "#8E8E93", marginTop: "2px", letterSpacing: "0.2px" }}>
-              Sign in to experience luxury fashion.
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-            {error && (
-              <div style={{
-                background: "rgba(255, 59, 48, 0.06)",
-                border: "1px solid rgba(255, 59, 48, 0.15)",
-                borderRadius: "8px",
-                padding: "6px 10px",
-                fontSize: "11.5px",
-                fontWeight: 500,
-                color: "#FF3B30",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px"
-              }}>
-                <span>⚠️</span>
-                <span>{error}</span>
+          {showOtp ? (
+            /* OTP Verification Screen */
+            <form onSubmit={handleOtpVerify} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div>
+                <h3 style={{
+                  fontFamily: "var(--font-playfair), serif",
+                  fontSize: "19px", fontWeight: 700, color: "#1C1C1E",
+                  margin: 0, letterSpacing: "1.5px"
+                }}>Verify Your Email</h3>
+                <p style={{ fontSize: "11px", color: "#8E8E93", marginTop: "4px", lineHeight: "1.4" }}>
+                  We have sent a 6-digit OTP code to <strong style={{ color: "#1C1C1E" }}>{otpEmail}</strong>. Please enter it below.
+                </p>
               </div>
-            )}
 
-            {/* Email field */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <label htmlFor="email" style={{ fontSize: "9px", fontWeight: 700, color: "#8E8E93", letterSpacing: "1px", textTransform: "uppercase" }}>Email Address</label>
-              <input
-                id="email"
-                type="email"
-                required
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  validateEmail(e.target.value);
-                }}
-                onBlur={(e) => validateEmail(e.target.value)}
+              {otpError && (
+                <div style={{
+                  background: "rgba(255, 59, 48, 0.06)",
+                  border: "1px solid rgba(255, 59, 48, 0.15)",
+                  borderRadius: "8px",
+                  padding: "6px 10px",
+                  fontSize: "11px",
+                  fontWeight: 500,
+                  color: "#FF3B30",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px"
+                }}>
+                  <span>⚠️</span>
+                  <span>{otpError}</span>
+                </div>
+              )}
+
+              {otpSuccess && (
+                <div style={{
+                  background: "rgba(52, 199, 89, 0.06)",
+                  border: "1px solid rgba(52, 199, 89, 0.15)",
+                  borderRadius: "8px",
+                  padding: "6px 10px",
+                  fontSize: "11px",
+                  fontWeight: 500,
+                  color: "#34C759",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px"
+                }}>
+                  <span>✓</span>
+                  <span>{otpSuccess}</span>
+                </div>
+              )}
+
+              {/* OTP Digits Grid */}
+              <div style={{ display: "flex", gap: "10px", justifyContent: "space-between", margin: "8px 0" }}>
+                {otpCode.map((digit, index) => (
+                  <input
+                    key={index}
+                    ref={(el) => { if (el) otpRefs.current[index] = el; }}
+                    type="text"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleOtpChange(index, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                    style={{
+                      width: "42px",
+                      height: "48px",
+                      textAlign: "center",
+                      fontSize: "22px",
+                      fontWeight: "bold",
+                      border: "none",
+                      borderBottom: "2px solid rgba(0,0,0,0.12)",
+                      background: "transparent",
+                      outline: "none",
+                      color: "#1C1C1E",
+                      transition: "all 0.2s ease"
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderBottomColor = "#1C1C1E";
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderBottomColor = "rgba(0,0,0,0.12)";
+                    }}
+                  />
+                ))}
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
                 style={{
+                  background: "#1C1C1E",
                   border: "none",
-                  borderBottom: emailError ? "1.5px solid #FF3B30" : "1px solid rgba(0,0,0,0.12)",
-                  borderRadius: "0px",
-                  background: "transparent",
-                  padding: "8px 0px",
-                  outline: "none",
-                  fontSize: "13.5px",
-                  color: "#1C1C1E",
-                  transition: "border-color 0.2s",
+                  borderRadius: "6px",
+                  padding: "12px",
+                  color: "#fff",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  letterSpacing: "2.5px",
+                  textTransform: "uppercase",
+                  cursor: "pointer",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                  transition: "all 0.2s ease",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                  marginTop: "6px"
                 }}
-                className="luxury-input-line"
-              />
-              {emailError && <span style={{ color: "#FF3B30", fontSize: "10px", marginTop: "2px", fontWeight: 500 }}>{emailError}</span>}
-            </div>
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "#000";
+                  e.currentTarget.style.boxShadow = "0 6px 16px rgba(0,0,0,0.25)";
+                  e.currentTarget.style.transform = "translateY(-1px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "#1C1C1E";
+                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
+              >
+                {isLoading ? (
+                  <>
+                    <span className="spinner-white" />
+                    <span>Verifying...</span>
+                  </>
+                ) : (
+                  <span>Verify OTP</span>
+                )}
+              </button>
 
-            {/* Password field */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <label htmlFor="password" style={{ fontSize: "9px", fontWeight: 700, color: "#8E8E93", letterSpacing: "1px", textTransform: "uppercase" }}>Password</label>
-              <input
-                id="password"
-                type="password"
-                required
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  validatePassword(e.target.value);
-                }}
-                onBlur={(e) => validatePassword(e.target.value)}
-                style={{
-                  border: "none",
-                  borderBottom: passwordError ? "1.5px solid #FF3B30" : "1px solid rgba(0,0,0,0.12)",
-                  borderRadius: "0px",
-                  background: "transparent",
-                  padding: "8px 0px",
-                  outline: "none",
-                  fontSize: "13.5px",
-                  color: "#1C1C1E",
-                  transition: "border-color 0.2s",
-                }}
-                className="luxury-input-line"
-              />
-              {passwordError && <span style={{ color: "#FF3B30", fontSize: "10px", marginTop: "2px", fontWeight: 500 }}>{passwordError}</span>}
-            </div>
+              <div style={{ textAlign: "center", marginTop: "10px", fontSize: "12px", color: "#8E8E93" }}>
+                Didn't receive code?{" "}
+                {canResend ? (
+                  <button
+                    type="button"
+                    onClick={handleResendOtp}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "#1C1C1E",
+                      fontWeight: 700,
+                      textDecoration: "underline",
+                      cursor: "pointer",
+                      padding: 0,
+                      fontFamily: "inherit"
+                    }}
+                  >
+                    Resend Code
+                  </button>
+                ) : (
+                  <span>Resend in <strong style={{ color: "#1C1C1E" }}>{timer}s</strong></span>
+                )}
+              </div>
+            </form>
+          ) : (
+            <>
+              <div style={{ marginBottom: "14px" }}>
+                <h3 style={{
+                  fontFamily: "var(--font-playfair), serif",
+                  fontSize: "19px", fontWeight: 700, color: "#1C1C1E",
+                  margin: 0, letterSpacing: "1.5px"
+                }}>Welcome Back</h3>
+                <p style={{ fontSize: "11px", color: "#8E8E93", marginTop: "2px", letterSpacing: "0.2px" }}>
+                  Sign in to experience luxury fashion.
+                </p>
+              </div>
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "11.5px" }}>
-              <label style={{ display: "flex", alignItems: "center", gap: "6px", color: "#48484A", cursor: "pointer" }}>
-                <input
-                  type="checkbox"
+              <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {error && (
+                  <div style={{
+                    background: "rgba(255, 59, 48, 0.06)",
+                    border: "1px solid rgba(255, 59, 48, 0.15)",
+                    borderRadius: "8px",
+                    padding: "6px 10px",
+                    fontSize: "11.5px",
+                    fontWeight: 500,
+                    color: "#FF3B30",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px"
+                  }}>
+                    <span>⚠️</span>
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                {/* Email field */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <label htmlFor="email" style={{ fontSize: "9px", fontWeight: 700, color: "#8E8E93", letterSpacing: "1px", textTransform: "uppercase" }}>Email Address</label>
+                  <input
+                    id="email"
+                    type="email"
+                    required
+                    placeholder="your@email.com"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      validateEmail(e.target.value);
+                    }}
+                    onBlur={(e) => validateEmail(e.target.value)}
+                    style={{
+                      border: "none",
+                      borderBottom: emailError ? "1.5px solid #FF3B30" : "1px solid rgba(0,0,0,0.12)",
+                      borderRadius: "0px",
+                      background: "transparent",
+                      padding: "8px 0px",
+                      outline: "none",
+                      fontSize: "13.5px",
+                      color: "#1C1C1E",
+                      transition: "border-color 0.2s",
+                    }}
+                    className="luxury-input-line"
+                  />
+                </div>
+
+                {/* Password field */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <label htmlFor="password" style={{ fontSize: "9px", fontWeight: 700, color: "#8E8E93", letterSpacing: "1px", textTransform: "uppercase" }}>Password</label>
+                  <input
+                    id="password"
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      validatePassword(e.target.value);
+                    }}
+                    onBlur={(e) => validatePassword(e.target.value)}
+                    style={{
+                      border: "none",
+                      borderBottom: passwordError ? "1.5px solid #FF3B30" : "1px solid rgba(0,0,0,0.12)",
+                      borderRadius: "0px",
+                      background: "transparent",
+                      padding: "8px 0px",
+                      outline: "none",
+                      fontSize: "13.5px",
+                      color: "#1C1C1E",
+                      transition: "border-color 0.2s",
+                    }}
+                    className="luxury-input-line"
+                  />
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "11.5px" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: "6px", color: "#48484A", cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      style={{
+                        width: "13px",
+                        height: "13px",
+                        accentColor: "#1C1C1E",
+                        cursor: "pointer"
+                      }}
+                    />
+                    <span style={{ fontWeight: 500 }}>Remember me</span>
+                  </label>
+                  <Link href="/auth/forgot-password" style={{ color: "#1C1C1E", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: "3px" }}>
+                    Forgot password?
+                  </Link>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
                   style={{
-                    width: "13px",
-                    height: "13px",
-                    accentColor: "#1C1C1E",
-                    cursor: "pointer"
+                    background: "#1C1C1E",
+                    border: "none",
+                    borderRadius: "6px",
+                    padding: "12px",
+                    color: "#fff",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    letterSpacing: "2.5px",
+                    textTransform: "uppercase",
+                    cursor: "pointer",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                    transition: "all 0.2s ease",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    marginTop: "6px"
                   }}
-                />
-                <span style={{ fontWeight: 500 }}>Remember me</span>
-              </label>
-              <Link href="/auth/forgot-password" style={{ color: "#1C1C1E", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: "3px" }}>
-                Forgot password?
-              </Link>
-            </div>
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "#000";
+                    e.currentTarget.style.boxShadow = "0 6px 16px rgba(0,0,0,0.25)";
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "#1C1C1E";
+                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+                    e.currentTarget.style.transform = "translateY(0)";
+                  }}
+                >
+                  {isLoading ? (
+                    <>
+                      <span className="spinner-white" />
+                      <span>Signing In...</span>
+                    </>
+                  ) : (
+                    <span>Sign In</span>
+                  )}
+                </button>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              style={{
-                background: "#1C1C1E",
-                border: "none",
-                borderRadius: "6px",
-                padding: "12px",
-                color: "#fff",
-                fontSize: "12px",
-                fontWeight: 700,
-                letterSpacing: "2.5px",
-                textTransform: "uppercase",
-                cursor: "pointer",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                transition: "all 0.2s ease",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px",
-                marginTop: "6px"
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "#000";
-                e.currentTarget.style.boxShadow = "0 6px 16px rgba(0,0,0,0.25)";
-                e.currentTarget.style.transform = "translateY(-1px)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "#1C1C1E";
-                e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
-                e.currentTarget.style.transform = "translateY(0)";
-              }}
-            >
-              {isLoading ? (
-                <>
-                  <span className="spinner-white" />
-                  <span>Signing In...</span>
-                </>
-              ) : (
-                <span>Sign In</span>
-              )}
-            </button>
+                <div style={{ textAlign: "center", marginTop: "12px", fontSize: "12px", color: "#8E8E93" }}>
+                  Don't have an account?{" "}
+                  <Link href="/auth/register" style={{ color: "#1C1C1E", fontWeight: 700, textDecoration: "underline", textUnderlineOffset: "3px" }}>
+                    Sign Up
+                  </Link>
+                </div>
 
-            <div style={{ textAlign: "center", marginTop: "12px", fontSize: "12px", color: "#8E8E93" }}>
-              Don't have an account?{" "}
-              <Link href="/auth/register" style={{ color: "#1C1C1E", fontWeight: 700, textDecoration: "underline", textUnderlineOffset: "3px" }}>
-                Sign Up
-              </Link>
-            </div>
+                {/* OR Divider */}
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", margin: "4px 0" }}>
+                  <div style={{ flex: 1, height: "1px", background: "rgba(0,0,0,0.1)" }} />
+                  <span style={{ fontSize: "10px", fontWeight: 600, color: "#AEAEB2", letterSpacing: "1px", textTransform: "uppercase" }}>or</span>
+                  <div style={{ flex: 1, height: "1px", background: "rgba(0,0,0,0.1)" }} />
+                </div>
 
-            {/* OR Divider */}
-            <div style={{ display: "flex", alignItems: "center", gap: "12px", margin: "4px 0" }}>
-              <div style={{ flex: 1, height: "1px", background: "rgba(0,0,0,0.1)" }} />
-              <span style={{ fontSize: "10px", fontWeight: 600, color: "#AEAEB2", letterSpacing: "1px", textTransform: "uppercase" }}>or</span>
-              <div style={{ flex: 1, height: "1px", background: "rgba(0,0,0,0.1)" }} />
-            </div>
-
-            {/* Google Sign-In Button */}
-            <button
-              id="google-signin-btn"
-              type="button"
-              disabled={isGoogleLoading}
-              onClick={async () => {
-                setIsGoogleLoading(true);
-                try {
-                  await googleLogin();
-                } catch (err: any) {
-                  setError(err.message || "Google login failed");
-                  setIsGoogleLoading(false);
-                }
-              }}
-              style={{
-                background: "#fff",
-                border: "1.5px solid rgba(0,0,0,0.12)",
-                borderRadius: "6px",
-                padding: "10px 12px",
-                color: "#3c4043",
-                fontSize: "12px",
-                fontWeight: 600,
-                letterSpacing: "0.5px",
-                cursor: isGoogleLoading ? "not-allowed" : "pointer",
-                boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-                transition: "all 0.2s ease",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "10px",
-                width: "100%",
-                opacity: isGoogleLoading ? 0.7 : 1,
-              }}
-              onMouseEnter={(e) => {
-                if (!isGoogleLoading) {
-                  e.currentTarget.style.boxShadow = "0 3px 10px rgba(0,0,0,0.12)";
-                  e.currentTarget.style.borderColor = "rgba(0,0,0,0.2)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.06)";
-                e.currentTarget.style.borderColor = "rgba(0,0,0,0.12)";
-              }}
-            >
-              {isGoogleLoading ? (
-                <span className="spinner-dark" />
-              ) : (
-                <svg width="18" height="18" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20-7.5 20-21 0-1.4-.2-2.7-.5-4z" fill="#FFC107" />
-                  <path d="M6.3 14.7l7 5.1C15.2 16.3 19.3 13 24 13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 5.1 29.6 3 24 3c-7.6 0-14.2 4.2-17.7 10.7z" fill="#FF3D00" />
-                  <path d="M24 45c5.5 0 10.4-1.9 14.3-5.1l-6.6-5.6C29.8 35.9 27 37 24 37c-6 0-10.6-3-11.8-8.3l-7 5.4C8.1 40.6 15.4 45 24 45z" fill="#4CAF50" />
-                  <path d="M44.5 20H24v8.5h11.8c-.6 2.9-2.3 5.4-4.7 7.1l6.6 5.6C41.7 37.9 45 31.6 45 24c0-1.4-.2-2.7-.5-4z" fill="#1976D2" />
-                </svg>
-              )}
-              <span>{isGoogleLoading ? "Signing in..." : "Continue with Google"}</span>
-            </button>
-          </form>
+                {/* Google Sign-In Button */}
+                <button
+                  id="google-signin-btn"
+                  type="button"
+                  disabled={isGoogleLoading}
+                  onClick={async () => {
+                    setIsGoogleLoading(true);
+                    try {
+                      await googleLogin();
+                    } catch (err: any) {
+                      setError(err.message || "Google login failed");
+                      setIsGoogleLoading(false);
+                    }
+                  }}
+                  style={{
+                    background: "#fff",
+                    border: "1.5px solid rgba(0,0,0,0.12)",
+                    borderRadius: "6px",
+                    padding: "10px 12px",
+                    color: "#3c4043",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    letterSpacing: "0.5px",
+                    cursor: isGoogleLoading ? "not-allowed" : "pointer",
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+                    transition: "all 0.2s ease",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "10px",
+                    width: "100%",
+                    opacity: isGoogleLoading ? 0.7 : 1,
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isGoogleLoading) {
+                      e.currentTarget.style.boxShadow = "0 3px 10px rgba(0,0,0,0.12)";
+                      e.currentTarget.style.borderColor = "rgba(0,0,0,0.2)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.06)";
+                    e.currentTarget.style.borderColor = "rgba(0,0,0,0.12)";
+                  }}
+                >
+                  {isGoogleLoading ? (
+                    <span className="spinner-dark" />
+                  ) : (
+                    <svg width="18" height="18" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20-7.5 20-21 0-1.4-.2-2.7-.5-4z" fill="#FFC107" />
+                      <path d="M6.3 14.7l7 5.1C15.2 16.3 19.3 13 24 13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 5.1 29.6 3 24 3c-7.6 0-14.2 4.2-17.7 10.7z" fill="#FF3D00" />
+                      <path d="M24 45c5.5 0 10.4-1.9 14.3-5.1l-6.6-5.6C29.8 35.9 27 37 24 37c-6 0-10.6-3-11.8-8.3l-7 5.4C8.1 40.6 15.4 45 24 45z" fill="#4CAF50" />
+                      <path d="M44.5 20H24v8.5h11.8c-.6 2.9-2.3 5.4-4.7 7.1l6.6 5.6C41.7 37.9 45 31.6 45 24c0-1.4-.2-2.7-.5-4z" fill="#1976D2" />
+                    </svg>
+                  )}
+                  <span>{isGoogleLoading ? "Signing in..." : "Continue with Google"}</span>
+                </button>
+              </form>
+            </>
+          )}
         </div>
       </div>
 

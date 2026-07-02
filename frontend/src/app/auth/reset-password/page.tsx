@@ -227,7 +227,6 @@ function ResetPasswordForm() {
               }}
               className="luxury-input-line"
             />
-            {newPasswordError && <span style={{ color: "#FF3B30", fontSize: "10px", marginTop: "2px", fontWeight: 500 }}>{newPasswordError}</span>}
           </div>
 
           {/* Confirm Password field */}
@@ -257,7 +256,6 @@ function ResetPasswordForm() {
               }}
               className="luxury-input-line"
             />
-            {confirmPasswordError && <span style={{ color: "#FF3B30", fontSize: "10px", marginTop: "2px", fontWeight: 500 }}>{confirmPasswordError}</span>}
           </div>
 
           <button

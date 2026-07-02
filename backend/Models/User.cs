@@ -18,10 +18,15 @@ namespace backend.Models
         public string? GoogleId { get; set; }
         public bool IsGoogleUser { get; set; } = false;
 
+        // Account Verification fields
+        public bool IsVerified { get; set; } = false;
+        public string? VerificationToken { get; set; }
+        public DateTime? VerificationTokenExpiry { get; set; }
+
         // Password reset fields
         public string? PasswordResetToken { get; set; }
         public DateTime? PasswordResetExpiry { get; set; }
-        
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }

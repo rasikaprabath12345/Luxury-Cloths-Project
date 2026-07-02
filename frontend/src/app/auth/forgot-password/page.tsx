@@ -13,13 +13,13 @@ export default function ForgotPasswordPage() {
   const { forgotPassword } = useAuth();
 
   const validateEmail = (val: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
     if (!val.trim()) {
       setEmailError("Email address is required.");
       return false;
     }
     if (!emailRegex.test(val.trim())) {
-      setEmailError("Please enter a valid email address.");
+      setEmailError("Please enter a realistic and valid email address.");
       return false;
     }
     setEmailError("");
@@ -214,7 +214,6 @@ export default function ForgotPasswordPage() {
                 }}
                 className="luxury-input-line"
               />
-              {emailError && <span style={{ color: "#FF3B30", fontSize: "10px", marginTop: "2px", fontWeight: 500 }}>{emailError}</span>}
             </div>
 
             <button

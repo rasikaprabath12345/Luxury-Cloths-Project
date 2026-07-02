@@ -38,6 +38,7 @@ builder.Services.AddCors(options =>
 // 3. OpenAPI සහ Controllers
 builder.Services.AddOpenApi();
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<EmailService>();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {

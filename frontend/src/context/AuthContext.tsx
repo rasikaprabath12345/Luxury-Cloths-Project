@@ -21,12 +21,14 @@ interface AuthContextType {
     token: string | null;
 
     // Auth methods
-    register: (fullName: string, email: string, password: string) => Promise<void>;
+    register: (fullName: string, email: string, password: string) => Promise<{ status?: string } | void>;
     login: (email: string, password: string) => Promise<void>;
     googleLogin: () => Promise<void>;
     logout: () => Promise<void>;
     forgotPassword: (email: string) => Promise<void>;
     resetPassword: (email: string, token: string, newPassword: string, confirmPassword: string) => Promise<void>;
+    verifyEmail: (email: string, code: string) => Promise<void>;
+    resendVerification: (email: string) => Promise<void>;
 
     // Profile methods
     getProfile: () => Promise<void>;
@@ -98,8 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(true);
         try {
             const response = await authAPI.register({ fullName, email, password });
-            // Auto-login after registration
-            await login(email, password);
+            return response.data;
         } catch (error: any) {
             const message = typeof error.response?.data === "string"
                 ? error.response.data
@@ -135,6 +136,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             throw new Error(message);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    // Verify Email
+    const verifyEmail = async (email: string, code: string) => {
+        setIsLoading(true);
+        try {
+            const response = await authAPI.verifyEmail({ email, code });
+            const data = response.data;
+
+            const userData: User = {
+                id: data.id,
+                fullName: data.fullName,
+                email: data.email,
+                role: data.role.toLowerCase(),
+            };
+
+            setUser(userData);
+            setToken(data.token);
+            localStorage.setItem("luxury_user", JSON.stringify(userData));
+            localStorage.setItem("luxury_token", data.token);
+        } catch (error: any) {
+            const message = typeof error.response?.data === "string"
+                ? error.response.data
+                : error.response?.data?.message || "Verification failed";
+            throw new Error(message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Resend Verification
+    const resendVerification = async (email: string) => {
+        try {
+            await authAPI.resendVerification({ email });
+        } catch (error: any) {
+            const message = typeof error.response?.data === "string"
+                ? error.response.data
+                : error.response?.data?.message || "Failed to resend verification";
+            throw new Error(message);
         }
     };
 
@@ -271,6 +312,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout,
         forgotPassword,
         resetPassword,
+        verifyEmail,
+        resendVerification,
         getProfile,
         updateProfile,
         changePassword,

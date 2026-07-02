@@ -16,12 +16,14 @@ namespace backend.Controllers
         private readonly ApplicationDbContext _context;
         private readonly TokenService _tokenService;
         private readonly IConfiguration _configuration;
+        private readonly EmailService _emailService;
 
-        public AuthController(ApplicationDbContext context, TokenService tokenService, IConfiguration configuration)
+        public AuthController(ApplicationDbContext context, TokenService tokenService, IConfiguration configuration, EmailService emailService)
         {
             _context = context;
             _tokenService = tokenService;
             _configuration = configuration;
+            _emailService = emailService;
         }
 
         // 1. REGISTER ENDPOINT
@@ -29,26 +31,65 @@ namespace backend.Controllers
         public async Task<IActionResult> Register(UserRegisterDto registerDto)
         {
             // Email එක දැනටමත් ඩේටාබේස් එකේ තියෙනවද බලන්න
-            if (await _context.Users.AnyAsync(u => u.Email == registerDto.Email.ToLower()))
+            var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == registerDto.Email.ToLower());
+            if (existingUser != null)
             {
-                return BadRequest("මෙම Email ලිපිනය දැනටමත් පාවිච්චි කර ඇත.");
+                if (existingUser.IsVerified || existingUser.IsGoogleUser)
+                {
+                    return BadRequest("මෙම Email ලිපිනය දැනටමත් පාවිච්චි කර ඇත.");
+                }
+                else
+                {
+                    // සත්‍යාපනය නොකළ (unverified) ගිණුමක් නම්, එය database එකෙන් ඉවත් කර නැවත ලියාපදිංචි වීමට ඉඩ දෙමු.
+                    _context.Users.Remove(existingUser);
+                    await _context.SaveChangesAsync();
+                }
             }
 
             // BCrypt පාවිච්චි කරලා Password එක සේෆ් විදිහට Hash කිරීම
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password);
+
+            // Generate 6-digit verification code
+            string otpCode = new Random().Next(100000, 999999).ToString();
 
             var user = new User
             {
                 FullName = registerDto.FullName,
                 Email = registerDto.Email.ToLower(),
                 PasswordHash = passwordHash,
-                Role = "Customer" // මුලින්ම හැදෙන හැමෝම Customers ලා
+                Role = "Customer", // මුලින්ම හැදෙන හැමෝම Customers ලා
+                IsVerified = false,
+                VerificationToken = otpCode,
+                VerificationTokenExpiry = DateTime.UtcNow.AddMinutes(15)
             };
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "ලියාපදිංචි වීම සාර්ථකයි!" });
+            // Send verification email
+            string emailBody = $@"
+                <div style='font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 12px; max-width: 600px; margin: 0 auto; color: #1c1c1e;'>
+                    <div style='text-align: center; margin-bottom: 20px;'>
+                        <span style='font-size: 40px;'>💎</span>
+                        <h2 style='font-family: Georgia, serif; letter-spacing: 4px; margin: 10px 0;'>LUXURY.lk</h2>
+                    </div>
+                    <p style='font-size: 15px;'>Hi {user.FullName},</p>
+                    <p style='font-size: 15px;'>Welcome to Luxury Store! Please verify your email address to complete your registration. Use the following 6-digit OTP code:</p>
+                    <div style='background: #f8f9fa; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; padding: 15px; font-size: 28px; font-weight: bold; text-align: center; letter-spacing: 6px; color: #1c1c1e; margin: 20px 0;'>
+                        {otpCode}
+                    </div>
+                    <p style='font-size: 13px; color: #8e8e93;'>This verification code is valid for 15 minutes. If you did not request this, please ignore this email.</p>
+                    <hr style='border: none; border-top: 1px solid #eee; margin: 20px 0;' />
+                    <p style='font-size: 12px; color: #8e8e93; text-align: center;'>© 2026 Luxury Store. All rights reserved.</p>
+                </div>";
+
+            await _emailService.SendEmailAsync(user.Email, "Verify Your Luxury Store Account", emailBody);
+
+            return Ok(new { 
+                message = "ලියාපදිංචි වීම සාර්ථකයි! කරුණාකර ඔබගේ ඊමේල් ලිපිනය පරීක්ෂා කර OTP කේතය ඇතුළත් කරන්න.",
+                email = user.Email,
+                status = "VerificationRequired"
+            });
         }
 
         // 2. LOGIN ENDPOINT
@@ -65,6 +106,38 @@ namespace backend.Controllers
 
             if (!isPasswordValid) 
                 return Unauthorized("ඇතුලත් කල Email හෝ Password වැරදියි.");
+
+            // Check if verified
+            if (!user.IsVerified && !user.IsGoogleUser)
+            {
+                // Generate a new OTP and resend
+                string otpCode = new Random().Next(100000, 999999).ToString();
+                user.VerificationToken = otpCode;
+                user.VerificationTokenExpiry = DateTime.UtcNow.AddMinutes(15);
+                
+                _context.Users.Update(user);
+                await _context.SaveChangesAsync();
+
+                string emailBody = $@"
+                    <div style='font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 12px; max-width: 600px; margin: 0 auto; color: #1c1c1e;'>
+                        <div style='text-align: center; margin-bottom: 20px;'>
+                            <span style='font-size: 40px;'>💎</span>
+                            <h2 style='font-family: Georgia, serif; letter-spacing: 4px; margin: 10px 0;'>LUXURY.lk</h2>
+                        </div>
+                        <p style='font-size: 15px;'>Hi {user.FullName},</p>
+                        <p style='font-size: 15px;'>Your account is not verified yet. Please use the following new OTP verification code to log in:</p>
+                        <div style='background: #f8f9fa; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; padding: 15px; font-size: 28px; font-weight: bold; text-align: center; letter-spacing: 6px; color: #1c1c1e; margin: 20px 0;'>
+                            {otpCode}
+                        </div>
+                        <p style='font-size: 13px; color: #8e8e93;'>This verification code is valid for 15 minutes.</p>
+                        <hr style='border: none; border-top: 1px solid #eee; margin: 20px 0;' />
+                        <p style='font-size: 12px; color: #8e8e93; text-align: center;'>© 2026 Luxury Store. All rights reserved.</p>
+                    </div>";
+
+                await _emailService.SendEmailAsync(user.Email, "Verify Your Luxury Store Account", emailBody);
+
+                return BadRequest("AccountNotVerified");
+            }
 
             // හැමදේම හරි නම් Token එක හදලා යවන්න
             var token = _tokenService.CreateToken(user);
@@ -134,6 +207,93 @@ namespace backend.Controllers
             });
         }
 
+        // 2c. VERIFY EMAIL ENDPOINT
+        [HttpPost("verify-email")]
+        public async Task<IActionResult> VerifyEmail(VerifyEmailDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Code))
+                return BadRequest("Email and code are required.");
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email.ToLower());
+            if (user == null)
+                return NotFound("පරිශීලකයා හමු වුනේ නැත.");
+
+            if (user.IsVerified)
+                return BadRequest("මෙම ගිණුම දැනටමත් සත්‍යාපනය කර ඇත.");
+
+            if (user.VerificationToken != dto.Code)
+                return BadRequest("ඇතුලත් කල සත්‍යාපන කේතය (OTP) වැරදියි.");
+
+            if (user.VerificationTokenExpiry < DateTime.UtcNow)
+                return BadRequest("සත්‍යාපන කේතයේ වලංගු කාලය අවසන් වී ඇත. කරුණාකර අලුත් කේතයක් ලබාගන්න.");
+
+            // Mark as verified
+            user.IsVerified = true;
+            user.VerificationToken = null;
+            user.VerificationTokenExpiry = null;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+
+            // Generate Token
+            var token = _tokenService.CreateToken(user);
+
+            return Ok(new LoginResponseDto
+            {
+                Id = user.Id,
+                FullName = user.FullName,
+                Email = user.Email,
+                Role = user.Role,
+                Token = token
+            });
+        }
+
+        // 2d. RESEND VERIFICATION CODE ENDPOINT
+        [HttpPost("resend-verification")]
+        public async Task<IActionResult> ResendVerification(ResendVerificationDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Email))
+                return BadRequest("Email is required.");
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email.ToLower());
+            if (user == null)
+                return NotFound("පරිශීලකයා හමු වුනේ නැත.");
+
+            if (user.IsVerified)
+                return BadRequest("මෙම ගිණුම දැනටමත් සත්‍යාපනය කර ඇත.");
+
+            // Generate new OTP
+            string otpCode = new Random().Next(100000, 999999).ToString();
+            user.VerificationToken = otpCode;
+            user.VerificationTokenExpiry = DateTime.UtcNow.AddMinutes(15);
+            user.UpdatedAt = DateTime.UtcNow;
+
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+
+            // Send Email
+            string emailBody = $@"
+                <div style='font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 12px; max-width: 600px; margin: 0 auto; color: #1c1c1e;'>
+                    <div style='text-align: center; margin-bottom: 20px;'>
+                        <span style='font-size: 40px;'>💎</span>
+                        <h2 style='font-family: Georgia, serif; letter-spacing: 4px; margin: 10px 0;'>LUXURY.lk</h2>
+                    </div>
+                    <p style='font-size: 15px;'>Hi {user.FullName},</p>
+                    <p style='font-size: 15px;'>We have generated a new OTP code for you to verify your email address:</p>
+                    <div style='background: #f8f9fa; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; padding: 15px; font-size: 28px; font-weight: bold; text-align: center; letter-spacing: 6px; color: #1c1c1e; margin: 20px 0;'>
+                        {otpCode}
+                    </div>
+                    <p style='font-size: 13px; color: #8e8e93;'>This verification code is valid for 15 minutes.</p>
+                    <hr style='border: none; border-top: 1px solid #eee; margin: 20px 0;' />
+                    <p style='font-size: 12px; color: #8e8e93; text-align: center;'>© 2026 Luxury Store. All rights reserved.</p>
+                </div>";
+
+            await _emailService.SendEmailAsync(user.Email, "New Verification OTP Code - Luxury Store", emailBody);
+
+            return Ok(new { message = "නව OTP කේතය සාර්ථකව ඊමේල් පණිවිඩයක් ලෙස යවන ලදී." });
+        }
+
         // 3. FORGOT PASSWORD ENDPOINT
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordDto dto)
@@ -141,23 +301,42 @@ namespace backend.Controllers
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email.ToLower());
 
             if (user == null)
-                return Ok(new { message = "Password reset එක තැපැල්වලට යවන ලදී (Email එකට)." });
+                return Ok(new { message = "මුරපදය ප්‍රතිසකස් කිරීමේ සබැඳිය ඊමේල් මඟින් යවන ලදී (එම Email ලිපිනය පවතී නම්)." });
 
             // Generate reset token
             string resetToken = Guid.NewGuid().ToString();
             user.PasswordResetToken = resetToken;
-            user.PasswordResetExpiry = DateTime.UtcNow.AddHours(24); // 24 hours validity
+            user.PasswordResetExpiry = DateTime.UtcNow.AddHours(2); // 2 hours validity
 
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
 
-            // In production, send email with reset link
-            // For now, return token (frontend will use it)
+            // Create Reset Link
             var resetLink = $"{_configuration["FrontendUrl"]}/auth/reset-password?token={resetToken}&email={user.Email}";
             
+            // Send Reset Link via Email Service
+            string emailBody = $@"
+                <div style='font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 12px; max-width: 600px; margin: 0 auto; color: #1c1c1e;'>
+                    <div style='text-align: center; margin-bottom: 20px;'>
+                        <span style='font-size: 40px;'>💎</span>
+                        <h2 style='font-family: Georgia, serif; letter-spacing: 4px; margin: 10px 0;'>LUXURY.lk</h2>
+                    </div>
+                    <p style='font-size: 15px;'>Hi {user.FullName},</p>
+                    <p style='font-size: 15px;'>We received a request to reset your password. Click the button below to reset your password:</p>
+                    <div style='text-align: center; margin: 30px 0;'>
+                        <a href='{resetLink}' style='background: #1C1C1E; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px;'>Reset Password</a>
+                    </div>
+                    <p style='font-size: 13px; color: #8e8e93;'>If you cannot click the button, copy and paste the following URL into your browser:</p>
+                    <p style='font-size: 12px; color: #0066cc; word-break: break-all;'>{resetLink}</p>
+                    <p style='font-size: 13px; color: #8e8e93; margin-top: 20px;'>This link is valid for 2 hours. If you did not request a password reset, please ignore this email.</p>
+                    <hr style='border: none; border-top: 1px solid #eee; margin: 20px 0;' />
+                    <p style='font-size: 12px; color: #8e8e93; text-align: center;'>© 2026 Luxury Store. All rights reserved.</p>
+                </div>";
+
+            await _emailService.SendEmailAsync(user.Email, "Reset Your Password - Luxury Store", emailBody);
+
             return Ok(new { 
-                message = "Password reset එක තැපැල්වලට යවන ලදී.",
-                resetLink = resetLink // Remove in production
+                message = "මුරපදය ප්‍රතිසකස් කිරීමේ සබැඳිය සාර්ථකව ඊමේල් පණිවිඩයක් ලෙස යවන ලදී."
             });
         }
 
