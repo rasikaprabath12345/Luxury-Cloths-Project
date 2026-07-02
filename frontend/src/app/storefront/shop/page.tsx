@@ -14,6 +14,8 @@ function ShopContent() {
   const categoryFilter = searchParams.get("category");
   const filterType = searchParams.get("filter");
 
+  const searchQuery = searchParams.get("search");
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -31,6 +33,17 @@ function ShopContent() {
   }, []);
 
   const filteredProducts = products.filter((product: any) => {
+    // Filter by Search Query
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      const name = product.name?.toLowerCase() || "";
+      const desc = product.description?.toLowerCase() || "";
+      const cat = product.category?.name?.toLowerCase() || "";
+      const brand = product.brand?.toLowerCase() || "";
+      const isMatch = name.includes(q) || desc.includes(q) || cat.includes(q) || brand.includes(q);
+      if (!isMatch) return false;
+    }
+
     // Filter by Category
     if (categoryFilter) {
       const slug = product.category?.slug?.toLowerCase() || "";
@@ -112,13 +125,16 @@ function ShopContent() {
               textTransform: "uppercase", color: "#007AFF"
             }}>Premium Collection</p>
             <h1 style={{ margin: 0, fontSize: "clamp(28px, 4vw, 42px)", fontWeight: 900, letterSpacing: "-0.04em", color: "#1C1C1E" }}>
-              {filterType === "new" ? "New Arrivals ✨" :
+              {searchQuery ? `Search Results for "${searchQuery}" ✨` :
+                filterType === "new" ? "New Arrivals ✨" :
                 filterType === "sale" || filterType === "offers" ? "Special Offers 🔥" :
                   categoryFilter ? `${categoryFilter.charAt(0).toUpperCase() + categoryFilter.slice(1)}'s Collection` :
                     "All Premium Apparel"}
             </h1>
             <p style={{ margin: "6px 0 0", color: "#8E8E93", fontSize: 15, fontWeight: 400 }}>
-              Discover curated luxury fashion items crafted for your premium taste.
+              {searchQuery 
+                ? `Showing products matching your search query. Found ${filteredProducts.length} items.`
+                : "Discover curated luxury fashion items crafted for your premium taste."}
             </p>
           </div>
         </div>
