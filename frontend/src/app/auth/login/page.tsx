@@ -63,7 +63,7 @@ export default function LoginPage() {
         border: "1px solid rgba(255, 255, 255, 0.85)",
         borderRadius: "24px",
         boxShadow: "0 20px 50px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)",
-       marginTop: "60px",
+        marginTop: "-40px",
         width: "100%",
         maxWidth: "840px",
         zIndex: 1,
