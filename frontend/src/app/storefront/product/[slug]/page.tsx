@@ -8,6 +8,7 @@ import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
+import { showStorefrontToast } from "@/utils/toast";
 
 interface ProductDetail {
   id: string;
@@ -407,8 +408,10 @@ export default function ProductDetailPage() {
                 disabled={product.stock === 0}
                 onClick={() => {
                   if (!isAuthenticated) {
-                    alert("Please login or signup to add items to your cart.");
-                    router.push("/auth/login");
+                    showStorefrontToast("Please login or signup to add items to your cart.", "error");
+                    setTimeout(() => {
+                      router.push("/auth/login");
+                    }, 1500);
                     return;
                   }
                   addToCart({
@@ -418,7 +421,7 @@ export default function ProductDetailPage() {
                     imageUrl: product.images?.[0] || "",
                     description: product.description,
                   }, quantity, selectedSize, selectedColor);
-                  alert(`${quantity} × ${product.name} added to cart! 🛒`);
+                  showStorefrontToast(`${quantity} × ${product.name} added to cart! 🛒`, "success");
                 }}
                 style={{
                   flex: 1, height: 50,
@@ -450,14 +453,16 @@ export default function ProductDetailPage() {
               <button
                 onClick={() => {
                   if (!isAuthenticated) {
-                    alert("Please login or signup to add items to your wishlist.");
-                    router.push("/auth/login");
+                    showStorefrontToast("Please login or signup to add items to your wishlist.", "error");
+                    setTimeout(() => {
+                      router.push("/auth/login");
+                    }, 1500);
                     return;
                   }
                   const isWish = isInWishlist(parseInt(product.id));
                   if (isWish) {
                     removeFromWishlist(parseInt(product.id));
-                    alert(`${product.name} removed from wishlist!`);
+                    showStorefrontToast(`${product.name} removed from wishlist!`, "error");
                   } else {
                     addToWishlist({
                       id: parseInt(product.id),
@@ -467,7 +472,7 @@ export default function ProductDetailPage() {
                       imageUrl: product.images?.[0] || "",
                       description: product.description,
                     });
-                    alert(`${product.name} added to wishlist!`);
+                    showStorefrontToast(`${product.name} added to wishlist!`, "success");
                   }
                 }}
                 style={{

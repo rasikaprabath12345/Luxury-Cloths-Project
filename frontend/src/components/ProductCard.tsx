@@ -4,6 +4,7 @@ import { glass } from "@/utils/theme";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { useAuth } from "@/context/AuthContext";
+import { showStorefrontToast } from "@/utils/toast";
 
 // Note: Ensure that we define the Product interface compatible with what's used
 export interface Product {
@@ -70,8 +71,10 @@ export default function ProductCard({ product }: { product: Product }) {
     e.preventDefault();
     e.stopPropagation();
     if (!isAuthenticated) {
-      alert("Please login or signup to add items to your wishlist.");
-      window.location.href = "/auth/login";
+      showStorefrontToast("Please login or signup to add items to your wishlist.", "error");
+      setTimeout(() => {
+        window.location.href = "/auth/login";
+      }, 1500);
       return;
     }
     if (inWishlist) {
@@ -268,8 +271,10 @@ export default function ProductCard({ product }: { product: Product }) {
                 e.stopPropagation();
                 if (isOutOfStock) return;
                 if (!isAuthenticated) {
-                  alert("Please login or signup to add items to your cart.");
-                  window.location.href = "/auth/login";
+                  showStorefrontToast("Please login or signup to add items to your cart.", "error");
+                  setTimeout(() => {
+                    window.location.href = "/auth/login";
+                  }, 1500);
                   return;
                 }
                 addToCart({
@@ -279,7 +284,7 @@ export default function ProductCard({ product }: { product: Product }) {
                   imageUrl: product.imageUrl || product.image || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop",
                   description: product.description,
                 });
-                alert(`${product.name} added to cart! 🛒`);
+                showStorefrontToast(`${product.name} added to cart! 🛒`, "success");
               }}
               disabled={isOutOfStock}
               style={{
