@@ -236,6 +236,7 @@ namespace backend.Controllers
                 };
 
                 decimal calculatedTotal = 0;
+                var stockMovements = new List<StockMovement>();
 
                 // Cart එකේ ආපු හැම අයිතමයක්ම ලූප් එකක් හරහා චෙක් කිරීම
                 foreach (var itemDto in orderDto.Items)
@@ -257,9 +258,21 @@ namespace backend.Controllers
                         return NotFound($"Product Variant ID {itemDto.ProductVariantId} සොයාගත නොහැක.");
                     }
 
+                    // Stock availability check
+                    int availableStock = variant.StockQuantity - variant.ReservedQuantity;
+                    if (availableStock < itemDto.Quantity)
+                    {
+                        string productName = variant.Product?.Name ?? "Unknown";
+                        return BadRequest($"{productName} ({variant.Size}) is out of stock. Available: {availableStock}, Requested: {itemDto.Quantity}");
+                    }
+
                     // මිල ගණන් එකතු කිරීම (ආරක්ෂාව සඳහා බැකෙන්ඩ් එකේම මිල ගණන් චෙක් කරයි)
                     decimal itemPrice = variant.Product?.Price ?? 0; // Product එකේ මිල ගනී
                     calculatedTotal += itemPrice * itemDto.Quantity;
+
+                    // Stock deduction
+                    int previousStock = variant.StockQuantity;
+                    variant.StockQuantity -= itemDto.Quantity;
 
                     var orderItem = new OrderItem
                     {
@@ -269,12 +282,32 @@ namespace backend.Controllers
                     };
 
                     newOrder.OrderItems.Add(orderItem);
+
+                    // Stock movement record එක save කරන්නේ order save වුනට පස්සේ (orderId ගන්න)
+                    stockMovements.Add(new StockMovement
+                    {
+                        ProductVariantId = variant.Id,
+                        Type = "OrderDeduct",
+                        Quantity = -itemDto.Quantity,
+                        PreviousStock = previousStock,
+                        NewStock = variant.StockQuantity,
+                        Reason = $"Order placed",
+                        CreatedAt = DateTime.UtcNow
+                    });
                 }
 
                 newOrder.TotalAmount = calculatedTotal;
 
                 // ඩේටාබේස් එකට සේව් කිරීම
                 _context.Orders.Add(newOrder);
+                await _context.SaveChangesAsync();
+
+                // Stock movement records වලට orderId එක දාන්න
+                foreach (var sm in stockMovements)
+                {
+                    sm.OrderId = newOrder.Id;
+                }
+                _context.StockMovements.AddRange(stockMovements);
                 await _context.SaveChangesAsync();
 
                 // ට්‍රාන්සෙක්ෂන් එක සාර්ථකව අවසන් කිරීම
@@ -295,13 +328,45 @@ namespace backend.Controllers
         {
             try
             {
-                var order = await _context.Orders.FindAsync(id);
+                var order = await _context.Orders
+                    .Include(o => o.OrderItems)
+                        .ThenInclude(oi => oi.ProductVariant)
+                    .FirstOrDefaultAsync(o => o.Id == id);
+
                 if (order == null)
                 {
                     return NotFound($"Order ID {id} සොයාගත නොහැක.");
                 }
 
+                string previousStatus = order.Status;
                 order.Status = dto.Status;
+
+                // Cancelled status එකට ගියොත් stock restore කරන්න
+                if (dto.Status.Equals("Cancelled", StringComparison.OrdinalIgnoreCase) && 
+                    !previousStatus.Equals("Cancelled", StringComparison.OrdinalIgnoreCase))
+                {
+                    foreach (var item in order.OrderItems)
+                    {
+                        if (item.ProductVariant != null)
+                        {
+                            int prevStock = item.ProductVariant.StockQuantity;
+                            item.ProductVariant.StockQuantity += item.Quantity;
+
+                            _context.StockMovements.Add(new StockMovement
+                            {
+                                ProductVariantId = item.ProductVariantId,
+                                Type = "OrderCancel",
+                                Quantity = item.Quantity,
+                                PreviousStock = prevStock,
+                                NewStock = item.ProductVariant.StockQuantity,
+                                Reason = $"Order #{order.Id} cancelled — stock restored",
+                                OrderId = order.Id,
+                                CreatedAt = DateTime.UtcNow
+                            });
+                        }
+                    }
+                }
+
                 _context.Orders.Update(order);
                 await _context.SaveChangesAsync();
 

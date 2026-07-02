@@ -19,6 +19,12 @@ export interface Product {
     slug: string;
   };
   categoryId?: number;
+  variants?: {
+    id: number;
+    size: string;
+    color: string;
+    stockQuantity: number;
+  }[];
 }
 
 export function ProductSkeleton() {
@@ -43,6 +49,11 @@ export default function ProductCard({ product }: { product: Product }) {
   const originalPrice = product.price;
   const discountAmount = hasDiscount ? (originalPrice * (product.discount || 0)) / 100 : 0;
   const finalPrice = originalPrice - discountAmount;
+
+  // Stock check — if variants exist and all have 0 stock, mark as out of stock
+  const isOutOfStock = product.variants && product.variants.length > 0
+    ? product.variants.every(v => v.stockQuantity <= 0)
+    : false;
 
   const inWishlist = isInWishlist(product.id);
   const handleWishlistToggle = (e: React.MouseEvent) => {
@@ -81,7 +92,7 @@ export default function ProductCard({ product }: { product: Product }) {
           onMouseLeave={e => ((e.currentTarget as HTMLImageElement).style.transform = "scale(1)")}
         />
         {/* Discount Tag */}
-        {hasDiscount && (
+        {hasDiscount && !isOutOfStock && (
           <div style={{
             position: "absolute", top: 12, left: 12,
             background: "#FF3B30", backdropFilter: "blur(8px)",
@@ -93,6 +104,23 @@ export default function ProductCard({ product }: { product: Product }) {
               {product.discount}% OFF
             </span>
           </div>
+        )}
+
+        {/* Out of Stock Badge */}
+        {isOutOfStock && (
+          <>
+            <div style={{
+              position: "absolute", inset: 0, background: "rgba(0,0,0,0.35)",
+              zIndex: 4, display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <span style={{
+                background: "rgba(220,38,38,0.95)", color: "#fff",
+                fontSize: 12, fontWeight: 800, letterSpacing: "0.05em",
+                padding: "8px 18px", borderRadius: 10, textTransform: "uppercase",
+                boxShadow: "0 4px 12px rgba(220,38,38,0.4)",
+              }}>Out of Stock</span>
+            </div>
+          </>
         )}
 
         {/* Wishlist Button */}
@@ -173,6 +201,7 @@ export default function ProductCard({ product }: { product: Product }) {
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
+              if (isOutOfStock) return;
               addToCart({
                 id: product.id,
                 name: product.name,
@@ -182,16 +211,19 @@ export default function ProductCard({ product }: { product: Product }) {
               });
               alert(`${product.name} added to cart! 🛒`);
             }}
+            disabled={isOutOfStock}
             style={{
-              background: "linear-gradient(135deg, #1C1C1E, #3C3C43)",
+              background: isOutOfStock ? "#e2e8f0" : "linear-gradient(135deg, #1C1C1E, #3C3C43)",
               border: "none", borderRadius: 12, padding: "8px 14px",
-              fontSize: 11, fontWeight: 600, color: "#fff", cursor: "pointer",
+              fontSize: 11, fontWeight: 600,
+              color: isOutOfStock ? "#94a3b8" : "#fff",
+              cursor: isOutOfStock ? "not-allowed" : "pointer",
               transition: "background 0.2s, transform 0.1s",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+              boxShadow: isOutOfStock ? "none" : "0 2px 8px rgba(0,0,0,0.15)",
             }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, #007AFF, #5856D6)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 12px rgba(0,122,255,0.3)"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, #1C1C1E, #3C3C43)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 8px rgba(0,0,0,0.15)"; }}>
-            Add to Bag
+            onMouseEnter={e => { if (!isOutOfStock) { (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, #007AFF, #5856D6)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 12px rgba(0,122,255,0.3)"; } }}
+            onMouseLeave={e => { if (!isOutOfStock) { (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, #1C1C1E, #3C3C43)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 8px rgba(0,0,0,0.15)"; } }}>
+            {isOutOfStock ? "Sold Out" : "Add to Bag"}
           </button>
         </div>
       </div>

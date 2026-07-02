@@ -196,4 +196,31 @@ export const uploadAPI = {
   },
 };
 
+// STOCK ENDPOINTS
+export const stockAPI = {
+  getAllStock: async () => {
+    return apiClient.get('/Stock');
+  },
+
+  getProductStock: async (productId: number) => {
+    return apiClient.get(`/Stock/${productId}`);
+  },
+
+  getLowStock: async () => {
+    return apiClient.get('/Stock/low-stock');
+  },
+
+  adjustStock: async (variantId: number, data: { adjustment: number; reason?: string }) => {
+    return apiClient.put(`/Stock/${variantId}/adjust`, data);
+  },
+
+  getStockMovements: async (variantId: number) => {
+    return apiClient.get(`/Stock/movements/${variantId}`);
+  },
+
+  getStockSummary: async () => {
+    return apiClient.get('/Stock/summary');
+  },
+};
+
 export default apiClient;

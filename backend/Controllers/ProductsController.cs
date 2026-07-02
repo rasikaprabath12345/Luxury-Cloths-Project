@@ -92,13 +92,36 @@ namespace backend.Controllers
 
             if (product.Variants == null || product.Variants.Count == 0)
             {
-                product.Variants = new List<ProductVariant>
+                var sizesList = !string.IsNullOrEmpty(product.Sizes)
+                    ? product.Sizes.Split(',').Select(s => s.Trim()).Where(s => !string.IsNullOrEmpty(s)).ToList()
+                    : new List<string> { "Free Size" };
+
+                product.Variants = sizesList.Select(size => new ProductVariant
                 {
-                    new ProductVariant { Size = "Free Size", Color = "Default", StockQuantity = 100 }
-                };
+                    Size = size,
+                    Color = "Default",
+                    StockQuantity = 100,
+                    LowStockThreshold = 5
+                }).ToList();
             }
 
             _context.Products.Add(product);
+            await _context.SaveChangesAsync();
+
+            // Log initial stock movement
+            foreach (var variant in product.Variants)
+            {
+                _context.StockMovements.Add(new StockMovement
+                {
+                    ProductVariantId = variant.Id,
+                    Type = "StockIn",
+                    Quantity = variant.StockQuantity,
+                    PreviousStock = 0,
+                    NewStock = variant.StockQuantity,
+                    Reason = "Product created with default stock",
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
@@ -125,6 +148,7 @@ namespace backend.Controllers
 
             var existingProduct = await _context.Products
                 .Include(p => p.Images)
+                .Include(p => p.Variants)
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (existingProduct == null)
@@ -160,9 +184,51 @@ namespace backend.Controllers
                 }
             }
 
+            // Sync variants based on Sizes
+            var sizesList = !string.IsNullOrEmpty(product.Sizes)
+                ? product.Sizes.Split(',').Select(s => s.Trim()).Where(s => !string.IsNullOrEmpty(s)).ToList()
+                : new List<string> { "Free Size" };
+
+            // Add new variants for newly added sizes
+            var newVariants = new List<ProductVariant>();
+            foreach (var size in sizesList)
+            {
+                if (!existingProduct.Variants.Any(v => v.Size.Equals(size, StringComparison.OrdinalIgnoreCase)))
+                {
+                    var newV = new ProductVariant
+                    {
+                        Size = size,
+                        Color = "Default",
+                        StockQuantity = 100,
+                        LowStockThreshold = 5
+                    };
+                    existingProduct.Variants.Add(newV);
+                    newVariants.Add(newV);
+                }
+            }
+
             try
             {
                 await _context.SaveChangesAsync();
+
+                // Log initial stock for new variants
+                foreach (var variant in newVariants)
+                {
+                    _context.StockMovements.Add(new StockMovement
+                    {
+                        ProductVariantId = variant.Id,
+                        Type = "StockIn",
+                        Quantity = variant.StockQuantity,
+                        PreviousStock = 0,
+                        NewStock = variant.StockQuantity,
+                        Reason = "New size variant added via update",
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+                if (newVariants.Any())
+                {
+                    await _context.SaveChangesAsync();
+                }
             }
             catch (DbUpdateConcurrencyException)
             {
