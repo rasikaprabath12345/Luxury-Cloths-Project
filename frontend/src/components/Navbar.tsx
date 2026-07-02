@@ -870,7 +870,7 @@ function UserMenu({
 function MegaMenu({ label, data, onLinkClick }: { label: string; data: typeof MEGA_MENUS[string]; onLinkClick?: () => void }) {
   return (
     <div style={{
-      position: "absolute", top: "calc(100% + 8px)", left: 0,
+      position: "relative",
       ...glass.dropdown,
       width: data.columns.length >= 4 ? 620 : data.columns.length === 3 ? 480 : 360,
       zIndex: 200, overflow: "hidden",
@@ -1000,10 +1000,6 @@ export default function Navbar() {
           fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', sans-serif",
           position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
           overflow: "visible",
-        }}
-        onMouseLeave={() => {
-          if (megaMenuTimer.current) clearTimeout(megaMenuTimer.current);
-          setHoveredTab(null);
         }}
       >
         {/* Promo strip */}
@@ -1193,7 +1189,7 @@ export default function Navbar() {
                       if (hasMega) setHoveredTab(tab.label);
                     }}
                     onMouseLeave={() => {
-                      megaMenuTimer.current = setTimeout(() => setHoveredTab(null), 120);
+                      megaMenuTimer.current = setTimeout(() => setHoveredTab(null), 300);
                     }}
                   >
                     <Link
@@ -1235,8 +1231,7 @@ export default function Navbar() {
                     {hasMega && isMegaOpen && (
                       <div
                         onMouseEnter={() => { if (megaMenuTimer.current) clearTimeout(megaMenuTimer.current); }}
-                        onMouseLeave={() => { megaMenuTimer.current = setTimeout(() => setHoveredTab(null), 120); }}
-                        style={{ animation: "megaFadeIn 0.2s ease" }}
+                        style={{ position: "absolute", left: 0, top: "100%", paddingTop: "8px", animation: "megaFadeIn 0.2s ease forwards" }}
                       >
                         <MegaMenu
                           label={tab.label}
@@ -1261,8 +1256,8 @@ export default function Navbar() {
 
       <style>{`
         @keyframes megaFadeIn {
-          from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
-          to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+          from { opacity: 0; transform: translateY(-8px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
         @keyframes searchDropdownOpen {
           from { opacity: 0; transform: translateY(12px) scale(0.98); }
