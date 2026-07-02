@@ -126,9 +126,10 @@ function UserMenu({ user, onLogout }: { user: User; onLogout: () => void }) {
 function ProductSlider({ products }: { products: Product[] }) {
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isTransitioning, setIsTransitioning] = useState(true);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [isMoving, setIsMoving] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -152,8 +153,12 @@ function ProductSlider({ products }: { products: Product[] }) {
 
   // Align index with clone offset when mounted or resized
   useEffect(() => {
-    setCurrentIndex(isLoopable ? itemsPerPage : 0);
     setIsTransitioning(false);
+    setCurrentIndex(isLoopable ? itemsPerPage : 0);
+    // Mark as ready after initial positioning
+    requestAnimationFrame(() => {
+      setReady(true);
+    });
   }, [itemsPerPage, isLoopable]);
 
   // Auto slide effect
@@ -167,20 +172,35 @@ function ProductSlider({ products }: { products: Product[] }) {
 
   if (totalProducts === 0) return null;
 
+  // When all products fit in one page, render a simple grid — no slider needed
+  if (!isLoopable) {
+    return (
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: `repeat(${Math.min(totalProducts, itemsPerPage)}, 1fr)`,
+        gap: 16,
+      }}>
+        {products.map((product) => (
+          <ProductCard key={product.id} product={product} />
+        ))}
+      </div>
+    );
+  }
+
   // Clone products to facilitate infinite loop scrolling
-  const prepended = isLoopable ? products.slice(-itemsPerPage) : [];
-  const appended = isLoopable ? products.slice(0, itemsPerPage) : [];
+  const prepended = products.slice(-itemsPerPage);
+  const appended = products.slice(0, itemsPerPage);
   const extendedProducts = [...prepended, ...products, ...appended];
 
   const handleNext = () => {
-    if (!isLoopable || isMoving) return;
+    if (isMoving) return;
     setIsMoving(true);
     setIsTransitioning(true);
     setCurrentIndex((prev) => prev + 1);
   };
 
   const handlePrev = () => {
-    if (!isLoopable || isMoving) return;
+    if (isMoving) return;
     setIsMoving(true);
     setIsTransitioning(true);
     setCurrentIndex((prev) => prev - 1);
@@ -212,6 +232,7 @@ function ProductSlider({ products }: { products: Product[] }) {
             transform: `translateX(-${currentIndex * (100 / extendedProducts.length)}%)`,
             transition: isTransitioning ? "transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)" : "none",
             width: `${(extendedProducts.length / itemsPerPage) * 100}%`,
+            opacity: ready ? 1 : 0,
           }}
         >
           {extendedProducts.map((product, index) => (
@@ -227,44 +248,42 @@ function ProductSlider({ products }: { products: Product[] }) {
       </div>
 
       {/* Navigation Arrows */}
-      {isLoopable && (
-        <>
-          <button
-            onClick={handlePrev}
-            style={{
-              position: "absolute", left: -20, top: "50%", transform: "translateY(-50%)",
-              background: "rgba(255,255,255,0.9)", border: "1px solid rgba(0,0,0,0.08)",
-              borderRadius: "50%", width: 44, height: 44, cursor: "pointer", zIndex: 10,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "0 4px 16px rgba(0,0,0,0.1)", fontSize: 18, color: "#1C1C1E",
-              transition: "transform 0.2s, background 0.2s",
-            }}
-            onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-50%) scale(1.08)"; e.currentTarget.style.background = "#fff"; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = "translateY(-50%)"; e.currentTarget.style.background = "rgba(255,255,255,0.9)"; }}
-          >
-            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-              <path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-          <button
-            onClick={handleNext}
-            style={{
-              position: "absolute", right: -20, top: "50%", transform: "translateY(-50%)",
-              background: "rgba(255,255,255,0.9)", border: "1px solid rgba(0,0,0,0.08)",
-              borderRadius: "50%", width: 44, height: 44, cursor: "pointer", zIndex: 10,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "0 4px 16px rgba(0,0,0,0.1)", fontSize: 18, color: "#1C1C1E",
-              transition: "transform 0.2s, background 0.2s",
-            }}
-            onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-50%) scale(1.08)"; e.currentTarget.style.background = "#fff"; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = "translateY(-50%)"; e.currentTarget.style.background = "rgba(255,255,255,0.9)"; }}
-          >
-            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-              <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-        </>
-      )}
+      <>
+        <button
+          onClick={handlePrev}
+          style={{
+            position: "absolute", left: -20, top: "50%", transform: "translateY(-50%)",
+            background: "rgba(255,255,255,0.9)", border: "1px solid rgba(0,0,0,0.08)",
+            borderRadius: "50%", width: 44, height: 44, cursor: "pointer", zIndex: 10,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 4px 16px rgba(0,0,0,0.1)", fontSize: 18, color: "#1C1C1E",
+            transition: "transform 0.2s, background 0.2s",
+          }}
+          onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-50%) scale(1.08)"; e.currentTarget.style.background = "#fff"; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = "translateY(-50%)"; e.currentTarget.style.background = "rgba(255,255,255,0.9)"; }}
+        >
+          <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+            <path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+        <button
+          onClick={handleNext}
+          style={{
+            position: "absolute", right: -20, top: "50%", transform: "translateY(-50%)",
+            background: "rgba(255,255,255,0.9)", border: "1px solid rgba(0,0,0,0.08)",
+            borderRadius: "50%", width: 44, height: 44, cursor: "pointer", zIndex: 10,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 4px 16px rgba(0,0,0,0.1)", fontSize: 18, color: "#1C1C1E",
+            transition: "transform 0.2s, background 0.2s",
+          }}
+          onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-50%) scale(1.08)"; e.currentTarget.style.background = "#fff"; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = "translateY(-50%)"; e.currentTarget.style.background = "rgba(255,255,255,0.9)"; }}
+        >
+          <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+            <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      </>
     </div>
   );
 }
