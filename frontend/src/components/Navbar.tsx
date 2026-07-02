@@ -609,8 +609,9 @@ export default function Navbar() {
       >
         {/* Promo strip */}
         <div style={{
-          background: "#0c1033", // deep luxury navy blue matching image
-          color: "#fff",
+          background: "#FFF5EB", // elegant, warm luxury peach-ivory
+          borderBottom: "1px solid rgba(255, 107, 0, 0.12)",
+          color: "#2C2C2E",
           fontSize: 13,
           fontWeight: 500,
           height: 32,
@@ -621,7 +622,9 @@ export default function Navbar() {
           width: "100%",
         }}>
           <div style={{ maxWidth: 1400, width: "100%", margin: "0 auto", display: "flex", justifyContent: "center" }}>
-            <span style={{ fontSize: 13.5, letterSpacing: "0.01em", opacity: 0.95 }}>Sign up and get 10% off on your first order</span>
+            <span style={{ fontSize: 13.5, letterSpacing: "0.01em" }}>
+              Sign up and get <span style={{ color: "#FF6B00", fontWeight: 700 }}>10% off</span> on your first order
+            </span>
           </div>
         </div>
 
