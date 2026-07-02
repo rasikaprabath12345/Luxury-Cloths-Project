@@ -337,29 +337,28 @@ function SearchBar() {
         gap: 8,
         padding: "0 16px",
         height: 38,
-        width: focused ? 320 : 230,
+        width: 260, // Fixed width to prevent layout shifts
         borderRadius: "100px",
         background: focused
           ? "#ffffff"
           : hovered
-            ? "rgba(120, 120, 128, 0.12)"
-            : "rgba(120, 120, 128, 0.07)",
+            ? "rgba(0, 0, 0, 0.06)"
+            : "rgba(0, 0, 0, 0.035)",
         border: focused
-          ? "1px solid #007AFF"
+          ? "1px solid #1C1C1E" // Premium luxury solid charcoal border
           : "1px solid rgba(0, 0, 0, 0.05)",
         boxShadow: focused
-          ? "0 4px 20px rgba(0, 122, 255, 0.08), 0 0 0 3px rgba(0, 122, 255, 0.12)"
+          ? "0 4px 12px rgba(0, 0, 0, 0.04)" // Soft neutral shadow
           : "none",
-        transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+        transition: "background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
         flex: "0 0 auto",
       }}
     >
       <span style={{
-        color: focused ? "#007AFF" : "#8E8E93",
+        color: focused ? "#1C1C1E" : "#8E8E93",
         flexShrink: 0,
         display: "flex",
-        transform: focused ? "scale(1.08)" : "scale(1)",
-        transition: "transform 0.2s ease, color 0.2s ease",
+        transition: "color 0.2s ease",
       }}>
         <SearchIcon />
       </span>
