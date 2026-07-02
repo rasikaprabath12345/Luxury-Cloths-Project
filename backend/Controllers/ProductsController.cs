@@ -162,6 +162,12 @@ namespace backend.Controllers
             existingProduct.CategoryId = product.CategoryId;
             existingProduct.Sizes = product.Sizes;
             existingProduct.Discount = product.Discount;
+            existingProduct.IsChoice = product.IsChoice;
+            existingProduct.IsSale = product.IsSale;
+            existingProduct.Rating = product.Rating;
+            existingProduct.SoldCount = product.SoldCount;
+            existingProduct.PromoText = product.PromoText ?? string.Empty;
+            existingProduct.ShopperSavingText = product.ShopperSavingText ?? string.Empty;
 
             if (!string.IsNullOrEmpty(product.Slug))
             {

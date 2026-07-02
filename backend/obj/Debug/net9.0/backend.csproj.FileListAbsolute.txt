@@ -312,3 +312,4 @@ C:\Users\ASUS\Downloads\New folder (2)\Luxury-Cloths-Project\backend\obj\Debug\n
 C:\Users\ASUS\Downloads\New folder (2)\Luxury-Cloths-Project\backend\obj\Debug\net9.0\backend.pdb
 C:\Users\ASUS\Downloads\New folder (2)\Luxury-Cloths-Project\backend\obj\Debug\net9.0\backend.genruntimeconfig.cache
 C:\Users\ASUS\Downloads\New folder (2)\Luxury-Cloths-Project\backend\obj\Debug\net9.0\ref\backend.dll
+C:\Users\ASUS\Downloads\New folder (2)\Luxury-Cloths-Project\backend\bin\Debug\net9.0\uploads\settings.json

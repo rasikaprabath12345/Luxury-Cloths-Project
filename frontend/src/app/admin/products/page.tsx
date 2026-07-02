@@ -11,6 +11,12 @@ interface Product {
   category?: { name: string };
   sizes?: string;
   discount?: number;
+  isChoice?: boolean;
+  isSale?: boolean;
+  rating?: number;
+  soldCount?: number;
+  promoText?: string;
+  shopperSavingText?: string;
 }
 
 export default function AdminProductsPage() {
@@ -28,6 +34,12 @@ export default function AdminProductsPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [newDiscount, setNewDiscount] = useState("0");
   const [newSizes, setNewSizes] = useState("S,M,L,XL");
+  const [newIsChoice, setNewIsChoice] = useState(false);
+  const [newIsSale, setNewIsSale] = useState(false);
+  const [newRating, setNewRating] = useState("4.5");
+  const [newSoldCount, setNewSoldCount] = useState("0");
+  const [newPromoText, setNewPromoText] = useState("");
+  const [newShopperSavingText, setNewShopperSavingText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
@@ -61,6 +73,12 @@ export default function AdminProductsPage() {
     setSelectedCategoryId(product.categoryId ? product.categoryId.toString() : "");
     setNewDiscount(product.discount !== undefined ? product.discount.toString() : "0");
     setNewSizes(product.sizes || "S,M,L,XL");
+    setNewIsChoice(product.isChoice ?? false);
+    setNewIsSale(product.isSale ?? false);
+    setNewRating(product.rating !== undefined ? product.rating.toString() : "4.5");
+    setNewSoldCount(product.soldCount !== undefined ? product.soldCount.toString() : "0");
+    setNewPromoText(product.promoText || "");
+    setNewShopperSavingText(product.shopperSavingText || "");
     setIsModalOpen(true);
   };
 
@@ -68,6 +86,8 @@ export default function AdminProductsPage() {
     setIsModalOpen(false); setIsEditMode(false); setEditingProductId(null);
     setNewName(""); setNewPrice(""); setNewImageUrl(""); setNewDescription(""); setSelectedCategoryId("");
     setNewDiscount("0"); setNewSizes("S,M,L,XL");
+    setNewIsChoice(false); setNewIsSale(false); setNewRating("4.5"); setNewSoldCount("0");
+    setNewPromoText(""); setNewShopperSavingText("");
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -122,6 +142,12 @@ export default function AdminProductsPage() {
       description: newDescription, categoryId: parseInt(selectedCategoryId),
       sizes: newSizes.trim() || "S,M,L,XL",
       discount: parseInt(newDiscount) || 0,
+      isChoice: newIsChoice,
+      isSale: newIsSale,
+      rating: parseFloat(newRating) || 4.5,
+      soldCount: parseInt(newSoldCount) || 0,
+      promoText: newPromoText.trim(),
+      shopperSavingText: newShopperSavingText.trim()
     };
     try {
       if (isEditMode && editingProductId) {
@@ -265,8 +291,8 @@ export default function AdminProductsPage() {
                   <input type="text" required value={newName} onChange={(e) => setNewName(e.target.value)} className="form-input" placeholder="e.g. Luxury Silk Shirt" />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Price ($) <span className="req">*</span></label>
-                  <input type="number" step="0.01" min="0" required value={newPrice} onChange={(e) => setNewPrice(e.target.value)} className="form-input" placeholder="250.00" />
+                  <label className="form-label">Price (LKR) <span className="req">*</span></label>
+                  <input type="number" step="0.01" min="0" required value={newPrice} onChange={(e) => setNewPrice(e.target.value)} className="form-input" placeholder="17805.36" />
                 </div>
               </div>
 
@@ -291,6 +317,42 @@ export default function AdminProductsPage() {
                 <div className="form-group">
                   <label className="form-label">Discount Percentage (%)</label>
                   <input type="number" min="0" max="100" value={newDiscount} onChange={(e) => setNewDiscount(e.target.value)} className="form-input" placeholder="0" />
+                </div>
+              </div>
+
+              {/* Badges Toggle Row */}
+              <div className="form-row" style={{ marginTop: "4px" }}>
+                <div className="form-group" style={{ flexDirection: "row", alignItems: "center", gap: "8px" }}>
+                  <input type="checkbox" id="isChoiceCheckbox" checked={newIsChoice} onChange={(e) => setNewIsChoice(e.target.checked)} style={{ cursor: "pointer", width: "16px", height: "16px" }} />
+                  <label htmlFor="isChoiceCheckbox" className="form-label" style={{ cursor: "pointer", marginBottom: 0 }}>Choice Badge (Store Pick)</label>
+                </div>
+                <div className="form-group" style={{ flexDirection: "row", alignItems: "center", gap: "8px" }}>
+                  <input type="checkbox" id="isSaleCheckbox" checked={newIsSale} onChange={(e) => setNewIsSale(e.target.checked)} style={{ cursor: "pointer", width: "16px", height: "16px" }} />
+                  <label htmlFor="isSaleCheckbox" className="form-label" style={{ cursor: "pointer", marginBottom: 0 }}>Sale Badge (Discount Item)</label>
+                </div>
+              </div>
+
+              {/* Rating and Sold Count Row */}
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">Rating Value (0.0 to 5.0)</label>
+                  <input type="number" step="0.1" min="0" max="5" value={newRating} onChange={(e) => setNewRating(e.target.value)} className="form-input" placeholder="4.5" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Items Sold Count</label>
+                  <input type="number" min="0" value={newSoldCount} onChange={(e) => setNewSoldCount(e.target.value)} className="form-input" placeholder="0" />
+                </div>
+              </div>
+
+              {/* Promo and Saving text Row */}
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">Custom Promo Label</label>
+                  <input type="text" value={newPromoText} onChange={(e) => setNewPromoText(e.target.value)} className="form-input" placeholder="e.g. LKR1,500 off on LKR11,000" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Shopper Saving Label</label>
+                  <input type="text" value={newShopperSavingText} onChange={(e) => setNewShopperSavingText(e.target.value)} className="form-input" placeholder="e.g. New shoppers save LKR230" />
                 </div>
               </div>
 

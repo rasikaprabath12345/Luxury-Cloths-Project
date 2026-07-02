@@ -25,6 +25,12 @@ export interface Product {
     color: string;
     stockQuantity: number;
   }[];
+  isChoice?: boolean;
+  isSale?: boolean;
+  rating?: number;
+  soldCount?: number;
+  promoText?: string;
+  shopperSavingText?: string;
 }
 
 export function ProductSkeleton() {
@@ -69,16 +75,28 @@ export default function ProductCard({ product }: { product: Product }) {
   // Split sizes by comma
   const sizesList = product.sizes ? product.sizes.split(",").map(s => s.trim()) : [];
 
-  // Deterministic ratings and soldCount based on product.id
-  const rating = (4.0 + (product.id * 7) % 10 / 10).toFixed(1);
+  // Use database fields if available, otherwise fall back to realistic defaults
+  const isChoice = product.isChoice ?? false;
+  const isSale = product.isSale ?? false;
+
+  const ratingVal = (product.rating !== undefined && product.rating !== null && product.rating > 0)
+    ? product.rating
+    : (4.0 + (product.id * 7) % 10 / 10);
+  const rating = ratingVal.toFixed(1);
   const ratingNum = parseFloat(rating);
-  const soldCount = ((product.id * 17) % 90 + 10) * 10;
+
+  const soldCount = (product.soldCount !== undefined && product.soldCount !== null && product.soldCount > 0)
+    ? product.soldCount
+    : ((product.id * 17) % 90 + 10) * 10;
   const totalSoldText = soldCount >= 1000 ? `${(soldCount / 1000).toFixed(1)}k+` : `${soldCount}+`;
 
-  // Promo calculations (in LKR formatting)
+  // Promo calculations (in LKR formatting as fallback)
   const promoOff = Math.round(finalPrice * 0.1);
   const promoMin = Math.round(originalPrice * 1.5);
   const shopperSave = Math.round(finalPrice * 0.05);
+
+  const promoText = product.promoText || `LKR${promoOff.toLocaleString(undefined, { minimumFractionDigits: 2 })} off on LKR${promoMin.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+  const shopperSavingText = product.shopperSavingText || `New shoppers save LKR${shopperSave.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
 
   return (
     <div style={{
@@ -164,14 +182,18 @@ export default function ProductCard({ product }: { product: Product }) {
             overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
             display: "flex", alignItems: "center", gap: "6px"
           }}>
-            <span style={{
-              background: "#FFD60A", color: "#000", fontSize: 9, fontWeight: 800,
-              padding: "2px 6px", borderRadius: 4, textTransform: "uppercase", flexShrink: 0
-            }}>Choice</span>
-            <span style={{
-              background: "#FF2D55", color: "#fff", fontSize: 9, fontWeight: 800,
-              padding: "2px 6px", borderRadius: 4, textTransform: "uppercase", flexShrink: 0
-            }}>Sale</span>
+            {isChoice && (
+              <span style={{
+                background: "#FFD60A", color: "#000", fontSize: 9, fontWeight: 800,
+                padding: "2px 6px", borderRadius: 4, textTransform: "uppercase", flexShrink: 0
+              }}>Choice</span>
+            )}
+            {isSale && (
+              <span style={{
+                background: "#FF2D55", color: "#fff", fontSize: 9, fontWeight: 800,
+                padding: "2px 6px", borderRadius: 4, textTransform: "uppercase", flexShrink: 0
+              }}>Sale</span>
+            )}
             <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {product.name}
             </span>
@@ -216,13 +238,13 @@ export default function ProductCard({ product }: { product: Product }) {
                 %
               </span>
               <span style={{ fontSize: 10, fontWeight: 600, color: "#FF2D55" }}>
-                LKR{promoOff.toLocaleString(undefined, { minimumFractionDigits: 2 })} off on LKR{promoMin.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                {promoText}
               </span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <span style={{ fontSize: 10, display: "inline-flex", alignItems: "center", height: 14 }}>⚡</span>
               <span style={{ fontSize: 10, fontWeight: 600, color: "#D19600" }}>
-                New shoppers save LKR{shopperSave.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                {shopperSavingText}
               </span>
             </div>
           </div>

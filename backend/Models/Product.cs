@@ -31,6 +31,13 @@ namespace backend.Models
             set => _imageUrl = value;
         }
 
+        public bool IsChoice { get; set; } = false;
+        public bool IsSale { get; set; } = false;
+        public double Rating { get; set; } = 4.5;
+        public int SoldCount { get; set; } = 0;
+        public string PromoText { get; set; } = string.Empty;
+        public string ShopperSavingText { get; set; } = string.Empty;
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }
