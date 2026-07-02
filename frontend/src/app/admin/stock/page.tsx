@@ -510,11 +510,11 @@ export default function AdminStockPage() {
               >Cancel</button>
               <button
                 onClick={handleAdjustStock}
-                disabled={adjusting || !adjustAmount || parseInt(adjustAmount) === 0}
+                disabled={adjusting || !adjustAmount || parseInt(adjustAmount) === 0 || (adjustModal.variant.stockQuantity + parseInt(adjustAmount) < 0)}
                 style={{
                   padding: "10px 24px", borderRadius: 10, border: "none",
-                  background: adjusting ? "#94a3b8" : "linear-gradient(135deg, #3b82f6, #2563eb)",
-                  color: "#fff", fontSize: 13, fontWeight: 600, cursor: adjusting ? "not-allowed" : "pointer",
+                  background: adjusting || (adjustModal.variant.stockQuantity + parseInt(adjustAmount) < 0) ? "#94a3b8" : "linear-gradient(135deg, #3b82f6, #2563eb)",
+                  color: "#fff", fontSize: 13, fontWeight: 600, cursor: adjusting || (adjustModal.variant.stockQuantity + parseInt(adjustAmount) < 0) ? "not-allowed" : "pointer",
                   boxShadow: "0 4px 12px rgba(59,130,246,0.25)",
                 }}
               >{adjusting ? "Updating..." : "Update Stock"}</button>
@@ -576,7 +576,7 @@ export default function AdminStockPage() {
                       </div>
                       <p style={{ fontSize: 12, color: "#475569", margin: "0 0 2px" }}>{m.reason}</p>
                       <p style={{ fontSize: 10, color: "#94a3b8", margin: 0 }}>
-                        {new Date(m.createdAt).toLocaleString()}
+                        {new Date(m.createdAt + (m.createdAt.endsWith("Z") ? "" : "Z")).toLocaleString()}
                         {m.orderId && ` · Order #${m.orderId}`}
                       </p>
                     </div>

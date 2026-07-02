@@ -10,7 +10,7 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
     const { cartItems, updateQuantity, removeFromCart } = useCart();
     const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
     const router = useRouter();
-    const [removingId, setRemovingId] = useState<number | null>(null);
+    const [removingId, setRemovingId] = useState<string | null>(null);
 
     useEffect(() => {
         document.body.style.overflow = "hidden";
@@ -28,10 +28,11 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
         0
     );
 
-    const handleRemove = (id: number) => {
-        setRemovingId(id);
+    const handleRemove = (id: number, size?: string, color?: string) => {
+        const itemKey = `${id}-${size || ''}-${color || ''}`;
+        setRemovingId(itemKey);
         setTimeout(() => {
-            removeFromCart(id);
+            removeFromCart(id, size, color);
             setRemovingId(null);
         }, 350);
     };
@@ -42,18 +43,28 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
         router.push("/storefront/checkout");
     };
 
-    // Selection state for checkboxes
-    const [selectedItems, setSelectedItems] = useState<number[]>(cartItems.map((i: any) => i.id));
+    const getItemKey = (item: any) => `${item.id}-${item.size || ''}-${item.color || ''}`;
 
-    const toggleSelection = (id: number) => {
-        setSelectedItems(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+    // Selection state for checkboxes
+    const [selectedItems, setSelectedItems] = useState<string[]>(cartItems.map(getItemKey));
+
+    useEffect(() => {
+        // Automatically sync selected items when cart items change
+        setSelectedItems(prev => {
+            const currentKeys = cartItems.map(getItemKey);
+            return prev.filter(k => currentKeys.includes(k));
+        });
+    }, [cartItems]);
+
+    const toggleSelection = (key: string) => {
+        setSelectedItems(prev => prev.includes(key) ? prev.filter(i => i !== key) : [...prev, key]);
     };
 
     const toggleAll = () => {
         if (selectedItems.length === cartItems.length) {
             setSelectedItems([]);
         } else {
-            setSelectedItems(cartItems.map((i: any) => i.id));
+            setSelectedItems(cartItems.map(getItemKey));
         }
     };
 
@@ -62,12 +73,17 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
             showStorefrontToast("No items selected to delete", "error");
             return;
         }
-        selectedItems.forEach(id => removeFromCart(id));
+        cartItems.forEach(item => {
+            const itemKey = getItemKey(item);
+            if (selectedItems.includes(itemKey)) {
+                removeFromCart(item.id, item.size, item.color);
+            }
+        });
         setSelectedItems([]);
         showStorefrontToast("Selected items removed from cart", "success");
     };
 
-    const selectedCartItems = cartItems.filter((i: any) => selectedItems.includes(i.id));
+    const selectedCartItems = cartItems.filter((i: any) => selectedItems.includes(getItemKey(i)));
 
     const itemsTotal = selectedCartItems.reduce((acc, item: any) => acc + (item.price * 1.5) * (item.quantity || 1), 0); // Fake original price
     const subtotal = selectedCartItems.reduce((acc, item: any) => acc + item.price * (item.quantity || 1), 0);
@@ -146,20 +162,26 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                                             const itemImg = item.imageUrl || item.image || "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=600&auto=format&fit=crop";
                                             const itemQuantity = item.quantity || 1;
                                             const originalPrice = item.price * 1.5; // fake original price
-                                            const isSelected = selectedItems.includes(item.id);
+                                            const itemKey = getItemKey(item);
+                                            const isSelected = selectedItems.includes(itemKey);
 
                                             return (
-                                                <div key={item.id} className="ali-item-row">
+                                                <div key={itemKey} className="ali-item-row" style={{ opacity: removingId === itemKey ? 0.3 : 1, transition: "opacity 0.3s" }}>
                                                     <input
                                                         type="checkbox"
                                                         className="ali-checkbox item-checkbox"
                                                         checked={isSelected}
-                                                        onChange={() => toggleSelection(item.id)}
+                                                        onChange={() => toggleSelection(itemKey)}
                                                     />
 
                                                     <div className="ali-item-img-container">
                                                         <img src={itemImg} alt={item.name} className="ali-item-img" />
-                                                        <div className="ali-item-img-overlay">Only 1 left</div>
+                                                        {item.availableStock !== undefined && item.availableStock <= 5 && item.availableStock > 0 && (
+                                                            <div className="ali-item-img-overlay">Only {item.availableStock} left</div>
+                                                        )}
+                                                        {item.availableStock !== undefined && item.availableStock <= 0 && (
+                                                            <div className="ali-item-img-overlay" style={{ background: "rgba(255, 59, 48, 0.85)" }}>Sold Out</div>
+                                                        )}
                                                     </div>
 
                                                     <div className="ali-item-details">
@@ -188,14 +210,14 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                                                                         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                                                                     </svg>
                                                                 </button>
-                                                                <button className="ali-action-btn" onClick={() => handleRemove(item.id)}>
+                                                                <button className="ali-action-btn" onClick={() => handleRemove(item.id, item.size, item.color)}>
                                                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                                                                 </button>
                                                             </div>
                                                         </div>
 
                                                         <div className="ali-item-variant">
-                                                            {item.size ? `Size: ${item.size}` : 'Standard / Luxury'} <span className="ali-chevron">&gt;</span>
+                                                            {item.size ? `Size: ${item.size}` : 'Standard / Luxury'} {item.color && `· Color: ${item.color}`} <span className="ali-chevron">&gt;</span>
                                                         </div>
 
                                                         <div className="ali-item-price-row">
@@ -205,9 +227,9 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                                                                 <span className="ali-discount-tag">Save LKR {(originalPrice - item.price).toLocaleString()}</span>
                                                             </div>
                                                             <div className="ali-qty-controls">
-                                                                <button className="ali-qty-btn" onClick={() => updateQuantity(item.id, itemQuantity - 1)}>−</button>
+                                                                <button className="ali-qty-btn" disabled={itemQuantity <= 1} onClick={() => updateQuantity(item.id, itemQuantity - 1, item.size, item.color)}>−</button>
                                                                 <span className="ali-qty-val">{itemQuantity}</span>
-                                                                <button className="ali-qty-btn" onClick={() => updateQuantity(item.id, itemQuantity + 1)}>+</button>
+                                                                <button className="ali-qty-btn" disabled={item.availableStock !== undefined && itemQuantity >= item.availableStock} onClick={() => updateQuantity(item.id, itemQuantity + 1, item.size, item.color)}>+</button>
                                                             </div>
                                                         </div>
 

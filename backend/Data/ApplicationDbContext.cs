@@ -35,6 +35,30 @@ namespace backend.Data
             modelBuilder.Entity<OrderItem>()
                 .Property(oi => oi.UnitPrice)
                 .HasColumnType("decimal(18,2)");
+
+            // Global value converter to specify DateTimeKind.Utc when loading dates from the database
+            var dateTimeConverter = new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateTime, DateTime>(
+                v => v,
+                v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
+
+            var nullableDateTimeConverter = new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateTime?, DateTime?>(
+                v => v,
+                v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : null);
+
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                foreach (var property in entityType.GetProperties())
+                {
+                    if (property.ClrType == typeof(DateTime))
+                    {
+                        property.SetValueConverter(dateTimeConverter);
+                    }
+                    else if (property.ClrType == typeof(DateTime?))
+                    {
+                        property.SetValueConverter(nullableDateTimeConverter);
+                    }
+                }
+            }
         }
     }
 }

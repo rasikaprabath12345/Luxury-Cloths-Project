@@ -14,13 +14,22 @@ interface CartItem extends Product {
   quantity: number;
   size?: string;
   color?: string;
+  variantId?: number;
+  availableStock?: number;
 }
 
 interface CartContextType {
   cartItems: CartItem[];
-  addToCart: (product: Product, quantity?: number, size?: string, color?: string) => void;
-  updateQuantity: (id: number, quantity: number) => void;
-  removeFromCart: (id: number) => void;
+  addToCart: (
+    product: Product,
+    quantity?: number,
+    size?: string,
+    color?: string,
+    variantId?: number,
+    availableStock?: number
+  ) => void;
+  updateQuantity: (id: number, quantity: number, size?: string, color?: string) => void;
+  removeFromCart: (id: number, size?: string, color?: string) => void;
   clearCart: () => void;
 }
 
@@ -49,32 +58,81 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [cartItems, isLoaded]);
 
-  const addToCart = (product: Product, qty: number = 1, size?: string, color?: string) => {
+  const addToCart = (
+    product: Product,
+    qty: number = 1,
+    size?: string,
+    color?: string,
+    variantId?: number,
+    availableStock?: number
+  ) => {
+    // Resolve variant details from product metadata if not passed directly (safeguard for lists)
+    let finalVariantId = variantId;
+    let finalSize = size;
+    let finalColor = color;
+    let finalAvailStock = availableStock;
+
+    if (!finalVariantId && (product as any).variants && (product as any).variants.length > 0) {
+      const firstAvail = (product as any).variants.find((v: any) => v.stockQuantity > 0) || (product as any).variants[0];
+      if (firstAvail) {
+        finalVariantId = firstAvail.variantId || firstAvail.id;
+        finalSize = finalSize || firstAvail.size;
+        finalColor = finalColor || firstAvail.color;
+        finalAvailStock = firstAvail.stockQuantity - (firstAvail.reservedQuantity || 0);
+      }
+    }
+
     setCartItems((prev) => {
-      const exist = prev.find((item) => item.id === product.id && item.size === size && item.color === color);
+      const exist = prev.find(
+        (item) => item.id === product.id && item.size === finalSize && item.color === finalColor
+      );
       if (exist) {
+        const newQty = (exist.quantity || 1) + qty;
+        const stockLimit = finalAvailStock !== undefined ? finalAvailStock : exist.availableStock;
+        const finalQty = stockLimit !== undefined ? Math.min(newQty, stockLimit) : newQty;
+
         return prev.map((item) =>
-          item.id === product.id && item.size === size && item.color === color
-            ? { ...item, quantity: (item.quantity || 1) + qty }
+          item.id === product.id && item.size === finalSize && item.color === finalColor
+            ? { ...item, quantity: finalQty, variantId: finalVariantId || item.variantId, availableStock: stockLimit }
             : item
         );
       }
-      return [...prev, { ...product, quantity: qty, size, color }];
+      const stockLimit = finalAvailStock;
+      const finalQty = stockLimit !== undefined ? Math.min(qty, stockLimit) : qty;
+      return [
+        ...prev,
+        {
+          ...product,
+          quantity: finalQty,
+          size: finalSize,
+          color: finalColor,
+          variantId: finalVariantId,
+          availableStock: stockLimit,
+        },
+      ];
     });
   };
 
-  const updateQuantity = (id: number, quantity: number) => {
+  const updateQuantity = (id: number, quantity: number, size?: string, color?: string) => {
     if (quantity <= 0) {
-      removeFromCart(id);
+      removeFromCart(id, size, color);
       return;
     }
     setCartItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, quantity } : item))
+      prev.map((item) => {
+        if (item.id === id && item.size === size && item.color === color) {
+          const finalQty = item.availableStock !== undefined ? Math.min(quantity, item.availableStock) : quantity;
+          return { ...item, quantity: finalQty };
+        }
+        return item;
+      })
     );
   };
 
-  const removeFromCart = (id: number) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== id));
+  const removeFromCart = (id: number, size?: string, color?: string) => {
+    setCartItems((prev) =>
+      prev.filter((item) => !(item.id === id && item.size === size && item.color === color))
+    );
   };
 
   const clearCart = () => {

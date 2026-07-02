@@ -28,6 +28,8 @@ export interface Product {
     size: string;
     color: string;
     stockQuantity: number;
+    reservedQuantity?: number;
+    variantId?: number;
   }[];
   isChoice?: boolean;
   isSale?: boolean;
@@ -277,13 +279,23 @@ export default function ProductCard({ product }: { product: Product }) {
                   }, 1500);
                   return;
                 }
+
+                // Find first variant with stock > 0
+                const firstAvailableVariant = product.variants?.find((v: any) => v.stockQuantity > 0) || product.variants?.[0];
+                const size = firstAvailableVariant?.size;
+                const color = firstAvailableVariant?.color;
+                const variantId = firstAvailableVariant?.variantId || firstAvailableVariant?.id;
+                const availStock = firstAvailableVariant ? (firstAvailableVariant.stockQuantity - (firstAvailableVariant.reservedQuantity || 0)) : undefined;
+
                 addToCart({
                   id: product.id,
                   name: product.name,
                   price: finalPrice,
                   imageUrl: product.imageUrl || product.image || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop",
                   description: product.description,
-                });
+                  variants: product.variants,
+                } as any, 1, size, color, variantId, availStock);
+
                 showStorefrontToast(`${product.name} added to cart! 🛒`, "success");
               }}
               disabled={isOutOfStock}

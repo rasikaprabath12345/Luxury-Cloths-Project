@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
@@ -26,6 +26,7 @@ interface ProductDetail {
   colors?: string[];
   material?: string;
   care?: string[];
+  variants?: any[];
 }
 
 export default function ProductDetailPage() {
@@ -43,6 +44,25 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
+
+  const activeVariant = product
+    ? product.variants?.find((v: any) => {
+        const sizeMatch = !selectedSize || v.size.toLowerCase() === selectedSize.toLowerCase();
+        const colorMatch = !selectedColor || !v.color || v.color.toLowerCase() === selectedColor.toLowerCase();
+        return sizeMatch && colorMatch;
+      }) || product.variants?.[0]
+    : null;
+
+  const activeStock = activeVariant ? (activeVariant.stockQuantity - (activeVariant.reservedQuantity || 0)) : (product?.stock ?? 0);
+
+  // Automatically bound quantity when variant stock limits change
+  useEffect(() => {
+    if (activeStock > 0 && quantity > activeStock) {
+      setQuantity(activeStock);
+    } else if (activeStock <= 0 && quantity !== 1) {
+      setQuantity(1);
+    }
+  }, [activeStock, quantity]);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -77,7 +97,8 @@ export default function ProductDetailPage() {
           sizes: sizesArr,
           colors: colorsArr,
           material: "Ceylon Luxury Cotton & Silk Mix",
-          care: ["Gentle Machine Wash", "Dry in Shade", "Iron Medium Heat"]
+          care: ["Gentle Machine Wash", "Dry in Shade", "Iron Medium Heat"],
+          variants: data.variants || []
         });
 
         if (sizesArr.length > 0) setSelectedSize(sizesArr[0]);
@@ -282,16 +303,16 @@ export default function ProductDetailPage() {
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
               <span style={{
                 width: 7, height: 7, borderRadius: "50%",
-                background: product.stock > 0 ? "#30D158" : "#FF3B30",
+                background: activeStock > 0 ? "#30D158" : "#FF3B30",
                 display: "inline-block",
-                boxShadow: product.stock > 0 ? "0 0 0 2px rgba(48,209,88,0.2)" : "0 0 0 2px rgba(255,59,48,0.2)",
+                boxShadow: activeStock > 0 ? "0 0 0 2px rgba(48,209,88,0.2)" : "0 0 0 2px rgba(255,59,48,0.2)",
               }} />
               <span style={{
                 fontSize: 12, fontWeight: 600,
-                color: product.stock > 0 ? "#30D158" : "#FF3B30",
+                color: activeStock > 0 ? "#30D158" : "#FF3B30",
                 letterSpacing: "0.04em",
               }}>
-                {product.stock > 0 ? `In Stock · ${product.stock} left` : "Out of Stock"}
+                {activeStock > 0 ? `In Stock · ${activeStock} left` : "Out of Stock"}
               </span>
             </div>
 
@@ -390,22 +411,25 @@ export default function ProductDetailPage() {
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   disabled={quantity <= 1}
-                  style={{ width: 36, height: "100%", border: "none", background: "none", cursor: "pointer", fontSize: 16, color: quantity <= 1 ? "#C7C7CC" : "#1C1C1E", fontWeight: 300 }}
+                  style={{ width: 36, height: "100%", border: "none", background: "none", cursor: quantity <= 1 ? "not-allowed" : "pointer", fontSize: 16, color: quantity <= 1 ? "#C7C7CC" : "#1C1C1E", fontWeight: 300 }}
                 >âˆ’</button>
                 <span style={{ minWidth: 32, textAlign: "center", fontSize: 14, fontWeight: 700, color: "#1C1C1E", fontFamily: "var(--font-montserrat)" }}>{quantity}</span>
                 <button
                   onClick={() => setQuantity(quantity + 1)}
-                  style={{ width: 36, height: "100%", border: "none", background: "none", cursor: "pointer", fontSize: 16, color: "#1C1C1E", fontWeight: 300 }}
+                  disabled={quantity >= activeStock}
+                  style={{ width: 36, height: "100%", border: "none", background: "none", cursor: quantity >= activeStock ? "not-allowed" : "pointer", fontSize: 16, color: quantity >= activeStock ? "#C7C7CC" : "#1C1C1E", fontWeight: 300 }}
                 >+</button>
               </div>
-              <span style={{ fontSize: 12, color: "#30D158", fontWeight: 600 }}>{product.stock} in stock</span>
+              <span style={{ fontSize: 12, color: activeStock > 0 ? "#30D158" : "#FF3B30", fontWeight: 600 }}>
+                {activeStock > 0 ? `${activeStock} in stock` : "Out of stock"}
+              </span>
             </div>
 
             {/* CTA Buttons */}
             <div style={{ display: "flex", gap: 12, marginBottom: 24 }}>
               {/* Add to Cart */}
               <button
-                disabled={product.stock === 0}
+                disabled={activeStock <= 0}
                 onClick={() => {
                   if (!isAuthenticated) {
                     showStorefrontToast("Please login or signup to add items to your cart.", "info");
@@ -420,33 +444,33 @@ export default function ProductDetailPage() {
                     price: product.price,
                     imageUrl: product.images?.[0] || "",
                     description: product.description,
-                  }, quantity, selectedSize, selectedColor);
+                  }, quantity, selectedSize, selectedColor, activeVariant?.id || activeVariant?.variantId, activeStock);
                   showStorefrontToast(`${quantity} × ${product.name} added to cart! 🛒`, "success");
                 }}
                 style={{
                   flex: 1, height: 50,
-                  background: product.stock === 0 ? "#E5E5EA" : "linear-gradient(135deg, #1C1C1E 0%, #3C3C43 100%)",
-                  color: product.stock === 0 ? "#8E8E93" : "#fff",
+                  background: activeStock <= 0 ? "#E5E5EA" : "linear-gradient(135deg, #1C1C1E 0%, #3C3C43 100%)",
+                  color: activeStock <= 0 ? "#8E8E93" : "#fff",
                   border: "none",
                   borderRadius: 14,
                   fontSize: 13, fontWeight: 800,
                   letterSpacing: "0.08em",
                   textTransform: "uppercase",
-                  cursor: product.stock === 0 ? "not-allowed" : "pointer",
+                  cursor: activeStock <= 0 ? "not-allowed" : "pointer",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                   transition: "all 0.2s ease",
                   fontFamily: "var(--font-montserrat)",
-                  boxShadow: product.stock === 0 ? "none" : "0 4px 20px rgba(28,28,30,0.3)",
+                  boxShadow: activeStock <= 0 ? "none" : "0 4px 20px rgba(28,28,30,0.3)",
                 }}
-                onMouseEnter={e => { if (product.stock > 0) { e.currentTarget.style.background = "linear-gradient(135deg, #007AFF, #5856D6)"; e.currentTarget.style.boxShadow = "0 6px 24px rgba(0,122,255,0.35)"; } }}
-                onMouseLeave={e => { if (product.stock > 0) { e.currentTarget.style.background = "linear-gradient(135deg, #1C1C1E, #3C3C43)"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(28,28,30,0.3)"; } }}
+                onMouseEnter={e => { if (activeStock > 0) { e.currentTarget.style.background = "linear-gradient(135deg, #007AFF, #5856D6)"; e.currentTarget.style.boxShadow = "0 6px 24px rgba(0,122,255,0.35)"; } }}
+                onMouseLeave={e => { if (activeStock > 0) { e.currentTarget.style.background = "linear-gradient(135deg, #1C1C1E, #3C3C43)"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(28,28,30,0.3)"; } }}
               >
                 <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                   <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
                   <line x1="3" y1="6" x2="21" y2="6" />
                   <path d="M16 10a4 4 0 0 1-8 0" />
                 </svg>
-                {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
+                {activeStock <= 0 ? "Out of Stock" : "Add to Cart"}
               </button>
 
               {/* Wishlist */}

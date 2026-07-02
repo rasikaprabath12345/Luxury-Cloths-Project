@@ -15,7 +15,7 @@ export default function CartPage() {
   const [paymentMethod, setPaymentMethod] = useState<string>("BankTransfer");
   const [loading, setLoading] = useState<boolean>(false);
   const [isOrdering, setIsOrdering] = useState<boolean>(false);
-  const [removingId, setRemovingId] = useState<number | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
   const [coupon, setCoupon] = useState("");
   const [couponApplied, setCouponApplied] = useState(false);
   const [isFirstOrder, setIsFirstOrder] = useState<boolean>(false);
@@ -64,15 +64,16 @@ export default function CartPage() {
     }
   }, []);
 
-  const handleUpdateQuantity = (id: number, newQty: number) => {
+  const handleUpdateQuantity = (id: number, newQty: number, size?: string, color?: string) => {
     if (newQty < 1) return;
-    updateQuantity(id, newQty);
+    updateQuantity(id, newQty, size, color);
   };
 
-  const removeItem = (id: number) => {
-    setRemovingId(id);
+  const removeItem = (id: number, size?: string, color?: string) => {
+    const itemKey = `${id}-${size || ''}-${color || ''}`;
+    setRemovingId(itemKey);
     setTimeout(() => {
-      removeFromCart(id);
+      removeFromCart(id, size, color);
       setRemovingId(null);
     }, 380);
   };
@@ -182,7 +183,7 @@ export default function CartPage() {
         shippingAddress: `${address}, ${city}, ${state}, ${country}. Postal Code: ${postalCode}`,
         paymentSlipUrl,
         items: cartItems.map(item => ({
-          productVariantId: item.id, // In this simple db variantId is matched to item id
+          productVariantId: item.variantId || item.id,
           quantity: item.quantity || 1,
         })),
       };
@@ -388,10 +389,11 @@ export default function CartPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 {cartItems.map((item) => {
                   const img = item.imageUrl || item.image || PLACEHOLDER_IMG;
-                  const isRemoving = removingId === item.id;
+                  const itemKey = `${item.id}-${item.size || ''}-${item.color || ''}`;
+                  const isRemoving = removingId === itemKey;
                   return (
                     <div
-                      key={item.id}
+                      key={itemKey}
                       style={{
                         ...glass.card,
                         display: "flex",
@@ -464,11 +466,25 @@ export default function CartPage() {
                                   padding: "2px 8px", borderRadius: 6
                                 }}>Color: {item.color}</span>
                               )}
+                              {item.availableStock !== undefined && item.availableStock <= 5 && item.availableStock > 0 && (
+                                <span style={{
+                                  fontSize: 10, fontWeight: 600, color: "#FF9500",
+                                  background: "rgba(255,149,0,0.1)", border: "0.5px solid rgba(255,149,0,0.2)",
+                                  padding: "2px 8px", borderRadius: 6
+                                }}>Only {item.availableStock} left</span>
+                              )}
+                              {item.availableStock !== undefined && item.availableStock <= 0 && (
+                                <span style={{
+                                  fontSize: 10, fontWeight: 600, color: "#FF3B30",
+                                  background: "rgba(255,59,48,0.1)", border: "0.5px solid rgba(255,59,48,0.2)",
+                                  padding: "2px 8px", borderRadius: 6
+                                }}>Out of stock</span>
+                              )}
                             </div>
                           </div>
 
                           <button
-                            onClick={() => removeItem(item.id)}
+                            onClick={() => removeItem(item.id, item.size, item.color)}
                             style={{
                               background: "rgba(0,0,0,0.02)", border: "none", color: "#8E8E93",
                               cursor: "pointer", width: 28, height: 28, borderRadius: "50%",
@@ -494,7 +510,7 @@ export default function CartPage() {
                             borderRadius: 12, padding: "2px"
                           }}>
                             <button
-                              onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
+                              onClick={() => handleUpdateQuantity(item.id, item.quantity - 1, item.size, item.color)}
                               disabled={item.quantity <= 1}
                               style={{
                                 width: 28, height: 26, display: "flex", alignItems: "center",
@@ -510,12 +526,15 @@ export default function CartPage() {
                               minWidth: 26, textAlign: "center"
                             }}>{item.quantity}</span>
                             <button
-                              onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                              onClick={() => handleUpdateQuantity(item.id, item.quantity + 1, item.size, item.color)}
+                              disabled={item.availableStock !== undefined && item.quantity >= item.availableStock}
                               style={{
                                 width: 28, height: 26, display: "flex", alignItems: "center",
                                 justifyItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700,
-                                color: "#555", background: "transparent", border: "none",
-                                cursor: "pointer", transition: "background 0.15s",
+                                color: (item.availableStock !== undefined && item.quantity >= item.availableStock) ? "#C7C7CC" : "#555",
+                                background: "transparent", border: "none",
+                                cursor: (item.availableStock !== undefined && item.quantity >= item.availableStock) ? "not-allowed" : "pointer",
+                                transition: "background 0.15s",
                                 borderRadius: 10
                               }}
                               className="qty-action-btn"

@@ -241,16 +241,16 @@ namespace backend.Controllers
                 // Cart එකේ ආපු හැම අයිතමයක්ම ලූප් එකක් හරහා චෙක් කිරීම
                 foreach (var itemDto in orderDto.Items)
                 {
-                    // ඩේටාබේස් එකෙන් අදාළ Product Variant එක සහ එහි Price එක සොයා ගැනීම (පළමුව ProductId ලෙසද, පසුව Variant Id ලෙසද සොයයි)
+                    // ඩේටාබේස් එකෙන් අදාළ Product Variant එක සහ එහි Price එක සොයා ගැනීම (පළමුව Variant Id ලෙසද, පසුව ProductId ලෙසද සොයයි)
                     var variant = await _context.ProductVariants
                         .Include(pv => pv.Product)
-                        .FirstOrDefaultAsync(pv => pv.ProductId == itemDto.ProductVariantId);
+                        .FirstOrDefaultAsync(pv => pv.Id == itemDto.ProductVariantId);
 
                     if (variant == null)
                     {
                         variant = await _context.ProductVariants
                             .Include(pv => pv.Product)
-                            .FirstOrDefaultAsync(pv => pv.Id == itemDto.ProductVariantId);
+                            .FirstOrDefaultAsync(pv => pv.ProductId == itemDto.ProductVariantId);
                     }
 
                     if (variant == null)
