@@ -105,13 +105,20 @@ function CategoryContent() {
                     <div className="px-5 pb-5 pt-0">
                       <button
                         onClick={() => {
+                          const firstAvailableVariant = product.variants?.find((v: any) => v.stockQuantity > 0) || product.variants?.[0];
+                          const size = firstAvailableVariant?.size;
+                          const color = firstAvailableVariant?.color;
+                          const variantId = firstAvailableVariant?.variantId || firstAvailableVariant?.id;
+                          const availStock = firstAvailableVariant ? (firstAvailableVariant.stockQuantity - (firstAvailableVariant.reservedQuantity || 0)) : undefined;
+
                           addToCart({
                             id: product.id,
                             name: product.name,
                             price: finalPrice,
                             imageUrl: imgUrl,
                             description: product.description,
-                          });
+                            variants: product.variants,
+                          } as any, 1, size, color, variantId, availStock);
                           alert(`${product.name} added to cart! 🛒`);
                         }}
                         className="w-full bg-gray-900 hover:bg-blue-600 text-white font-bold py-2.5 px-4 rounded-lg transition-colors text-sm"

@@ -52,9 +52,24 @@ export default function ProductPage() {
                   </div>
                   <div className="p-5 space-y-3">
                     <h3 className="font-bold text-zinc-200 text-base truncate">{product.name}</h3>
-                    <div className="text-lg font-black text-white">${product.price.toFixed(2)}</div>
+                    <div className="text-lg font-black text-white">Rs. {product.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                     <button 
-                      onClick={() => addToCart(product)}
+                      onClick={() => {
+                        const firstAvailableVariant = product.variants?.find((v: any) => v.stockQuantity > 0) || product.variants?.[0];
+                        const size = firstAvailableVariant?.size;
+                        const color = firstAvailableVariant?.color;
+                        const variantId = firstAvailableVariant?.variantId || firstAvailableVariant?.id;
+                        const availStock = firstAvailableVariant ? (firstAvailableVariant.stockQuantity - (firstAvailableVariant.reservedQuantity || 0)) : undefined;
+
+                        addToCart({
+                          id: product.id,
+                          name: product.name,
+                          price: product.price,
+                          imageUrl: product.imageUrl || product.image || "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=600&auto=format&fit=crop",
+                          description: product.description,
+                          variants: product.variants,
+                        } as any, 1, size, color, variantId, availStock);
+                      }}
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition text-xs uppercase tracking-wider"
                     >
                       Add to Cart 🛒

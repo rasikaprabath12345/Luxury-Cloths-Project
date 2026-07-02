@@ -303,7 +303,7 @@ export default function AdminProductsPage() {
                       </div>
                     </td>
                     <td><span className="category-tag">{getCategoryName(product.categoryId)}</span></td>
-                    <td className="price-cell">${(product.price || 0).toFixed(2)}</td>
+                    <td className="price-cell">Rs. {(product.price || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td className="text-right">
                       <div className="actions-group">
                         <button onClick={() => openEditModal(product)} className="btn-icon btn-edit" title="Edit">

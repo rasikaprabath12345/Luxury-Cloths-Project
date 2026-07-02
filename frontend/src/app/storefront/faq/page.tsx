@@ -8,7 +8,7 @@ const FAQS = [
     category: "Shipping & Delivery",
     question: "How long does delivery take?",
     answer:
-      "We offer free shipping on orders over $100, with delivery typically taking 5-7 business days. Express shipping options are available for an additional fee.",
+      "We offer free shipping on orders over Rs. 30,000, with delivery typically taking 5-7 business days. Express shipping options are available for an additional fee.",
   },
   {
     id: 2,
@@ -36,7 +36,7 @@ const FAQS = [
     category: "Payment & Billing",
     question: "What payment methods do you accept?",
     answer:
-      "We accept all major credit cards (Visa, Mastercard, AmEx), PayPal, Apple Pay, Google Pay, and bank transfers for orders over $500.",
+      "We accept all major credit cards (Visa, Mastercard, AmEx), PayPal, Apple Pay, Google Pay, and bank transfers for orders over Rs. 150,000.",
   },
   {
     id: 6,

@@ -12,28 +12,28 @@ export default function ShippingPolicyPage() {
           <div className="space-y-6">
             <div className="border border-gray-200 rounded-lg p-6">
               <h3 className="font-semibold text-gray-900 mb-2">Standard Shipping</h3>
-              <p className="text-gray-700 mb-2">✓ Free on orders over $100</p>
+              <p className="text-gray-700 mb-2">✓ Free on orders over Rs. 30,000</p>
               <p className="text-gray-700 mb-2">✓ 5-7 business days</p>
               <p className="text-sm text-gray-600">Regular delivery to your address</p>
             </div>
 
             <div className="border border-gray-200 rounded-lg p-6">
               <h3 className="font-semibold text-gray-900 mb-2">Express Shipping</h3>
-              <p className="text-gray-700 mb-2">✓ $15 for orders under $100</p>
+              <p className="text-gray-700 mb-2">✓ Rs. 4,500 for orders under Rs. 30,000</p>
               <p className="text-gray-700 mb-2">✓ 2-3 business days</p>
               <p className="text-sm text-gray-600">Fastest delivery option</p>
             </div>
 
             <div className="border border-gray-200 rounded-lg p-6">
               <h3 className="font-semibold text-gray-900 mb-2">International Shipping</h3>
-              <p className="text-gray-700 mb-2">✓ $30-50 depending on location</p>
+              <p className="text-gray-700 mb-2">✓ Rs. 9,000 - 15,000 depending on location</p>
               <p className="text-gray-700 mb-2">✓ 10-21 business days</p>
               <p className="text-sm text-gray-600">Available to 50+ countries</p>
             </div>
 
             <div className="border border-gray-200 rounded-lg p-6">
               <h3 className="font-semibold text-gray-900 mb-2">Overnight Shipping</h3>
-              <p className="text-gray-700 mb-2">✓ $50</p>
+              <p className="text-gray-700 mb-2">✓ Rs. 15,000</p>
               <p className="text-gray-700 mb-2">✓ Next business day</p>
               <p className="text-sm text-gray-600">For urgent orders</p>
             </div>
@@ -96,7 +96,7 @@ export default function ShippingPolicyPage() {
         <section className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Signature Required</h2>
           <p className="text-gray-700 leading-relaxed">
-            Orders over $500 require a signature upon delivery. Packages will not be left unattended. If you're not
+            Orders over Rs. 150,000 require a signature upon delivery. Packages will not be left unattended. If you're not
             available, the carrier will leave a notice and attempt redelivery.
           </p>
         </section>

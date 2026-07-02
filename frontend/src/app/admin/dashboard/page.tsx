@@ -110,7 +110,7 @@ export default function AdminDashboard() {
   };
 
   const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
+    "Rs. " + amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   return (
     <div className="dashboard-container">
@@ -143,7 +143,7 @@ export default function AdminDashboard() {
             <div className="stat-card stat-revenue">
               <div className="stat-header">
                 <span className="stat-label">Total Revenue</span>
-                <div className="stat-icon-wrap revenue-icon">$</div>
+                <div className="stat-icon-wrap revenue-icon">Rs.</div>
               </div>
               <div className="stat-value">{formatCurrency(stats.totalRevenue)}</div>
               <div className="stat-footer">From all non-cancelled orders</div>

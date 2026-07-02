@@ -104,7 +104,7 @@ export default function WishlistPage() {
                       {item.inStock ? "In Stock" : "Out of Stock"}
                     </p>
                   </div>
-                  <p className="text-lg font-bold text-gray-900">${item.price.toFixed(2)}</p>
+                  <p className="text-lg font-bold text-gray-900">Rs. {item.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                 </div>
 
                 {/* Actions */}

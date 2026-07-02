@@ -35,7 +35,21 @@ export default function WishlistDrawer({ onClose }: { onClose: () => void }) {
   };
 
   const handleMoveToCart = (item: any) => {
-    addToCart(item, 1);
+    const firstAvailableVariant = item.variants?.find((v: any) => v.stockQuantity > 0) || item.variants?.[0];
+    const size = firstAvailableVariant?.size;
+    const color = firstAvailableVariant?.color;
+    const variantId = firstAvailableVariant?.variantId || firstAvailableVariant?.id;
+    const availStock = firstAvailableVariant ? (firstAvailableVariant.stockQuantity - (firstAvailableVariant.reservedQuantity || 0)) : undefined;
+
+    addToCart({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      imageUrl: item.imageUrl || item.image || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop",
+      description: item.description,
+      variants: item.variants,
+    } as any, 1, size, color, variantId, availStock);
+
     removeFromWishlist(item.id);
   };
 
