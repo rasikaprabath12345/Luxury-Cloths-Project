@@ -262,7 +262,7 @@ function IconBtn({
         <span style={{
           position: "absolute", top: 1, right: 1,
           minWidth: 16, height: 16, padding: "0 4px",
-          background: "#007AFF", color: "#fff",
+          background: "#aa841c", color: "#fff",
           fontSize: 9, fontWeight: 800, borderRadius: 100,
           display: "flex", alignItems: "center", justifyContent: "center",
           border: "1.5px solid rgba(242,242,247,0.9)",
@@ -305,7 +305,7 @@ function IconBtnLabeled({
           <span style={{
             position: "absolute", top: -5, right: -6,
             minWidth: 16, height: 16, padding: "0 3px",
-            background: "#007AFF", color: "#fff",
+            background: "#aa841c", color: "#fff",
             fontSize: 9, fontWeight: 800, borderRadius: 100,
             display: "flex", alignItems: "center", justifyContent: "center",
             border: "1.5px solid rgba(242,242,247,0.9)",
@@ -413,36 +413,26 @@ function SearchBar() {
       style={{
         display: "flex",
         alignItems: "center",
-        gap: 8,
-        padding: "0 16px",
-        height: 38,
-        width: focused ? 320 : 210, // Dynamic width with premium transition
+        gap: 6,
+        padding: "0 4px 0 16px",
+        height: 42,
+        width: "100%",
+        maxWidth: 540,
         borderRadius: "100px",
-        background: focused
-          ? "#ffffff"
-          : hovered
-            ? "rgba(0, 0, 0, 0.05)"
-            : "rgba(0, 0, 0, 0.025)",
+        background: "#ffffff",
         border: focused
-          ? "1px solid #aa841c" // Luxury gold/bronze border on focus
-          : "1px solid rgba(0, 0, 0, 0.06)",
+          ? "1px solid #aa841c"
+          : hovered
+            ? "1px solid #1C1C1E"
+            : "1px solid rgba(0, 0, 0, 0.12)",
         boxShadow: focused
-          ? "0 8px 24px rgba(170, 132, 28, 0.12), 0 2px 6px rgba(0, 0, 0, 0.03)" // Glowing soft ambient shadow
+          ? "0 8px 24px rgba(170, 132, 28, 0.08), 0 2px 6px rgba(0, 0, 0, 0.02)"
           : "none",
-        transition: "width 0.3s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.2s, border-color 0.2s, box-shadow 0.2s",
+        transition: "border-color 0.2s, box-shadow 0.2s",
         flex: "0 0 auto",
         position: "relative",
       }}
     >
-      <span style={{
-        color: focused ? "#aa841c" : "#8E8E93",
-        flexShrink: 0,
-        display: "flex",
-        transform: focused ? "scale(1.08)" : "scale(1)",
-        transition: "color 0.2s ease, transform 0.2s ease",
-      }}>
-        <SearchIcon />
-      </span>
       <input
         ref={inputRef}
         type="text"
@@ -467,11 +457,11 @@ function SearchBar() {
         <button
           onClick={() => setQuery("")}
           style={{
-            background: "rgba(120, 120, 128, 0.18)",
+            background: "rgba(120, 120, 128, 0.12)",
             border: "none",
             borderRadius: "50%",
-            width: 16,
-            height: 16,
+            width: 18,
+            height: 18,
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
@@ -480,8 +470,8 @@ function SearchBar() {
             padding: 0,
             transition: "background 0.15s",
           }}
-          onMouseEnter={e => (e.currentTarget.style.background = "rgba(120, 120, 128, 0.3)")}
-          onMouseLeave={e => (e.currentTarget.style.background = "rgba(120, 120, 128, 0.18)")}
+          onMouseEnter={e => (e.currentTarget.style.background = "rgba(120, 120, 128, 0.24)")}
+          onMouseLeave={e => (e.currentTarget.style.background = "rgba(120, 120, 128, 0.12)")}
         >
           <svg width={8} height={8} viewBox="0 0 24 24" fill="none"
             stroke="#6C6C70" strokeWidth={3} strokeLinecap="round">
@@ -496,20 +486,48 @@ function SearchBar() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "rgba(0, 0, 0, 0.05)",
+          background: "rgba(0, 0, 0, 0.04)",
           color: "#8E8E93",
           fontSize: 10,
           fontWeight: 600,
           padding: "2px 6px",
           borderRadius: "5px",
-          border: "0.5px solid rgba(0, 0, 0, 0.08)",
+          border: "0.5px solid rgba(0, 0, 0, 0.06)",
           fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
           pointerEvents: "none",
           flexShrink: 0,
+          marginRight: 2,
         }}>
           /
         </span>
       )}
+
+      {/* Search Submission Button */}
+      <button
+        onClick={() => handleSearchSubmit(query)}
+        style={{
+          background: "#1C1C1E",
+          color: "#ffffff",
+          border: "none",
+          borderRadius: "50%",
+          width: 34,
+          height: 34,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          transition: "background 0.2s ease, transform 0.1s ease",
+          flexShrink: 0,
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = "#aa841c"}
+        onMouseLeave={e => e.currentTarget.style.background = "#1C1C1E"}
+      >
+        <svg width={15} height={15} viewBox="0 0 24 24" fill="none"
+          stroke="#ffffff" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.35-4.35" />
+        </svg>
+      </button>
 
       {/* Quick Suggestions & History Dropdown on Focus */}
       {focused && (
@@ -770,7 +788,7 @@ function UserMenu({
       >
         <span style={{
           width: 24, height: 24, borderRadius: "50%",
-          background: "linear-gradient(135deg, #007AFF, #5856D6)",
+          background: "linear-gradient(135deg, #aa841c, #d4af37)",
           color: "#fff", fontSize: 9, fontWeight: 800,
           display: "flex", alignItems: "center", justifyContent: "center",
         }}>{initials}</span>
@@ -792,8 +810,8 @@ function UserMenu({
               <span style={{
                 display: "inline-block", marginTop: 6,
                 fontSize: 9, fontWeight: 700, letterSpacing: "0.12em",
-                textTransform: "uppercase" as const, color: "#007AFF",
-                background: "rgba(0,122,255,0.08)", border: "0.5px solid rgba(0,122,255,0.2)",
+                textTransform: "uppercase" as const, color: "#aa841c",
+                background: "rgba(170,132,28,0.08)", border: "0.5px solid rgba(170,132,28,0.2)",
                 padding: "2px 8px", borderRadius: 6,
               }}>Admin</span>
             )}
@@ -939,9 +957,9 @@ export default function Navbar() {
   const megaMenuTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const promoMessages = [
-    <>Sign up and get <span style={{ color: "#FF6B00", fontWeight: 700 }}>10% off</span> on your first order</>,
-    <>Free delivery on orders over <span style={{ color: "#FF6B00", fontWeight: 700 }}>Rs. 5,000</span></>,
-    <>Discover the premium <span style={{ color: "#FF6B00", fontWeight: 700 }}>Summer Collection — 2026</span></>
+    <>Sign up and get <span style={{ color: "#aa841c", fontWeight: 700 }}>10% off</span> on your first order</>,
+    <>Free delivery on orders over <span style={{ color: "#aa841c", fontWeight: 700 }}>Rs. 5,000</span></>,
+    <>Discover the premium <span style={{ color: "#aa841c", fontWeight: 700 }}>Summer Collection — 2026</span></>
   ];
   const [promoIndex, setPromoIndex] = useState(0);
 
@@ -1033,31 +1051,35 @@ export default function Navbar() {
               onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = "scale(1.02)"}
               onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = "scale(1)"}
             >
-              <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
+              <div style={{ display: "flex", flexDirection: "column", lineHeight: 1, alignItems: "center" }}>
                 <span style={{
-                  fontSize: 18, fontWeight: 900, letterSpacing: "-0.03em",
+                  fontSize: 22, fontWeight: 800, letterSpacing: "0.12em",
                   color: "#1C1C1E",
-                  fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif",
+                  fontFamily: "var(--font-playfair), serif",
+                  textTransform: "uppercase",
                 }}>
                   LUXURY
                   <span style={{
-                    color: "#007AFF",
-                    fontStyle: "italic",
+                    color: "#aa841c",
+                    fontStyle: "normal",
+                    marginLeft: 2,
+                    marginRight: 2,
                   }}>.</span>
-                  <span style={{ color: "#1C1C1E" }}>lk</span>
+                  <span style={{ fontSize: 16, fontWeight: 400, letterSpacing: "0.05em", color: "#6C6C70" }}>lk</span>
                 </span>
                 <span style={{
-                  fontSize: 9, fontWeight: 600, letterSpacing: "0.18em",
+                  fontSize: 7.5, fontWeight: 600, letterSpacing: "0.3em",
                   textTransform: "uppercase" as const, color: "#8E8E93",
-                  marginTop: 1,
+                  marginTop: 3,
+                  fontFamily: "var(--font-montserrat), sans-serif",
                 }}>
-                  Premium Fashion
+                  Premium Boutique
                 </span>
               </div>
             </Link>
 
             {/* ── SEARCH ── */}
-            <div style={{ flex: 1, maxWidth: 480, display: "flex", justifyContent: "center" }}>
+            <div style={{ flex: 1, maxWidth: 580, display: "flex", justifyContent: "center" }}>
               <SearchBar />
             </div>
 
@@ -1119,9 +1141,9 @@ export default function Navbar() {
                 style={{
                   display: "flex", alignItems: "center", justifyContent: "center",
                   width: 32, height: 32, alignSelf: "center", borderRadius: "50%",
-                  color: activeTab === "/" ? "#007AFF" : "#3C3C43",
+                  color: activeTab === "/" ? "#aa841c" : "#3C3C43",
                   transition: "all 0.2s ease",
-                  background: activeTab === "/" ? "rgba(0, 122, 255, 0.06)" : "transparent",
+                  background: activeTab === "/" ? "rgba(170, 132, 28, 0.06)" : "transparent",
                   marginRight: 8,
                 }}
                 onMouseEnter={e => {
@@ -1228,7 +1250,7 @@ export default function Navbar() {
           gap: 5px;
           padding: 0 16px;
           height: 100%;
-          font-size: 11.5px;
+          font-size: 11px;
           font-weight: 600;
           letter-spacing: 0.08em;
           text-transform: uppercase;
@@ -1236,10 +1258,11 @@ export default function Navbar() {
           position: relative;
           transition: color 0.22s ease, background 0.22s ease;
           border-radius: 6px;
+          font-family: var(--font-montserrat), sans-serif;
         }
         .nav-link:hover {
-          color: #007AFF;
-          background: rgba(0, 122, 255, 0.04);
+          color: #aa841c;
+          background: rgba(170, 132, 28, 0.04);
         }
         .nav-link::after {
           content: '';
@@ -1248,7 +1271,7 @@ export default function Navbar() {
           left: 16px;
           right: 16px;
           height: 2px;
-          background: linear-gradient(90deg, #007AFF, #5856D6);
+          background: linear-gradient(90deg, #aa841c, #d4af37);
           transform: scaleX(0);
           transform-origin: center;
           transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1258,7 +1281,7 @@ export default function Navbar() {
           transform: scaleX(1);
         }
         .nav-link.active {
-          color: #007AFF;
+          color: #aa841c;
           font-weight: 700;
         }
         .nav-link.offer {
