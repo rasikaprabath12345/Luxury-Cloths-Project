@@ -18,14 +18,14 @@ interface AuthContextType {
     isAuthenticated: boolean;
     isAdmin: boolean;
     token: string | null;
-    
+
     // Auth methods
     register: (fullName: string, email: string, password: string) => Promise<void>;
     login: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
     forgotPassword: (email: string) => Promise<void>;
     resetPassword: (email: string, token: string, newPassword: string, confirmPassword: string) => Promise<void>;
-    
+
     // Profile methods
     getProfile: () => Promise<void>;
     updateProfile: (data: { fullName?: string; phone?: string; avatar?: string }) => Promise<void>;
@@ -45,11 +45,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             try {
                 const savedUser = localStorage.getItem("luxury_user");
                 const savedToken = localStorage.getItem("luxury_token");
-                
+
                 if (savedUser && savedToken) {
                     setUser(JSON.parse(savedUser));
                     setToken(savedToken);
-                    
+
                     // Verify token is still valid by getting profile
                     try {
                         await authAPI.getProfile();

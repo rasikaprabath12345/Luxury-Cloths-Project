@@ -71,7 +71,7 @@ export default function ProductCard({ product }: { product: Product }) {
     e.preventDefault();
     e.stopPropagation();
     if (!isAuthenticated) {
-      showStorefrontToast("Please login or signup to add items to your wishlist.", "error");
+      showStorefrontToast("Please login or signup to add items to your wishlist.", "info");
       setTimeout(() => {
         window.location.href = "/auth/login";
       }, 1500);
@@ -271,7 +271,7 @@ export default function ProductCard({ product }: { product: Product }) {
                 e.stopPropagation();
                 if (isOutOfStock) return;
                 if (!isAuthenticated) {
-                  showStorefrontToast("Please login or signup to add items to your cart.", "error");
+                  showStorefrontToast("Please login or signup to add items to your cart.", "info");
                   setTimeout(() => {
                     window.location.href = "/auth/login";
                   }, 1500);

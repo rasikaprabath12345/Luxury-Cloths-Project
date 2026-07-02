@@ -82,7 +82,6 @@ export default function ProductDetailPage() {
 
         if (sizesArr.length > 0) setSelectedSize(sizesArr[0]);
         if (colorsArr.length > 0) setSelectedColor(colorsArr[0]);
-        setQuantity(totalStock > 0 ? 1 : 0);
 
         // Fetch related products from same category
         try {
@@ -389,48 +388,27 @@ export default function ProductDetailPage() {
                 height: 40,
               }}>
                 <button
-                  onClick={() => setQuantity(Math.max(product.stock > 0 ? 1 : 0, quantity - 1))}
-                  disabled={quantity <= (product.stock > 0 ? 1 : 0)}
-                  style={{
-                    width: 36,
-                    height: "100%",
-                    border: "none",
-                    background: "none",
-                    cursor: quantity <= (product.stock > 0 ? 1 : 0) ? "not-allowed" : "pointer",
-                    fontSize: 16,
-                    color: quantity <= (product.stock > 0 ? 1 : 0) ? "#C7C7CC" : "#1C1C1E",
-                    fontWeight: 300
-                  }}
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  disabled={quantity <= 1}
+                  style={{ width: 36, height: "100%", border: "none", background: "none", cursor: "pointer", fontSize: 16, color: quantity <= 1 ? "#C7C7CC" : "#1C1C1E", fontWeight: 300 }}
                 >âˆ’</button>
                 <span style={{ minWidth: 32, textAlign: "center", fontSize: 14, fontWeight: 700, color: "#1C1C1E", fontFamily: "var(--font-montserrat)" }}>{quantity}</span>
                 <button
-                  onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                  disabled={quantity >= product.stock}
-                  style={{
-                    width: 36,
-                    height: "100%",
-                    border: "none",
-                    background: "none",
-                    cursor: quantity >= product.stock ? "not-allowed" : "pointer",
-                    fontSize: 16,
-                    color: quantity >= product.stock ? "#C7C7CC" : "#1C1C1E",
-                    fontWeight: 300
-                  }}
+                  onClick={() => setQuantity(quantity + 1)}
+                  style={{ width: 36, height: "100%", border: "none", background: "none", cursor: "pointer", fontSize: 16, color: "#1C1C1E", fontWeight: 300 }}
                 >+</button>
               </div>
-              <span style={{ fontSize: 12, color: product.stock > 0 ? "#30D158" : "#FF3B30", fontWeight: 600 }}>
-                {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
-              </span>
+              <span style={{ fontSize: 12, color: "#30D158", fontWeight: 600 }}>{product.stock} in stock</span>
             </div>
 
             {/* CTA Buttons */}
             <div style={{ display: "flex", gap: 12, marginBottom: 24 }}>
               {/* Add to Cart */}
               <button
-                disabled={product.stock === 0 || quantity === 0 || quantity > product.stock}
+                disabled={product.stock === 0}
                 onClick={() => {
                   if (!isAuthenticated) {
-                    showStorefrontToast("Please login or signup to add items to your cart.", "error");
+                    showStorefrontToast("Please login or signup to add items to your cart.", "info");
                     setTimeout(() => {
                       router.push("/auth/login");
                     }, 1500);
@@ -447,14 +425,14 @@ export default function ProductDetailPage() {
                 }}
                 style={{
                   flex: 1, height: 50,
-                  background: (product.stock === 0 || quantity === 0 || quantity > product.stock) ? "#E5E5EA" : "linear-gradient(135deg, #1C1C1E 0%, #3C3C43 100%)",
-                  color: (product.stock === 0 || quantity === 0 || quantity > product.stock) ? "#8E8E93" : "#fff",
+                  background: product.stock === 0 ? "#E5E5EA" : "linear-gradient(135deg, #1C1C1E 0%, #3C3C43 100%)",
+                  color: product.stock === 0 ? "#8E8E93" : "#fff",
                   border: "none",
                   borderRadius: 14,
                   fontSize: 13, fontWeight: 800,
                   letterSpacing: "0.08em",
                   textTransform: "uppercase",
-                  cursor: (product.stock === 0 || quantity === 0 || quantity > product.stock) ? "not-allowed" : "pointer",
+                  cursor: product.stock === 0 ? "not-allowed" : "pointer",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                   transition: "all 0.2s ease",
                   fontFamily: "var(--font-montserrat)",
@@ -475,7 +453,7 @@ export default function ProductDetailPage() {
               <button
                 onClick={() => {
                   if (!isAuthenticated) {
-                    showStorefrontToast("Please login or signup to add items to your wishlist.", "error");
+                    showStorefrontToast("Please login or signup to add items to your wishlist.", "info");
                     setTimeout(() => {
                       router.push("/auth/login");
                     }, 1500);
@@ -484,7 +462,7 @@ export default function ProductDetailPage() {
                   const isWish = isInWishlist(parseInt(product.id));
                   if (isWish) {
                     removeFromWishlist(parseInt(product.id));
-                    showStorefrontToast(`${product.name} removed from wishlist!`, "error");
+                    showStorefrontToast(`${product.name} removed from wishlist!`, "info");
                   } else {
                     addToWishlist({
                       id: parseInt(product.id),
