@@ -5,6 +5,11 @@ import { productsAPI, categoriesAPI, uploadAPI } from "@/lib/api";
 import { showToast, showConfirm } from "@/lib/adminUtils";
 
 interface Category { id: number; name: string; }
+interface ProductImage {
+  id?: number;
+  imageUrl: string;
+  isMainImage: boolean;
+}
 interface Product {
   id: number; name: string; price: number;
   imageUrl?: string; image?: string; description?: string; categoryId?: number;
@@ -17,6 +22,7 @@ interface Product {
   soldCount?: number;
   promoText?: string;
   shopperSavingText?: string;
+  images?: ProductImage[];
 }
 
 export default function AdminProductsPage() {
@@ -29,9 +35,13 @@ export default function AdminProductsPage() {
   const [newName, setNewName] = useState("");
   const [newPrice, setNewPrice] = useState("");
   const [newImageUrl, setNewImageUrl] = useState("");
+  const [newImageUrl1, setNewImageUrl1] = useState("");
+  const [newImageUrl2, setNewImageUrl2] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [isUploading1, setIsUploading1] = useState(false);
+  const [isUploading2, setIsUploading2] = useState(false);
   const [newDiscount, setNewDiscount] = useState("0");
   const [newSizes, setNewSizes] = useState("S,M,L,XL");
   const [newIsChoice, setNewIsChoice] = useState(false);
@@ -68,7 +78,13 @@ export default function AdminProductsPage() {
     setEditingProductId(product.id);
     setNewName(product.name);
     setNewPrice(product.price.toString());
-    setNewImageUrl(product.imageUrl || product.image || "");
+    
+    const mainImg = product.images?.find(img => img.isMainImage)?.imageUrl || product.imageUrl || product.image || "";
+    const additionalImgs = product.images?.filter(img => !img.isMainImage) || [];
+    
+    setNewImageUrl(mainImg);
+    setNewImageUrl1(additionalImgs[0]?.imageUrl || "");
+    setNewImageUrl2(additionalImgs[1]?.imageUrl || "");
     setNewDescription(product.description || "");
     setSelectedCategoryId(product.categoryId ? product.categoryId.toString() : "");
     setNewDiscount(product.discount !== undefined ? product.discount.toString() : "0");
@@ -84,14 +100,13 @@ export default function AdminProductsPage() {
 
   const closeModal = () => {
     setIsModalOpen(false); setIsEditMode(false); setEditingProductId(null);
-    setNewName(""); setNewPrice(""); setNewImageUrl(""); setNewDescription(""); setSelectedCategoryId("");
+    setNewName(""); setNewPrice(""); setNewImageUrl(""); setNewImageUrl1(""); setNewImageUrl2(""); setNewDescription(""); setSelectedCategoryId("");
     setNewDiscount("0"); setNewSizes("S,M,L,XL");
     setNewIsChoice(false); setNewIsSale(false); setNewRating("4.5"); setNewSoldCount("0");
     setNewPromoText(""); setNewShopperSavingText("");
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleImageUploadGeneric = async (file: File, setter: (url: string) => void, setUploading: (u: boolean) => void) => {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
@@ -99,18 +114,33 @@ export default function AdminProductsPage() {
       return;
     }
 
-    setIsUploading(true);
+    setUploading(true);
     try {
       const response = await uploadAPI.uploadImage(file);
       const uploadedUrl = response.data.url;
-      setNewImageUrl(uploadedUrl);
+      setter(uploadedUrl);
       showToast("Image uploaded successfully!", "success");
     } catch (error) {
       console.error("Error uploading image:", error);
       showToast("Failed to upload image.", "error");
     } finally {
-      setIsUploading(false);
+      setUploading(false);
     }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleImageUploadGeneric(file, setNewImageUrl, setIsUploading);
+  };
+
+  const handleImageUpload1 = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleImageUploadGeneric(file, setNewImageUrl1, setIsUploading1);
+  };
+
+  const handleImageUpload2 = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleImageUploadGeneric(file, setNewImageUrl2, setIsUploading2);
   };
 
   const handleDelete = (id: number, name: string) => {
@@ -135,6 +165,18 @@ export default function AdminProductsPage() {
       return showToast("Please fill in all required fields", "warning");
     }
     setIsSubmitting(true);
+
+    const imagesList = [];
+    if (newImageUrl) {
+      imagesList.push({ imageUrl: newImageUrl, isMainImage: true });
+    }
+    if (newImageUrl1) {
+      imagesList.push({ imageUrl: newImageUrl1, isMainImage: false });
+    }
+    if (newImageUrl2) {
+      imagesList.push({ imageUrl: newImageUrl2, isMainImage: false });
+    }
+
     const productPayload = {
       id: isEditMode ? editingProductId : undefined,
       name: newName, price: parseFloat(newPrice),
@@ -147,7 +189,8 @@ export default function AdminProductsPage() {
       rating: parseFloat(newRating) || 4.5,
       soldCount: parseInt(newSoldCount) || 0,
       promoText: newPromoText.trim(),
-      shopperSavingText: newShopperSavingText.trim()
+      shopperSavingText: newShopperSavingText.trim(),
+      images: imagesList
     };
     try {
       if (isEditMode && editingProductId) {
@@ -278,9 +321,11 @@ export default function AdminProductsPage() {
             </div>
 
             {/* Image preview */}
-            {newImageUrl && (
-              <div className="image-preview">
-                <img src={newImageUrl} alt="Preview" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+            {(newImageUrl || newImageUrl1 || newImageUrl2) && (
+              <div className="image-preview" style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap" }}>
+                {newImageUrl && <img src={newImageUrl} alt="Main" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #cbd5e1" }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
+                {newImageUrl1 && <img src={newImageUrl1} alt="Alt 1" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #cbd5e1" }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
+                {newImageUrl2 && <img src={newImageUrl2} alt="Alt 2" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #cbd5e1" }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
               </div>
             )}
 
@@ -356,29 +401,46 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Product Image</label>
-                <div style={{ display: "flex", gap: "10px", flexDirection: "column" }}>
-                  <label className="btn-upload">
-                    {isUploading ? (
-                      <><span className="spinner-dark" /> Uploading...</>
-                    ) : (
-                      <>📷 Select & Upload Image File</>
-                    )}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      disabled={isUploading}
-                      style={{ display: "none" }}
-                    />
-                  </label>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    <div style={{ flex: 1, height: "1px", background: "#e2e8f0" }}></div>
-                    <span style={{ fontSize: "11px", color: "#94a3b8", textTransform: "uppercase", fontWeight: 600 }}>or</span>
-                    <div style={{ flex: 1, height: "1px", background: "#e2e8f0" }}></div>
+              <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: "14px", marginTop: "4px" }}>
+                <p style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a", marginBottom: "12px" }}>Product Images (Main + 2 Additional)</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                  
+                  {/* Main Image */}
+                  <div className="form-group">
+                    <label className="form-label">Main Image URL</label>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <input type="url" value={newImageUrl} onChange={(e) => setNewImageUrl(e.target.value)} className="form-input" placeholder="e.g. https://images.unsplash.com/main.jpg" />
+                      <label className="btn-upload" style={{ width: "auto", whiteSpace: "nowrap", margin: 0, padding: "0 14px", display: "inline-flex", alignItems: "center" }}>
+                        {isUploading ? <span className="spinner-dark" /> : "📷 Upload"}
+                        <input type="file" accept="image/*" onChange={handleImageUpload} disabled={isUploading} style={{ display: "none" }} />
+                      </label>
+                    </div>
                   </div>
-                  <input type="url" value={newImageUrl} onChange={(e) => setNewImageUrl(e.target.value)} className="form-input" placeholder="Paste image URL (e.g. https://images.unsplash.com/...)" />
+
+                  {/* Additional Image 1 */}
+                  <div className="form-group">
+                    <label className="form-label">Additional Image 1 URL</label>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <input type="url" value={newImageUrl1} onChange={(e) => setNewImageUrl1(e.target.value)} className="form-input" placeholder="e.g. https://images.unsplash.com/side.jpg" />
+                      <label className="btn-upload" style={{ width: "auto", whiteSpace: "nowrap", margin: 0, padding: "0 14px", display: "inline-flex", alignItems: "center" }}>
+                        {isUploading1 ? <span className="spinner-dark" /> : "📷 Upload"}
+                        <input type="file" accept="image/*" onChange={handleImageUpload1} disabled={isUploading1} style={{ display: "none" }} />
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Additional Image 2 */}
+                  <div className="form-group">
+                    <label className="form-label">Additional Image 2 URL</label>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <input type="url" value={newImageUrl2} onChange={(e) => setNewImageUrl2(e.target.value)} className="form-input" placeholder="e.g. https://images.unsplash.com/back.jpg" />
+                      <label className="btn-upload" style={{ width: "auto", whiteSpace: "nowrap", margin: 0, padding: "0 14px", display: "inline-flex", alignItems: "center" }}>
+                        {isUploading2 ? <span className="spinner-dark" /> : "📷 Upload"}
+                        <input type="file" accept="image/*" onChange={handleImageUpload2} disabled={isUploading2} style={{ display: "none" }} />
+                      </label>
+                    </div>
+                  </div>
+
                 </div>
               </div>
 

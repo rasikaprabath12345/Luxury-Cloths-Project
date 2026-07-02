@@ -178,16 +178,23 @@ namespace backend.Controllers
                 existingProduct.Slug = product.Name.ToLower().Replace(" ", "-").Replace("/", "-");
             }
 
-            if (!string.IsNullOrEmpty(product.ImageUrl))
+            // Sync all images (multiple images support)
+            if (product.Images != null && product.Images.Count > 0)
             {
-                if (existingProduct.Images.Any())
+                _context.ProductImages.RemoveRange(existingProduct.Images);
+                existingProduct.Images = product.Images.Select(img => new ProductImage
                 {
-                    existingProduct.Images[0].ImageUrl = product.ImageUrl;
-                }
-                else
+                    ImageUrl = img.ImageUrl,
+                    IsMainImage = img.IsMainImage
+                }).ToList();
+            }
+            else if (!string.IsNullOrEmpty(product.ImageUrl))
+            {
+                _context.ProductImages.RemoveRange(existingProduct.Images);
+                existingProduct.Images = new List<ProductImage>
                 {
-                    existingProduct.Images.Add(new ProductImage { ImageUrl = product.ImageUrl, IsMainImage = true });
-                }
+                    new ProductImage { ImageUrl = product.ImageUrl, IsMainImage = true }
+                };
             }
 
             // Sync variants based on Sizes
