@@ -324,21 +324,43 @@ function IconBtnLabeled({
 // ─── SEARCH BAR ───────────────────────────────────────────────────────────────
 function SearchBar() {
   const [focused, setFocused] = useState(false);
+  const [hovered, setHovered] = useState(false);
   const [query, setQuery] = useState("");
 
   return (
-    <div style={{
-      ...glass.pill,
-      display: "flex", alignItems: "center", gap: 8,
-      padding: "0 14px", height: 38,
-      width: focused ? 280 : 220,
-      transition: "width 0.3s ease, box-shadow 0.2s",
-      boxShadow: focused
-        ? "0 0 0 2px rgba(0,122,255,0.25), 0 2px 16px rgba(0,0,0,0.08)"
-        : "0 1px 8px rgba(0,0,0,0.07)",
-      flex: "0 0 auto",
-    }}>
-      <span style={{ color: "#8E8E93", flexShrink: 0, display: "flex" }}>
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        padding: "0 16px",
+        height: 38,
+        width: focused ? 320 : 230,
+        borderRadius: "100px",
+        background: focused
+          ? "#ffffff"
+          : hovered
+            ? "rgba(120, 120, 128, 0.12)"
+            : "rgba(120, 120, 128, 0.07)",
+        border: focused
+          ? "1px solid #007AFF"
+          : "1px solid rgba(0, 0, 0, 0.05)",
+        boxShadow: focused
+          ? "0 4px 20px rgba(0, 122, 255, 0.08), 0 0 0 3px rgba(0, 122, 255, 0.12)"
+          : "none",
+        transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+        flex: "0 0 auto",
+      }}
+    >
+      <span style={{
+        color: focused ? "#007AFF" : "#8E8E93",
+        flexShrink: 0,
+        display: "flex",
+        transform: focused ? "scale(1.08)" : "scale(1)",
+        transition: "transform 0.2s ease, color 0.2s ease",
+      }}>
         <SearchIcon />
       </span>
       <input
@@ -349,8 +371,13 @@ function SearchBar() {
         onBlur={() => setFocused(false)}
         placeholder="Search products, categories…"
         style={{
-          background: "none", border: "none", outline: "none",
-          fontSize: 12, color: "#1C1C1E", width: "100%",
+          background: "none",
+          border: "none",
+          outline: "none",
+          fontSize: 12.5,
+          fontWeight: 400,
+          color: "#1C1C1E",
+          width: "100%",
           fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
         }}
       />
@@ -358,11 +385,22 @@ function SearchBar() {
         <button
           onClick={() => setQuery("")}
           style={{
-            background: "rgba(120,120,128,0.18)", border: "none",
-            borderRadius: "50%", width: 16, height: 16, cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            flexShrink: 0, padding: 0,
-          }}>
+            background: "rgba(120, 120, 128, 0.18)",
+            border: "none",
+            borderRadius: "50%",
+            width: 16,
+            height: 16,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+            padding: 0,
+            transition: "background 0.15s",
+          }}
+          onMouseEnter={e => (e.currentTarget.style.background = "rgba(120, 120, 128, 0.3)")}
+          onMouseLeave={e => (e.currentTarget.style.background = "rgba(120, 120, 128, 0.18)")}
+        >
           <svg width={8} height={8} viewBox="0 0 24 24" fill="none"
             stroke="#6C6C70" strokeWidth={3} strokeLinecap="round">
             <path d="M18 6L6 18M6 6l12 12" />
@@ -577,6 +615,20 @@ export default function Navbar() {
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
   const megaMenuTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const promoMessages = [
+    <>Sign up and get <span style={{ color: "#FF6B00", fontWeight: 700 }}>10% off</span> on your first order</>,
+    <>Free delivery on orders over <span style={{ color: "#FF6B00", fontWeight: 700 }}>Rs. 5,000</span></>,
+    <>Discover the premium <span style={{ color: "#FF6B00", fontWeight: 700 }}>Summer Collection — 2026</span></>
+  ];
+  const [promoIndex, setPromoIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPromoIndex((prev) => (prev + 1) % promoMessages.length);
+    }, 4500);
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     const current = NAV_TABS.find(
       t => pathname === t.href || pathname.startsWith(t.href + "/")
@@ -620,18 +672,24 @@ export default function Navbar() {
           justifyContent: "center",
           padding: "0 28px",
           width: "100%",
+          overflow: "hidden",
         }}>
-          <div style={{ maxWidth: 1400, width: "100%", margin: "0 auto", display: "flex", justifyContent: "center" }}>
-            <span style={{ fontSize: 13.5, letterSpacing: "0.01em" }}>
-              Sign up and get <span style={{ color: "#FF6B00", fontWeight: 700 }}>10% off</span> on your first order
+          <div style={{ maxWidth: 1400, width: "100%", margin: "0 auto", display: "flex", justifyContent: "center", alignItems: "center" }}>
+            <span key={promoIndex} style={{
+              fontSize: 13,
+              letterSpacing: "0.02em",
+              animation: "promoFade 4.5s infinite ease-in-out",
+              display: "inline-block",
+            }}>
+              {promoMessages[promoIndex]}
             </span>
           </div>
         </div>
 
         <div style={{
           background: scrolled
-            ? "rgba(248,248,252,0.92)"
-            : "rgba(248,248,252,0.82)",
+            ? "rgba(255, 255, 255, 0.96)"
+            : "#ffffff",
           backdropFilter: "blur(40px) saturate(200%)",
           WebkitBackdropFilter: "blur(40px) saturate(200%)",
           borderBottom: "0.5px solid rgba(0,0,0,0.08)",
@@ -648,7 +706,10 @@ export default function Navbar() {
         }}>
 
           {/* ── LOGO ── */}
-          <Link href="/" style={{ textDecoration: "none", flexShrink: 0 }}>
+          <Link href="/" style={{ textDecoration: "none", flexShrink: 0, transition: "transform 0.2s ease", display: "inline-block" }}
+            onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = "scale(1.02)"}
+            onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = "scale(1)"}
+          >
             <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
               <span style={{
                 fontSize: 18, fontWeight: 900, letterSpacing: "-0.03em",
@@ -715,7 +776,9 @@ export default function Navbar() {
         {/* ── BOTTOM ROW: Category Tabs ── */}
         <div style={{
           borderTop: "0.5px solid rgba(0,0,0,0.06)",
-          background: "rgba(255,255,255,0.50)",
+          background: scrolled
+            ? "rgba(255, 255, 255, 0.92)"
+            : "#ffffff",
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
           overflow: "visible",
@@ -723,8 +786,8 @@ export default function Navbar() {
           <div style={{
             maxWidth: 1400, margin: "0 auto",
             padding: "0 28px",
-            display: "flex", alignItems: "center",
-            gap: 2, height: 40,
+            display: "flex", alignItems: "stretch",
+            gap: 4, height: 40,
             overflow: "visible",
           }}>
             <Link
@@ -732,21 +795,21 @@ export default function Navbar() {
               onClick={() => setActiveTab("/")}
               style={{
                 display: "flex", alignItems: "center", justifyContent: "center",
-                padding: "6px 12px", borderRadius: 100,
-                color: activeTab === "/" ? "#fff" : "#3C3C43",
-                background: activeTab === "/"
-                  ? "linear-gradient(135deg, #007AFF, #5856D6)"
-                  : "transparent",
-                boxShadow: activeTab === "/"
-                  ? "0 2px 10px rgba(0,122,255,0.28)"
-                  : "none",
-                transition: "all 0.18s ease",
+                width: 32, height: 32, alignSelf: "center", borderRadius: "50%",
+                color: activeTab === "/" ? "#007AFF" : "#3C3C43",
+                transition: "all 0.2s ease",
+                background: activeTab === "/" ? "rgba(0, 122, 255, 0.06)" : "transparent",
+                marginRight: 8,
               }}
               onMouseEnter={e => {
-                if (activeTab !== "/") (e.currentTarget as HTMLElement).style.background = "rgba(0,0,0,0.05)";
+                if (activeTab !== "/") {
+                  (e.currentTarget as HTMLElement).style.background = "rgba(0, 0, 0, 0.04)";
+                }
               }}
               onMouseLeave={e => {
-                if (activeTab !== "/") (e.currentTarget as HTMLElement).style.background = "transparent";
+                if (activeTab !== "/") {
+                  (e.currentTarget as HTMLElement).style.background = "transparent";
+                }
               }}
               aria-label="Home"
             >
@@ -761,7 +824,7 @@ export default function Navbar() {
               return (
                 <div
                   key={tab.href}
-                  style={{ position: "relative" }}
+                  style={{ position: "relative", height: "100%", display: "flex", alignItems: "center" }}
                   onMouseEnter={() => {
                     if (megaMenuTimer.current) clearTimeout(megaMenuTimer.current);
                     if (hasMega) setHoveredTab(tab.label);
@@ -773,26 +836,14 @@ export default function Navbar() {
                   <Link
                     href={tab.href}
                     onClick={() => { setActiveTab(tab.href); setHoveredTab(null); }}
+                    className={`nav-link ${isActive ? "active" : ""} ${isOffer ? "offer" : ""}`}
                     style={{
-                      display: "flex", alignItems: "center", gap: 5,
-                      padding: "5px 14px", borderRadius: 100,
-                      fontSize: 12.5, fontWeight: isActive ? 600 : 500,
-                      whiteSpace: "nowrap" as const, textDecoration: "none",
-                      transition: "all 0.18s ease",
-                      color: isActive
-                        ? "#fff"
-                        : isOffer
-                          ? "#FF3B30"
-                          : "#3C3C43",
-                      background: isActive
-                        ? "linear-gradient(135deg, #007AFF, #5856D6)"
-                        : isMegaOpen
-                          ? "rgba(0,0,0,0.05)"
-                          : "transparent",
-                      boxShadow: isActive
-                        ? "0 2px 10px rgba(0,122,255,0.28)"
-                        : "none",
-                      letterSpacing: "-0.01em",
+                      height: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 5,
+                      textDecoration: "none",
+                      whiteSpace: "nowrap",
                     }}
                   >
                     {tab.label}
@@ -837,6 +888,60 @@ export default function Navbar() {
         @keyframes megaFadeIn {
           from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
           to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        @keyframes promoFade {
+          0% { opacity: 0; transform: translateY(8px); }
+          5% { opacity: 1; transform: translateY(0); }
+          95% { opacity: 1; transform: translateY(0); }
+          100% { opacity: 0; transform: translateY(-8px); }
+        }
+        .nav-link {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          padding: 0 16px;
+          height: 100%;
+          font-size: 11.5px;
+          font-weight: 600;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: #3C3C43;
+          position: relative;
+          transition: color 0.22s ease, background 0.22s ease;
+          border-radius: 6px;
+        }
+        .nav-link:hover {
+          color: #007AFF;
+          background: rgba(0, 122, 255, 0.04);
+        }
+        .nav-link::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 16px;
+          right: 16px;
+          height: 2px;
+          background: linear-gradient(90deg, #007AFF, #5856D6);
+          transform: scaleX(0);
+          transform-origin: center;
+          transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .nav-link:hover::after,
+        .nav-link.active::after {
+          transform: scaleX(1);
+        }
+        .nav-link.active {
+          color: #007AFF;
+          font-weight: 700;
+        }
+        .nav-link.offer {
+          color: #FF3B30;
+        }
+        .nav-link.offer::after {
+          background: #FF3B30;
+        }
+        .nav-link.offer:hover {
+          background: rgba(255, 59, 48, 0.04);
         }
       `}</style>
 
