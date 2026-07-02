@@ -117,6 +117,15 @@ export default function CartPage() {
   const handlePlaceOrder = async () => {
     if (cartItems.length === 0) return;
 
+    // Legacy cart safeguard
+    const hasLegacy = cartItems.some(item => !item.variantId || item.variantId === item.id);
+    if (hasLegacy) {
+      alert("Your cart contains outdated items. The cart will be cleared. Please add the items to the cart again.");
+      clearCart();
+      router.push("/storefront/shop");
+      return;
+    }
+
     // Check local storage for user token/info, standard auth
     const savedUserStr = localStorage.getItem("luxury_user");
     const token = localStorage.getItem("luxury_token");
@@ -183,7 +192,7 @@ export default function CartPage() {
         shippingAddress: `${address}, ${city}, ${state}, ${country}. Postal Code: ${postalCode}`,
         paymentSlipUrl,
         items: cartItems.map(item => ({
-          productVariantId: item.variantId || item.id,
+          productVariantId: item.variantId,
           quantity: item.quantity || 1,
         })),
       };

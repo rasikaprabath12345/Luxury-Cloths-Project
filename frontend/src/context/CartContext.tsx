@@ -44,7 +44,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const savedCart = localStorage.getItem("cart");
     if (savedCart) {
       try {
-        setCartItems(JSON.parse(savedCart));
+        const parsed = JSON.parse(savedCart);
+        const hasLegacy = Array.isArray(parsed) && parsed.some((item: any) => !item.variantId);
+        if (hasLegacy) {
+          localStorage.removeItem("cart");
+          setCartItems([]);
+        } else {
+          setCartItems(parsed);
+        }
       } catch (error) {
         console.error("Failed to parse cart:", error);
         localStorage.removeItem("cart");
