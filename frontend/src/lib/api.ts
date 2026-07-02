@@ -91,6 +91,10 @@ export const authAPI = {
   updateUserRole: async (id: number, role: string) => {
     return apiClient.put(`/Auth/users/${id}/role`, { role });
   },
+
+  deleteUser: async (id: number) => {
+    return apiClient.delete(`/Auth/users/${id}`);
+  },
 };
 
 // PRODUCTS ENDPOINTS

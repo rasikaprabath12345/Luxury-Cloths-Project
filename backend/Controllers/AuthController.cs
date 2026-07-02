@@ -274,6 +274,11 @@ namespace backend.Controllers
                 return NotFound("User not found.");
             }
 
+            if (string.Equals(user.Role, "Admin", System.StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest("Admins cannot be demoted or have their role changed.");
+            }
+
             user.Role = dto.Role;
             user.UpdatedAt = DateTime.UtcNow;
 
@@ -281,6 +286,36 @@ namespace backend.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "User role updated successfully.", role = user.Role });
+        }
+
+        // 11. DELETE USER (Admin only, only Customer accounts can be deleted)
+        [HttpDelete("users/{id}")]
+        [Authorize]
+        public async Task<IActionResult> DeleteUser(int id)
+        {
+            var adminId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            var adminUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == adminId);
+            if (adminUser == null || !string.Equals(adminUser.Role, "Admin", System.StringComparison.OrdinalIgnoreCase))
+            {
+                return Unauthorized("Only admins can perform this action.");
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            // block deleting Admin accounts
+            if (string.Equals(user.Role, "Admin", System.StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest("Admin accounts cannot be deleted.");
+            }
+
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "User deleted successfully." });
         }
     }
 }

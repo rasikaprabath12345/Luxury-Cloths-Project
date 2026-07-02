@@ -26,22 +26,21 @@ export default function AdminUsersPage() {
 
   useEffect(() => { fetchUsers(); }, []);
 
-  const handleRoleChange = (userId: number, currentRole: string, userName: string) => {
-    const newRole = currentRole.toLowerCase() === "admin" ? "Customer" : "Admin";
+  const handleDeleteUser = (userId: number, userName: string) => {
     showConfirm(
-      `Change Role to ${newRole}`,
-      `Are you sure you want to ${newRole === "Admin" ? "promote" : "demote"} <strong>"${userName}"</strong> to <strong>${newRole}</strong>?`,
+      "Delete User Account",
+      `Are you sure you want to permanently delete user <strong>"${userName}"</strong>? This action cannot be undone.`,
       async () => {
         try {
-          await authAPI.updateUserRole(userId, newRole);
-          showToast(`${userName} is now ${newRole}`, "success");
-          setUsers((prev) => prev.map((u) => u.id === userId ? { ...u, role: newRole } : u));
+          await authAPI.deleteUser(userId);
+          showToast(`"${userName}" has been deleted`, "success");
+          setUsers((prev) => prev.filter((u) => u.id !== userId));
         } catch (error) {
-          showToast("Failed to update user role", "error");
+          showToast("Failed to delete user account", "error");
         }
       },
-      newRole === "Admin" ? "Promote" : "Demote",
-      newRole === "Admin" ? "primary" : "danger"
+      "Delete",
+      "danger"
     );
   };
 
@@ -127,22 +126,15 @@ export default function AdminUsersPage() {
                     {user.role?.toLowerCase() === "admin" ? "🛡️" : "👤"} {user.role}
                   </span>
                 </div>
-                {user.role?.toLowerCase() === "admin" ? (
+                {user.role?.toLowerCase() !== "admin" ? (
                   <button
                     className="role-btn demote-btn"
-                    onClick={() => handleRoleChange(user.id, user.role, user.fullName)}
+                    onClick={() => handleDeleteUser(user.id, user.fullName)}
                   >
-                    Demote
+                    Delete
                   </button>
                 ) : (
-                  <button
-                    className="role-btn promote-btn"
-                    style={{ opacity: 0.5, cursor: "not-allowed" }}
-                    title="Admins are not allowed to promote other users to Admin"
-                    disabled
-                  >
-                    Promote
-                  </button>
+                  <div style={{ width: 72 }} />
                 )}
               </div>
             ))}
