@@ -301,20 +301,17 @@ namespace backend.Controllers
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email.ToLower());
 
             if (user == null)
-                return Ok(new { message = "මුරපදය ප්‍රතිසකස් කිරීමේ සබැඳිය ඊමේල් මඟින් යවන ලදී (එම Email ලිපිනය පවතී නම්)." });
+                return Ok(new { message = "මුරපදය ප්‍රතිසකස් කිරීමේ OTP කේතය ඊමේල් මඟින් යවන ලදී (එම Email ලිපිනය පවතී නම්)." });
 
-            // Generate reset token
-            string resetToken = Guid.NewGuid().ToString();
-            user.PasswordResetToken = resetToken;
-            user.PasswordResetExpiry = DateTime.UtcNow.AddHours(2); // 2 hours validity
+            // Generate 6-digit reset OTP
+            string otpCode = new Random().Next(100000, 999999).ToString();
+            user.PasswordResetToken = otpCode;
+            user.PasswordResetExpiry = DateTime.UtcNow.AddMinutes(15); // 15 mins validity for OTP
 
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
 
-            // Create Reset Link
-            var resetLink = $"{_configuration["FrontendUrl"]}/auth/reset-password?token={resetToken}&email={user.Email}";
-            
-            // Send Reset Link via Email Service
+            // Send Reset OTP via Email Service
             string emailBody = $@"
                 <div style='font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 12px; max-width: 600px; margin: 0 auto; color: #1c1c1e;'>
                     <div style='text-align: center; margin-bottom: 20px;'>
@@ -322,21 +319,19 @@ namespace backend.Controllers
                         <h2 style='font-family: Georgia, serif; letter-spacing: 4px; margin: 10px 0;'>LUXURY.lk</h2>
                     </div>
                     <p style='font-size: 15px;'>Hi {user.FullName},</p>
-                    <p style='font-size: 15px;'>We received a request to reset your password. Click the button below to reset your password:</p>
-                    <div style='text-align: center; margin: 30px 0;'>
-                        <a href='{resetLink}' style='background: #1C1C1E; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px;'>Reset Password</a>
+                    <p style='font-size: 15px;'>We received a request to reset your password. Please use the following 6-digit OTP code to reset your password:</p>
+                    <div style='background: #f8f9fa; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; padding: 15px; font-size: 28px; font-weight: bold; text-align: center; letter-spacing: 6px; color: #1c1c1e; margin: 20px 0;'>
+                        {otpCode}
                     </div>
-                    <p style='font-size: 13px; color: #8e8e93;'>If you cannot click the button, copy and paste the following URL into your browser:</p>
-                    <p style='font-size: 12px; color: #0066cc; word-break: break-all;'>{resetLink}</p>
-                    <p style='font-size: 13px; color: #8e8e93; margin-top: 20px;'>This link is valid for 2 hours. If you did not request a password reset, please ignore this email.</p>
+                    <p style='font-size: 13px; color: #8e8e93;'>This OTP code is valid for 15 minutes. If you did not request a password reset, please ignore this email.</p>
                     <hr style='border: none; border-top: 1px solid #eee; margin: 20px 0;' />
                     <p style='font-size: 12px; color: #8e8e93; text-align: center;'>© 2026 Luxury Store. All rights reserved.</p>
                 </div>";
 
-            await _emailService.SendEmailAsync(user.Email, "Reset Your Password - Luxury Store", emailBody);
+            await _emailService.SendEmailAsync(user.Email, "Reset Your Password OTP - Luxury Store", emailBody);
 
             return Ok(new { 
-                message = "මුරපදය ප්‍රතිසකස් කිරීමේ සබැඳිය සාර්ථකව ඊමේල් පණිවිඩයක් ලෙස යවන ලදී."
+                message = "මුරපදය ප්‍රතිසකස් කිරීමේ OTP කේතය සාර්ථකව ඊමේල් පණිවිඩයක් ලෙස යවන ලදී."
             });
         }
 
