@@ -82,12 +82,15 @@ namespace backend.Controllers
                 product.Slug = product.Name.ToLower().Replace(" ", "-").Replace("/", "-");
             }
 
-            if (!string.IsNullOrEmpty(product.ImageUrl))
+            if (product.Images == null || product.Images.Count == 0)
             {
-                product.Images = new List<ProductImage>
+                if (!string.IsNullOrEmpty(product.ImageUrl))
                 {
-                    new ProductImage { ImageUrl = product.ImageUrl, IsMainImage = true }
-                };
+                    product.Images = new List<ProductImage>
+                    {
+                        new ProductImage { ImageUrl = product.ImageUrl, IsMainImage = true }
+                    };
+                }
             }
 
             if (product.Variants == null || product.Variants.Count == 0)

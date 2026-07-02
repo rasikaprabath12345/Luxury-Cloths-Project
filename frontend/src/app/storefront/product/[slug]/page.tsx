@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
@@ -174,39 +174,11 @@ export default function ProductDetailPage() {
           alignItems: "start",
         }} className="product-detail-grid">
 
-          {/* â”€â”€ LEFT: Image Gallery â”€â”€ */}
-          <div style={{ display: "flex", gap: 12 }} className="product-images-gallery">
-
-            {/* Thumbnails (left side vertical stack) */}
-            {product.images.length > 1 && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8, width: 56, flexShrink: 0 }} className="thumbnails-column">
-                {product.images.map((image, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setCurrentImageIndex(idx)}
-                    style={{
-                      width: 56,
-                      height: 100,
-                      padding: 0,
-                      border: currentImageIndex === idx ? "2px solid #aa841c" : "1.5px solid rgba(0,0,0,0.08)",
-                      borderRadius: 10,
-                      overflow: "hidden",
-                      cursor: "pointer",
-                      background: "rgba(255,255,255,0.72)",
-                      backdropFilter: "blur(12px)",
-                      transition: "border 0.2s ease, box-shadow 0.2s ease",
-                      boxShadow: currentImageIndex === idx ? "0 0 0 3px rgba(170,132,28,0.15)" : "0 2px 8px rgba(0,0,0,0.06)",
-                    }}
-                  >
-                    <img src={image} alt={`View ${idx + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  </button>
-                ))}
-              </div>
-            )}
+          {/* ── LEFT: Image Gallery ── */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }} className="product-images-gallery">
 
             {/* Main Image */}
             <div style={{
-              flex: 1,
               position: "relative",
               aspectRatio: "3/4",
               borderRadius: 20,
@@ -237,9 +209,37 @@ export default function ProductDetailPage() {
                 }}>-{discount}% OFF</span>
               )}
             </div>
+
+            {/* Thumbnails (below main image, horizontal row) */}
+            {product.images.length > 1 && (
+              <div style={{ display: "flex", flexDirection: "row", gap: 10, justifyContent: "center", marginTop: 4, flexWrap: "wrap" }} className="thumbnails-column">
+                {product.images.map((image, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentImageIndex(idx)}
+                    style={{
+                      width: 64,
+                      aspectRatio: "3/4",
+                      padding: 0,
+                      border: currentImageIndex === idx ? "2.5px solid #aa841c" : "1.5px solid rgba(0,0,0,0.08)",
+                      borderRadius: 10,
+                      overflow: "hidden",
+                      cursor: "pointer",
+                      background: "rgba(255,255,255,0.72)",
+                      backdropFilter: "blur(12px)",
+                      transition: "border 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease",
+                      boxShadow: currentImageIndex === idx ? "0 0 0 3px rgba(170,132,28,0.15)" : "0 2px 8px rgba(0,0,0,0.06)",
+                      transform: currentImageIndex === idx ? "scale(1.05)" : "scale(1)",
+                    }}
+                  >
+                    <img src={image} alt={`View ${idx + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* â”€â”€ RIGHT: Product Info â”€â”€ */}
+          {/* ── RIGHT: Product Info ── */}
           <div style={{
             display: "flex",
             flexDirection: "column",
@@ -496,8 +496,8 @@ export default function ProductDetailPage() {
         <style>{`
           @media (max-width: 768px) {
             .product-detail-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
-            .product-images-gallery { flex-direction: column-reverse !important; }
-            .thumbnails-column { flex-direction: row !important; width: 100% !important; overflow-x: auto; }
+            .product-images-gallery { flex-direction: column !important; }
+            .thumbnails-column { flex-direction: row !important; width: 100% !important; overflow-x: auto; justify-content: center !important; }
             .thumbnails-column button { width: 60px !important; height: 80px !important; }
           }
         `}</style>

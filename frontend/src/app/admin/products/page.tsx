@@ -37,11 +37,13 @@ export default function AdminProductsPage() {
   const [newImageUrl, setNewImageUrl] = useState("");
   const [newImageUrl1, setNewImageUrl1] = useState("");
   const [newImageUrl2, setNewImageUrl2] = useState("");
+  const [newImageUrl3, setNewImageUrl3] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [isUploading1, setIsUploading1] = useState(false);
   const [isUploading2, setIsUploading2] = useState(false);
+  const [isUploading3, setIsUploading3] = useState(false);
   const [newDiscount, setNewDiscount] = useState("0");
   const [newSizes, setNewSizes] = useState("S,M,L,XL");
   const [newIsChoice, setNewIsChoice] = useState(false);
@@ -78,13 +80,14 @@ export default function AdminProductsPage() {
     setEditingProductId(product.id);
     setNewName(product.name);
     setNewPrice(product.price.toString());
-    
+
     const mainImg = product.images?.find(img => img.isMainImage)?.imageUrl || product.imageUrl || product.image || "";
     const additionalImgs = product.images?.filter(img => !img.isMainImage) || [];
-    
+
     setNewImageUrl(mainImg);
     setNewImageUrl1(additionalImgs[0]?.imageUrl || "");
     setNewImageUrl2(additionalImgs[1]?.imageUrl || "");
+    setNewImageUrl3(additionalImgs[2]?.imageUrl || "");
     setNewDescription(product.description || "");
     setSelectedCategoryId(product.categoryId ? product.categoryId.toString() : "");
     setNewDiscount(product.discount !== undefined ? product.discount.toString() : "0");
@@ -100,7 +103,7 @@ export default function AdminProductsPage() {
 
   const closeModal = () => {
     setIsModalOpen(false); setIsEditMode(false); setEditingProductId(null);
-    setNewName(""); setNewPrice(""); setNewImageUrl(""); setNewImageUrl1(""); setNewImageUrl2(""); setNewDescription(""); setSelectedCategoryId("");
+    setNewName(""); setNewPrice(""); setNewImageUrl(""); setNewImageUrl1(""); setNewImageUrl2(""); setNewImageUrl3(""); setNewDescription(""); setSelectedCategoryId("");
     setNewDiscount("0"); setNewSizes("S,M,L,XL");
     setNewIsChoice(false); setNewIsSale(false); setNewRating("4.5"); setNewSoldCount("0");
     setNewPromoText(""); setNewShopperSavingText("");
@@ -143,6 +146,11 @@ export default function AdminProductsPage() {
     if (file) handleImageUploadGeneric(file, setNewImageUrl2, setIsUploading2);
   };
 
+  const handleImageUpload3 = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleImageUploadGeneric(file, setNewImageUrl3, setIsUploading3);
+  };
+
   const handleDelete = (id: number, name: string) => {
     showConfirm(
       "Delete Product",
@@ -175,6 +183,9 @@ export default function AdminProductsPage() {
     }
     if (newImageUrl2) {
       imagesList.push({ imageUrl: newImageUrl2, isMainImage: false });
+    }
+    if (newImageUrl3) {
+      imagesList.push({ imageUrl: newImageUrl3, isMainImage: false });
     }
 
     const productPayload = {
@@ -321,11 +332,12 @@ export default function AdminProductsPage() {
             </div>
 
             {/* Image preview */}
-            {(newImageUrl || newImageUrl1 || newImageUrl2) && (
+            {(newImageUrl || newImageUrl1 || newImageUrl2 || newImageUrl3) && (
               <div className="image-preview" style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap" }}>
                 {newImageUrl && <img src={newImageUrl} alt="Main" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #cbd5e1" }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
                 {newImageUrl1 && <img src={newImageUrl1} alt="Alt 1" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #cbd5e1" }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
                 {newImageUrl2 && <img src={newImageUrl2} alt="Alt 2" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #cbd5e1" }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
+                {newImageUrl3 && <img src={newImageUrl3} alt="Alt 3" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #cbd5e1" }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
               </div>
             )}
 
@@ -402,9 +414,9 @@ export default function AdminProductsPage() {
               </div>
 
               <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: "14px", marginTop: "4px" }}>
-                <p style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a", marginBottom: "12px" }}>Product Images (Main + 2 Additional)</p>
+                <p style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a", marginBottom: "12px" }}>Product Images (Main + 3 Additional)</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                  
+
                   {/* Main Image */}
                   <div className="form-group">
                     <label className="form-label">Main Image URL</label>
@@ -437,6 +449,18 @@ export default function AdminProductsPage() {
                       <label className="btn-upload" style={{ width: "auto", whiteSpace: "nowrap", margin: 0, padding: "0 14px", display: "inline-flex", alignItems: "center" }}>
                         {isUploading2 ? <span className="spinner-dark" /> : "📷 Upload"}
                         <input type="file" accept="image/*" onChange={handleImageUpload2} disabled={isUploading2} style={{ display: "none" }} />
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Additional Image 3 */}
+                  <div className="form-group">
+                    <label className="form-label">Additional Image 3 URL</label>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <input type="url" value={newImageUrl3} onChange={(e) => setNewImageUrl3(e.target.value)} className="form-input" placeholder="e.g. https://images.unsplash.com/detail.jpg" />
+                      <label className="btn-upload" style={{ width: "auto", whiteSpace: "nowrap", margin: 0, padding: "0 14px", display: "inline-flex", alignItems: "center" }}>
+                        {isUploading3 ? <span className="spinner-dark" /> : "📷 Upload"}
+                        <input type="file" accept="image/*" onChange={handleImageUpload3} disabled={isUploading3} style={{ display: "none" }} />
                       </label>
                     </div>
                   </div>
