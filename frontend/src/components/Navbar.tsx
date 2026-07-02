@@ -327,6 +327,17 @@ function SearchBar() {
   const [hovered, setHovered] = useState(false);
   const [query, setQuery] = useState("");
 
+  const placeholders = ["dresses…", "linen shirts…", "silk sarees…", "designer shoes…"];
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+
+  useEffect(() => {
+    if (focused) return;
+    const interval = setInterval(() => {
+      setPlaceholderIndex((prev) => (prev + 1) % placeholders.length);
+    }, 3500);
+    return () => clearInterval(interval);
+  }, [focused]);
+
   return (
     <div
       onMouseEnter={() => setHovered(true)}
@@ -352,6 +363,7 @@ function SearchBar() {
           : "none",
         transition: "background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
         flex: "0 0 auto",
+        position: "relative",
       }}
     >
       <span style={{
@@ -368,7 +380,7 @@ function SearchBar() {
         onChange={e => setQuery(e.target.value)}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
-        placeholder="Search products, categories…"
+        placeholder={focused ? "Search products, categories…" : `Search ${placeholders[placeholderIndex]}`}
         style={{
           background: "none",
           border: "none",
@@ -405,6 +417,125 @@ function SearchBar() {
             <path d="M18 6L6 18M6 6l12 12" />
           </svg>
         </button>
+      )}
+
+      {/* Quick Suggestions Dropdown on Focus */}
+      {focused && (
+        <div
+          style={{
+            position: "absolute",
+            top: 44,
+            left: 0,
+            width: 300,
+            background: "#ffffff",
+            border: "1px solid rgba(0, 0, 0, 0.08)",
+            borderRadius: 16,
+            boxShadow: "0 8px 30px rgba(0, 0, 0, 0.12)",
+            padding: 14,
+            display: "flex",
+            flexDirection: "column",
+            gap: 12,
+            animation: "searchFadeIn 0.2s ease-out forwards",
+            zIndex: 1000,
+          }}
+          onMouseDown={e => e.preventDefault()} // Prevents loss of focus (blur) when clicking items
+        >
+          <div>
+            <p style={{
+              margin: "0 0 8px 0",
+              fontSize: 9.5,
+              fontWeight: 700,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: "#8E8E93",
+              textAlign: "left"
+            }}>Trending Searches</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              {["Summer Dresses", "Linen Shirts", "Premium Sarees", "Designer Footwear"].map((term) => (
+                <button
+                  key={term}
+                  onClick={() => {
+                    setQuery(term);
+                    window.location.href = `/storefront/shop?search=${encodeURIComponent(term)}`;
+                  }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    background: "none",
+                    border: "none",
+                    padding: "6px 8px",
+                    borderRadius: 8,
+                    textAlign: "left",
+                    cursor: "pointer",
+                    fontSize: 12.5,
+                    color: "#3C3C43",
+                    width: "100%",
+                    transition: "all 0.15s",
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = "rgba(0, 122, 255, 0.05)";
+                    e.currentTarget.style.color = "#007AFF";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = "none";
+                    e.currentTarget.style.color = "#3C3C43";
+                  }}
+                >
+                  <svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} style={{ opacity: 0.6 }}>
+                    <line x1="19" y1="5" x2="5" y2="19" strokeLinecap="round" />
+                    <polyline points="19 15 19 5 9 5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  {term}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ borderTop: "0.5px solid rgba(0,0,0,0.06)", paddingTop: 8 }}>
+            <p style={{
+              margin: "0 0 8px 0",
+              fontSize: 9.5,
+              fontWeight: 700,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: "#8E8E93",
+              textAlign: "left"
+            }}>Shop by Category</p>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-start" }}>
+              {[
+                { label: "Women", href: "/storefront/shop?category=women" },
+                { label: "Men", href: "/storefront/shop?category=men" },
+                { label: "New Arrival", href: "/storefront/shop?filter=new" }
+              ].map((cat) => (
+                <Link
+                  key={cat.label}
+                  href={cat.href}
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 500,
+                    textDecoration: "none",
+                    color: "#3C3C43",
+                    background: "rgba(0, 0, 0, 0.04)",
+                    padding: "4px 10px",
+                    borderRadius: 100,
+                    transition: "all 0.15s",
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = "#1C1C1E";
+                    e.currentTarget.style.color = "#ffffff";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = "rgba(0, 0, 0, 0.04)";
+                    e.currentTarget.style.color = "#3C3C43";
+                  }}
+                >
+                  {cat.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -887,6 +1018,10 @@ export default function Navbar() {
         @keyframes megaFadeIn {
           from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
           to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        @keyframes searchFadeIn {
+          from { opacity: 0; transform: translateY(8px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
         @keyframes promoFade {
           0% { opacity: 0; transform: translateY(8px); }
