@@ -322,7 +322,7 @@ function IconBtnLabeled({
 }
 
 // ─── SEARCH BAR ───────────────────────────────────────────────────────────────
-function SearchBar() {
+function SearchBar({ onLinkClick }: { onLinkClick?: () => void }) {
   const [focused, setFocused] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [query, setQuery] = useState("");
@@ -719,6 +719,7 @@ function SearchBar() {
                 <Link
                   key={cat.label}
                   href={cat.href}
+                  onClick={onLinkClick}
                   style={{
                     fontSize: 11,
                     fontWeight: 600,
@@ -866,7 +867,7 @@ function UserMenu({
   );
 }
 
-function MegaMenu({ label, data }: { label: string; data: typeof MEGA_MENUS[string] }) {
+function MegaMenu({ label, data, onLinkClick }: { label: string; data: typeof MEGA_MENUS[string]; onLinkClick?: () => void }) {
   return (
     <div style={{
       position: "absolute", top: "calc(100% + 8px)", left: 0,
@@ -883,11 +884,13 @@ function MegaMenu({ label, data }: { label: string; data: typeof MEGA_MENUS[stri
         <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: "#1C1C1E", letterSpacing: "-0.01em" }}>
           Shop {label}
         </p>
-        <Link href={`/storefront/shop?category=${label.toLowerCase() === "kids" ? "children" : label.toLowerCase()}`} style={{
-          fontSize: 11, fontWeight: 700, color: "#aa841c",
-          textDecoration: "none", letterSpacing: "0.04em",
-          display: "flex", alignItems: "center", gap: 4,
-        }}>
+        <Link href={`/storefront/shop?category=${label.toLowerCase() === "kids" ? "children" : label.toLowerCase()}`}
+          onClick={onLinkClick}
+          style={{
+            fontSize: 11, fontWeight: 700, color: "#aa841c",
+            textDecoration: "none", letterSpacing: "0.04em",
+            display: "flex", alignItems: "center", gap: 4,
+          }}>
           View All →
         </Link>
       </div>
@@ -913,6 +916,7 @@ function MegaMenu({ label, data }: { label: string; data: typeof MEGA_MENUS[stri
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={onLinkClick}
                   style={{
                     fontSize: 12.5, color: "#3C3C43", textDecoration: "none",
                     padding: "5px 8px", borderRadius: 8,
@@ -975,6 +979,8 @@ export default function Navbar() {
       t => pathname === t.href || pathname.startsWith(t.href + "/")
     );
     setActiveTab(current?.href || pathname);
+    setIsDrawerOpen(false);
+    setIsWishlistDrawerOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -1047,7 +1053,12 @@ export default function Navbar() {
           }}>
 
             {/* ── LOGO ── */}
-            <Link href="/" style={{ textDecoration: "none", flexShrink: 0, transition: "transform 0.2s ease", display: "inline-block" }}
+            <Link href="/"
+              onClick={() => {
+                setIsDrawerOpen(false);
+                setIsWishlistDrawerOpen(false);
+              }}
+              style={{ textDecoration: "none", flexShrink: 0, transition: "transform 0.2s ease", display: "inline-block" }}
               onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = "scale(1.02)"}
               onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = "scale(1)"}
             >
@@ -1080,7 +1091,10 @@ export default function Navbar() {
 
             {/* ── SEARCH ── */}
             <div style={{ flex: 1, maxWidth: 580, display: "flex", justifyContent: "center" }}>
-              <SearchBar />
+              <SearchBar onLinkClick={() => {
+                setIsDrawerOpen(false);
+                setIsWishlistDrawerOpen(false);
+              }} />
             </div>
 
             {/* ── RIGHT ICONS ── */}
@@ -1137,7 +1151,11 @@ export default function Navbar() {
             }}>
               <Link
                 href="/"
-                onClick={() => setActiveTab("/")}
+                onClick={() => {
+                  setActiveTab("/");
+                  setIsDrawerOpen(false);
+                  setIsWishlistDrawerOpen(false);
+                }}
                 style={{
                   display: "flex", alignItems: "center", justifyContent: "center",
                   width: 32, height: 32, alignSelf: "center", borderRadius: "50%",
@@ -1180,7 +1198,12 @@ export default function Navbar() {
                   >
                     <Link
                       href={tab.href}
-                      onClick={() => { setActiveTab(tab.href); setHoveredTab(null); }}
+                      onClick={() => {
+                        setActiveTab(tab.href);
+                        setHoveredTab(null);
+                        setIsDrawerOpen(false);
+                        setIsWishlistDrawerOpen(false);
+                      }}
                       className={`nav-link ${isActive ? "active" : ""} ${isOffer ? "offer" : ""}`}
                       style={{
                         height: "100%",
@@ -1215,7 +1238,14 @@ export default function Navbar() {
                         onMouseLeave={() => { megaMenuTimer.current = setTimeout(() => setHoveredTab(null), 120); }}
                         style={{ animation: "megaFadeIn 0.2s ease" }}
                       >
-                        <MegaMenu label={tab.label} data={MEGA_MENUS[tab.label]} />
+                        <MegaMenu
+                          label={tab.label}
+                          data={MEGA_MENUS[tab.label]}
+                          onLinkClick={() => {
+                            setIsDrawerOpen(false);
+                            setIsWishlistDrawerOpen(false);
+                          }}
+                        />
                       </div>
                     )}
                   </div>
