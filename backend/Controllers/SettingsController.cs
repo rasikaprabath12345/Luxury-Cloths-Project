@@ -26,6 +26,9 @@ namespace backend.Controllers
         public class SiteSettings
         {
             public string HeroImage { get; set; } = "/qw.jpg";
+            public string WhatsApp { get; set; } = "";
+            public string Messenger { get; set; } = "";
+            public string Facebook { get; set; } = "";
         }
 
         [HttpGet]

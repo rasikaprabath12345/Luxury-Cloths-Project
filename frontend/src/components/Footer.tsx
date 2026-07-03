@@ -1,7 +1,9 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { settingsAPI } from "@/lib/api";
 
 // ─── FOOTER COLUMNS ───────────────────────────────────────────────────────────
 const FOOTER_COLS = [
@@ -75,6 +77,22 @@ const SOCIALS = [
 // ─── FOOTER ───────────────────────────────────────────────────────────────────
 export default function Footer() {
   const pathname = usePathname();
+  const [facebookLink, setFacebookLink] = useState("#");
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await settingsAPI.getSettings();
+        if (response.data && response.data.facebook) {
+          setFacebookLink(response.data.facebook);
+        }
+      } catch (err) {
+        console.error("Failed to load footer settings", err);
+      }
+    };
+    fetchSettings();
+  }, []);
+
   if (pathname?.startsWith("/admin")) {
     return null;
   }
@@ -105,7 +123,7 @@ export default function Footer() {
             {SOCIALS.map((s) => (
               <a
                 key={s.label}
-                href={s.href}
+                href={s.label === "Facebook" ? facebookLink : s.href}
                 aria-label={s.label}
                 className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.12]
                            text-[#6E6E73] hover:text-white

@@ -6,6 +6,9 @@ import { showToast } from "@/lib/adminUtils";
 
 export default function AdminSettingsPage() {
   const [heroImage, setHeroImage] = useState("/qw.jpg");
+  const [whatsApp, setWhatsApp] = useState("");
+  const [messenger, setMessenger] = useState("");
+  const [facebook, setFacebook] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -14,8 +17,11 @@ export default function AdminSettingsPage() {
     const fetchSettings = async () => {
       try {
         const response = await settingsAPI.getSettings();
-        if (response.data && response.data.heroImage) {
-          setHeroImage(response.data.heroImage);
+        if (response.data) {
+          if (response.data.heroImage) setHeroImage(response.data.heroImage);
+          if (response.data.whatsApp) setWhatsApp(response.data.whatsApp);
+          if (response.data.messenger) setMessenger(response.data.messenger);
+          if (response.data.facebook) setFacebook(response.data.facebook);
         }
       } catch (error) {
         console.error("Error fetching settings:", error);
@@ -58,7 +64,12 @@ export default function AdminSettingsPage() {
 
     setIsSaving(true);
     try {
-      await settingsAPI.updateSettings({ heroImage });
+      await settingsAPI.updateSettings({
+        heroImage,
+        whatsApp,
+        messenger,
+        facebook,
+      });
       showToast("Store settings saved successfully!", "success");
     } catch (error) {
       console.error("Error saving settings:", error);
@@ -143,6 +154,47 @@ export default function AdminSettingsPage() {
                 onChange={(e) => setHeroImage(e.target.value)}
               />
             </div>
+          </div>
+
+          <hr className="section-divider" />
+
+          <h2 className="panel-title" style={{ marginTop: "24px" }}>Social & Support Channels</h2>
+          <p className="panel-desc">Configure customer support chat icons and links.</p>
+
+          <div className="form-group">
+            <label className="form-label">WhatsApp Number</label>
+            <input
+              type="text"
+              className="url-input"
+              placeholder="e.g. 94771234567"
+              value={whatsApp}
+              onChange={(e) => setWhatsApp(e.target.value)}
+            />
+            <p className="input-help">Enter standard country code + number without spaces or "+" (e.g., 94771234567)</p>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Messenger Username</label>
+            <input
+              type="text"
+              className="url-input"
+              placeholder="e.g. your_page_name"
+              value={messenger}
+              onChange={(e) => setMessenger(e.target.value)}
+            />
+            <p className="input-help">Your page name or username used to open Messenger chat (m.me/your_page_name)</p>
+          </div>
+
+          <div className="form-group" style={{ marginBottom: "28px" }}>
+            <label className="form-label">Facebook URL</label>
+            <input
+              type="text"
+              className="url-input"
+              placeholder="e.g. https://facebook.com/your_page_name"
+              value={facebook}
+              onChange={(e) => setFacebook(e.target.value)}
+            />
+            <p className="input-help">Full link to your Facebook page for the site footer</p>
           </div>
 
           <div className="panel-actions">
@@ -292,6 +344,19 @@ export default function AdminSettingsPage() {
           text-align: center;
           margin: 20px 0;
           letter-spacing: 0.1em;
+        }
+
+        .section-divider {
+          border: 0;
+          border-top: 1px dashed #e2e8f0;
+          margin: 28px 0 16px;
+          width: 100%;
+        }
+
+        .input-help {
+          font-size: 11px;
+          color: #64748b;
+          margin-top: 6px;
         }
 
         .url-input {
