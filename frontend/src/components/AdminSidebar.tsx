@@ -183,19 +183,21 @@ export default function AdminSidebar() {
           <button
             onClick={handleLogout}
             className="admin-sidebar-logout"
-            title="Logout"
             style={{
-              background: "none",
-              border: "1px solid var(--admin-border)",
-              borderRadius: "8px",
-              padding: "6px 8px",
+              background: "#fff5f5",
+              border: "1px solid #fecaca",
+              borderRadius: "var(--admin-radius-md)",
+              padding: "6px 12px",
               cursor: "pointer",
-              fontSize: "15px",
+              fontSize: "11.5px",
+              fontWeight: 700,
+              color: "#dc2626",
               transition: "all 0.2s",
               flexShrink: 0,
+              fontFamily: "var(--font-body)"
             }}
           >
-            🚪
+            Logout
           </button>
         </div>
       </aside>
