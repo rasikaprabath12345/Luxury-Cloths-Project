@@ -757,7 +757,7 @@ function SearchBar({ onLinkClick }: { onLinkClick?: () => void }) {
 function UserMenu({
   user, onLogout,
 }: {
-  user: { fullName: string; email: string; role: "admin" | "customer" };
+  user: { fullName: string; email: string; role: "admin" | "customer"; avatar?: string };
   onLogout: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -787,12 +787,24 @@ function UserMenu({
         onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "rgba(0,0,0,0.05)")}
         onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "none")}
       >
-        <span style={{
-          width: 24, height: 24, borderRadius: "50%",
-          background: "linear-gradient(135deg, #aa841c, #d4af37)",
-          color: "#fff", fontSize: 9, fontWeight: 800,
-          display: "flex", alignItems: "center", justifyContent: "center",
-        }}>{initials}</span>
+        {user.avatar ? (
+          <img
+            src={user.avatar}
+            alt={user.fullName}
+            style={{
+              width: 24, height: 24, borderRadius: "50%",
+              objectFit: "cover",
+              border: "1px solid rgba(170, 132, 28, 0.3)",
+            }}
+          />
+        ) : (
+          <span style={{
+            width: 24, height: 24, borderRadius: "50%",
+            background: "linear-gradient(135deg, #aa841c, #d4af37)",
+            color: "#fff", fontSize: 9, fontWeight: 800,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>{initials}</span>
+        )}
         <span style={{ fontSize: 10, fontWeight: 500, color: "#3C3C43" }}>
           {user.fullName.split(" ")[0]}
         </span>

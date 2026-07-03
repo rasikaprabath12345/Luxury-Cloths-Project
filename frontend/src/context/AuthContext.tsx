@@ -53,11 +53,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     fullName: (session as any).fullName || session.user?.name || "",
                     email: session.user?.email || "",
                     role: ((session as any).role || "customer").toLowerCase() as "admin" | "customer",
+                    avatar: (session as any).avatar || session.user?.image || "",
                 };
                 setUser(userData);
                 setToken((session as any).backendToken);
                 localStorage.setItem("luxury_user", JSON.stringify(userData));
                 localStorage.setItem("luxury_token", (session as any).backendToken);
+
+                // Fetch latest profile from DB (including uploaded avatar)
+                try {
+                    await getProfile();
+                } catch (e) {
+                    console.error("Failed to sync profile after Google Login:", e);
+                }
             }
         };
         syncGoogleSession();
@@ -76,7 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
                     // Verify token is still valid by getting profile
                     try {
-                        await authAPI.getProfile();
+                        await getProfile();
                     } catch (error) {
                         // Token expired or invalid
                         localStorage.removeItem("luxury_user");
@@ -125,10 +133,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 role: data.role.toLowerCase(),
             };
 
-            setUser(userData);
             setToken(data.token);
-            localStorage.setItem("luxury_user", JSON.stringify(userData));
             localStorage.setItem("luxury_token", data.token);
+
+            // Fetch complete profile with avatar
+            await getProfile();
         } catch (error: any) {
             const message = typeof error.response?.data === "string"
                 ? error.response.data

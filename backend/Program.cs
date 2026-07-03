@@ -45,7 +45,20 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
 
+// Configure form options for file uploads
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 10_000_000; // 10MB
+});
+
+// Configure Kestrel for larger request bodies
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 10_000_000; // 10MB
+});
+
 var app = builder.Build();
+
 
 // 4. Middleware Pipeline
 if (app.Environment.IsDevelopment())
