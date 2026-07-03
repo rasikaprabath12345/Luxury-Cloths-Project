@@ -62,11 +62,27 @@ export default function AdminSettingsPage() {
       return;
     }
 
+    // Auto-format WhatsApp number to standard international format if user entered one
+    let formattedWhatsApp = whatsApp.trim();
+    if (formattedWhatsApp && !formattedWhatsApp.includes("X")) {
+      let cleaned = formattedWhatsApp.replace(/\D/g, ''); // Remove non-digits
+      if (cleaned.startsWith('00')) {
+        cleaned = cleaned.slice(2);
+      }
+      if (cleaned.startsWith('0') && cleaned.length === 10) {
+        cleaned = '94' + cleaned.slice(1);
+      } else if (cleaned.length === 9 && /^[7][01245678]/.test(cleaned)) {
+        cleaned = '94' + cleaned;
+      }
+      formattedWhatsApp = cleaned;
+      setWhatsApp(cleaned); // Update the input field display
+    }
+
     setIsSaving(true);
     try {
       await settingsAPI.updateSettings({
         heroImage,
-        whatsApp,
+        whatsApp: formattedWhatsApp,
         messenger,
         facebook,
       });
