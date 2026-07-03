@@ -270,7 +270,7 @@ namespace backend.Controllers
                         return NotFound($"Product Variant ID {itemDto.ProductVariantId} සොයාගත නොහැක.");
                     }
 
-                    // Stock availability check
+                    // Stock availability check (Available = StockQuantity - ReservedQuantity)
                     int availableStock = variant.StockQuantity - variant.ReservedQuantity;
                     if (availableStock < itemDto.Quantity)
                     {
@@ -278,13 +278,14 @@ namespace backend.Controllers
                         return BadRequest($"{productName} ({variant.Size}) is out of stock. Available: {availableStock}, Requested: {itemDto.Quantity}");
                     }
 
-                    // මිල ගණන් එකතු කිරීම (ආරක්ෂාව සඳහා බැකෙන්ඩ් එකේම මිල ගණන් චෙක් කරයි)
-                    decimal itemPrice = variant.Product?.Price ?? 0; // Product එකේ මිල ගනී
+                    // මිල ගණන් එකතු කිරීම
+                    decimal itemPrice = variant.Product?.Price ?? 0;
                     calculatedTotal += itemPrice * itemDto.Quantity;
 
-                    // Stock deduction
-                    int previousStock = variant.StockQuantity;
-                    variant.StockQuantity -= itemDto.Quantity;
+                    // ✅ Order place වූ විට StockQuantity අඩු කිරීම නොකර ReservedQuantity වැඩි කරනවා
+                    // භෞතික stock delivery වූ පසු පමණක් StockQuantity අඩු කෙරේ
+                    int previousReserved = variant.ReservedQuantity;
+                    variant.ReservedQuantity += itemDto.Quantity;
 
                     var orderItem = new OrderItem
                     {
@@ -295,15 +296,15 @@ namespace backend.Controllers
 
                     newOrder.OrderItems.Add(orderItem);
 
-                    // Stock movement record එක save කරන්නේ order save වුනට පස්සේ (orderId ගන්න)
+                    // Stock movement — Reserved (Pending)
                     stockMovements.Add(new StockMovement
                     {
                         ProductVariantId = variant.Id,
-                        Type = "OrderDeduct",
+                        Type = "OrderReserved",
                         Quantity = -itemDto.Quantity,
-                        PreviousStock = previousStock,
+                        PreviousStock = variant.StockQuantity,
                         NewStock = variant.StockQuantity,
-                        Reason = $"Order placed",
+                        Reason = $"Order placed — {itemDto.Quantity} units reserved",
                         CreatedAt = DateTime.UtcNow
                     });
                 }
@@ -353,25 +354,53 @@ namespace backend.Controllers
                 string previousStatus = order.Status;
                 order.Status = dto.Status;
 
-                // Cancelled status එකට ගියොත් stock restore කරන්න
-                if (dto.Status.Equals("Cancelled", StringComparison.OrdinalIgnoreCase) && 
+                // ✅ Cancelled → ReservedQuantity release කරනවා (StockQuantity touch නොකරනවා)
+                if (dto.Status.Equals("Cancelled", StringComparison.OrdinalIgnoreCase) &&
                     !previousStatus.Equals("Cancelled", StringComparison.OrdinalIgnoreCase))
                 {
                     foreach (var item in order.OrderItems)
                     {
                         if (item.ProductVariant != null)
                         {
-                            int prevStock = item.ProductVariant.StockQuantity;
-                            item.ProductVariant.StockQuantity += item.Quantity;
+                            item.ProductVariant.ReservedQuantity = Math.Max(0, item.ProductVariant.ReservedQuantity - item.Quantity);
 
                             _context.StockMovements.Add(new StockMovement
                             {
                                 ProductVariantId = item.ProductVariantId,
                                 Type = "OrderCancel",
                                 Quantity = item.Quantity,
+                                PreviousStock = item.ProductVariant.StockQuantity,
+                                NewStock = item.ProductVariant.StockQuantity,
+                                Reason = $"Order #{order.Id} cancelled — reservation released",
+                                OrderId = order.Id,
+                                CreatedAt = DateTime.UtcNow
+                            });
+                        }
+                    }
+                }
+
+                // ✅ Delivered/Shipped → StockQuantity physically deduct කරනවා + ReservedQuantity release
+                if ((dto.Status.Equals("Delivered", StringComparison.OrdinalIgnoreCase) ||
+                     dto.Status.Equals("Shipped", StringComparison.OrdinalIgnoreCase)) &&
+                    !previousStatus.Equals("Delivered", StringComparison.OrdinalIgnoreCase) &&
+                    !previousStatus.Equals("Shipped", StringComparison.OrdinalIgnoreCase))
+                {
+                    foreach (var item in order.OrderItems)
+                    {
+                        if (item.ProductVariant != null)
+                        {
+                            int prevStock = item.ProductVariant.StockQuantity;
+                            item.ProductVariant.StockQuantity = Math.Max(0, item.ProductVariant.StockQuantity - item.Quantity);
+                            item.ProductVariant.ReservedQuantity = Math.Max(0, item.ProductVariant.ReservedQuantity - item.Quantity);
+
+                            _context.StockMovements.Add(new StockMovement
+                            {
+                                ProductVariantId = item.ProductVariantId,
+                                Type = "OrderDeduct",
+                                Quantity = -item.Quantity,
                                 PreviousStock = prevStock,
                                 NewStock = item.ProductVariant.StockQuantity,
-                                Reason = $"Order #{order.Id} cancelled — stock restored",
+                                Reason = $"Order #{order.Id} {dto.Status} — stock deducted",
                                 OrderId = order.Id,
                                 CreatedAt = DateTime.UtcNow
                             });
