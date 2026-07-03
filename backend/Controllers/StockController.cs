@@ -215,9 +215,41 @@ namespace backend.Controllers
                 inStockCount
             });
         }
+
+        // 7. PUT /api/Stock/{variantId}/config — Admin configures variant stock threshold/reservations
+        [HttpPut("{variantId}/config")]
+        public async Task<IActionResult> UpdateVariantConfig(int variantId, [FromBody] UpdateVariantConfigDto dto)
+        {
+            var variant = await _context.ProductVariants
+                .Include(v => v.Product)
+                .FirstOrDefaultAsync(v => v.Id == variantId);
+
+            if (variant == null)
+                return NotFound("Variant not found.");
+
+            variant.LowStockThreshold = dto.LowStockThreshold;
+            variant.ReservedQuantity = dto.ReservedQuantity;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "Variant threshold and reservations updated successfully!",
+                variantId = variant.Id,
+                lowStockThreshold = variant.LowStockThreshold,
+                reservedQuantity = variant.ReservedQuantity,
+                availableStock = variant.StockQuantity - variant.ReservedQuantity
+            });
+        }
     }
 
     // DTOs
+    public class UpdateVariantConfigDto
+    {
+        public int LowStockThreshold { get; set; }
+        public int ReservedQuantity { get; set; }
+    }
+
     public class AdjustStockDto
     {
         public int Adjustment { get; set; } // + for add, - for remove

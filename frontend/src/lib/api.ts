@@ -237,6 +237,10 @@ export const stockAPI = {
   getStockSummary: async () => {
     return apiClient.get('/Stock/summary');
   },
+
+  updateStockConfig: async (variantId: number, data: { lowStockThreshold: number; reservedQuantity: number }) => {
+    return apiClient.put(`/Stock/${variantId}/config`, data);
+  },
 };
 
 // SETTINGS ENDPOINTS

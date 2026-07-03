@@ -68,6 +68,14 @@ export default function AdminStockPage() {
   const [movements, setMovements] = useState<StockMovement[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
+  // Custom configuration modal
+  const [configModal, setConfigModal] = useState<{ open: boolean; variant: StockVariant | null; productName: string }>({
+    open: false, variant: null, productName: ""
+  });
+  const [configThreshold, setConfigThreshold] = useState("");
+  const [configReserved, setConfigReserved] = useState("");
+  const [configuring, setConfiguring] = useState(false);
+
   // Expanded product rows
   const [expandedProducts, setExpandedProducts] = useState<Set<number>>(new Set());
 
@@ -145,6 +153,37 @@ export default function AdminStockPage() {
       showToast("Failed to load history", "error");
     } finally {
       setLoadingHistory(false);
+    }
+  };
+
+  const openConfigModal = (variant: StockVariant, productName: string) => {
+    setConfigModal({ open: true, variant, productName });
+    setConfigThreshold(variant.lowStockThreshold.toString());
+    setConfigReserved(variant.reservedQuantity.toString());
+  };
+
+  const handleUpdateConfig = async () => {
+    if (!configModal.variant) return;
+    const threshold = parseInt(configThreshold);
+    const reserved = parseInt(configReserved);
+    if (isNaN(threshold) || threshold < 0 || isNaN(reserved) || reserved < 0) {
+      showToast("Enter valid threshold and reservation counts", "warning");
+      return;
+    }
+
+    setConfiguring(true);
+    try {
+      await stockAPI.updateStockConfig(configModal.variant.variantId, {
+        lowStockThreshold: threshold,
+        reservedQuantity: reserved
+      });
+      showToast("Inventory configuration updated!", "success");
+      setConfigModal({ open: false, variant: null, productName: "" });
+      fetchData();
+    } catch (err: any) {
+      showToast(err?.response?.data || "Failed to update configuration", "error");
+    } finally {
+      setConfiguring(false);
     }
   };
 
@@ -270,6 +309,7 @@ export default function AdminStockPage() {
                 <th>Product</th>
                 <th>Category</th>
                 <th className="text-center">Total Stock</th>
+                <th className="text-center">Reserved</th>
                 <th className="text-center">Available</th>
                 <th className="text-center">Status</th>
                 <th className="text-center">Actions</th>
@@ -278,7 +318,7 @@ export default function AdminStockPage() {
             <tbody>
               {filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="empty-row">
+                  <td colSpan={8} className="empty-row">
                     No products found matching your search.
                   </td>
                 </tr>
@@ -307,6 +347,9 @@ export default function AdminStockPage() {
                         </td>
                         <td className="category-cell-text">{product.categoryName}</td>
                         <td className="text-center bold-count">{product.totalStock}</td>
+                        <td className="text-center bold-avail" style={{ color: "#64748b", fontWeight: "600" }}>
+                          {product.variants.reduce((sum, v) => sum + (v.reservedQuantity || 0), 0)}
+                        </td>
                         <td className="text-center bold-avail">{product.totalAvailable}</td>
                         <td className="text-center">
                           {getStatusBadge(product.overallStatus)}
@@ -338,6 +381,7 @@ export default function AdminStockPage() {
                           </td>
                           <td></td>
                           <td className="text-center variant-count-bold">{v.stockQuantity}</td>
+                          <td className="text-center variant-avail-bold" style={{ color: "#64748b", fontWeight: "600" }}>{v.reservedQuantity}</td>
                           <td className="text-center variant-avail-bold">{v.availableStock}</td>
                           <td className="text-center">
                             {getStatusBadge(v.status)}
@@ -349,6 +393,14 @@ export default function AdminStockPage() {
                                 className="variant-btn btn-adjust"
                               >
                                 ± Adjust
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); openConfigModal(v, product.productName); }}
+                                className="variant-btn"
+                                style={{ color: "var(--admin-primary)", borderColor: "var(--admin-border)" }}
+                                title="Configure Alert Threshold and Reservations"
+                              >
+                                🔧 Settings
                               </button>
                               <button
                                 onClick={(e) => { e.stopPropagation(); openHistoryModal(v.variantId, product.productName, v.size); }}
@@ -498,6 +550,76 @@ export default function AdminStockPage() {
                 style={{ width: "100%" }}
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Configure Threshold & Reservations Modal */}
+      {configModal.open && configModal.variant && (
+        <div className="modal-overlay" onClick={() => setConfigModal({ open: false, variant: null, productName: "" })}>
+          <div className="modal-card" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <h3 className="modal-title">🔧 Stock Configurations</h3>
+                <p className="modal-subtitle">{configModal.productName} — Size: {configModal.variant.size}</p>
+              </div>
+              <button className="modal-close" onClick={() => setConfigModal({ open: false, variant: null, productName: "" })}>✕</button>
+            </div>
+
+            <div className="modal-body">
+              <div className="current-stats-box" style={{ background: "#f8fafc", border: "1px solid var(--admin-border)" }}>
+                <div className="stat-line">
+                  <span className="stat-label">Total On-Hand Quantity</span>
+                  <span className="stat-val">{configModal.variant.stockQuantity}</span>
+                </div>
+                <div className="stat-line">
+                  <span className="stat-label">Available (For Customers)</span>
+                  <span className="stat-val bold">{configModal.variant.stockQuantity - parseInt(configReserved || "0")}</span>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Low Stock Threshold Limit</label>
+                <p className="form-help">Trigger alert indicator when available stock falls below this level.</p>
+                <input
+                  type="number"
+                  value={configThreshold}
+                  onChange={e => setConfigThreshold(e.target.value)}
+                  placeholder="e.g. 5"
+                  className="form-input"
+                  min="0"
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Reserved Quantity (Allocations)</label>
+                <p className="form-help">Reserved inventory for processing transactions/holds.</p>
+                <input
+                  type="number"
+                  value={configReserved}
+                  onChange={e => setConfigReserved(e.target.value)}
+                  placeholder="e.g. 0"
+                  className="form-input"
+                  min="0"
+                />
+              </div>
+            </div>
+
+            <div className="modal-actions">
+              <button
+                onClick={() => setConfigModal({ open: false, variant: null, productName: "" })}
+                className="btn-cancel"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateConfig}
+                disabled={configuring}
+                className="btn-submit"
+              >
+                {configuring ? "Configuring..." : "Save Configs"}
               </button>
             </div>
           </div>
