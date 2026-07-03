@@ -159,15 +159,14 @@ export default function AdminStockPage() {
   const openConfigModal = (variant: StockVariant, productName: string) => {
     setConfigModal({ open: true, variant, productName });
     setConfigThreshold(variant.lowStockThreshold.toString());
-    setConfigReserved(variant.reservedQuantity.toString());
+    // configReserved no longer editable — auto managed by order lifecycle
   };
 
   const handleUpdateConfig = async () => {
     if (!configModal.variant) return;
     const threshold = parseInt(configThreshold);
-    const reserved = parseInt(configReserved);
-    if (isNaN(threshold) || threshold < 0 || isNaN(reserved) || reserved < 0) {
-      showToast("Enter valid threshold and reservation counts", "warning");
+    if (isNaN(threshold) || threshold < 0) {
+      showToast("Enter a valid threshold value (0 or above)", "warning");
       return;
     }
 
@@ -175,9 +174,9 @@ export default function AdminStockPage() {
     try {
       await stockAPI.updateStockConfig(configModal.variant.variantId, {
         lowStockThreshold: threshold,
-        reservedQuantity: reserved
+        reservedQuantity: configModal.variant.reservedQuantity  // pass current value unchanged
       });
-      showToast("Inventory configuration updated!", "success");
+      showToast("Low stock threshold updated!", "success");
       setConfigModal({ open: false, variant: null, productName: "" });
       fetchData();
     } catch (err: any) {
@@ -575,8 +574,12 @@ export default function AdminStockPage() {
                   <span className="stat-val">{configModal.variant.stockQuantity}</span>
                 </div>
                 <div className="stat-line">
+                  <span className="stat-label">Reserved (Auto — Pending Orders)</span>
+                  <span className="stat-val" style={{ color: "#64748b" }}>{configModal.variant.reservedQuantity}</span>
+                </div>
+                <div className="stat-line">
                   <span className="stat-label">Available (For Customers)</span>
-                  <span className="stat-val bold">{configModal.variant.stockQuantity - parseInt(configReserved || "0")}</span>
+                  <span className="stat-val bold" style={{ color: "#16a34a" }}>{configModal.variant.availableStock}</span>
                 </div>
               </div>
 
@@ -593,17 +596,18 @@ export default function AdminStockPage() {
                 />
               </div>
 
+              {/* Reserved Quantity — Read Only (Auto-managed by order system) */}
               <div className="form-group">
-                <label className="form-label">Reserved Quantity (Allocations)</label>
-                <p className="form-help">Reserved inventory for processing transactions/holds.</p>
-                <input
-                  type="number"
-                  value={configReserved}
-                  onChange={e => setConfigReserved(e.target.value)}
-                  placeholder="e.g. 0"
-                  className="form-input"
-                  min="0"
-                />
+                <div className="readonly-info-box">
+                  <div className="readonly-info-header">
+                    <span className="readonly-info-icon">🔒</span>
+                    <div>
+                      <span className="readonly-info-title">Reserved Quantity (Auto-Managed)</span>
+                      <p className="readonly-info-desc">Automatically updated by the order system — increases when an order is placed, decreases when delivered or cancelled.</p>
+                    </div>
+                  </div>
+                  <div className="readonly-info-value">{configModal.variant.reservedQuantity} units currently reserved</div>
+                </div>
               </div>
             </div>
 
@@ -789,6 +793,21 @@ export default function AdminStockPage() {
         .preview-box.positive { background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; }
         .preview-box.negative { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; }
         .stock-warning { color: #dc2626; font-size: 11px; font-weight: 700; }
+
+        /* Read-only info box for auto-managed Reserved Quantity */
+        .readonly-info-box {
+          background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: var(--admin-radius-md);
+          padding: 14px 16px; margin-top: 4px;
+        }
+        .readonly-info-header { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; }
+        .readonly-info-icon { font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+        .readonly-info-title { font-size: 13px; font-weight: 700; color: var(--admin-text-main); display: block; margin-bottom: 4px; }
+        .readonly-info-desc { font-size: 11.5px; color: var(--admin-text-muted); margin: 0; line-height: 1.5; }
+        .readonly-info-value {
+          font-size: 13px; font-weight: 800; color: #64748b;
+          background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px;
+          padding: 8px 12px;
+        }
 
         .modal-actions { display: flex; gap: 12px; margin-top: 24px; }
         .btn-cancel {
