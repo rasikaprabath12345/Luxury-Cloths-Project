@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import CartDrawer from "@/components/CartDrawer";
@@ -978,13 +978,36 @@ export default function Navbar() {
     <>Discover the premium <span style={{ color: "#d4af37", fontWeight: 700 }}>Summer Collection — 2026</span></>
   ];
   const [promoIndex, setPromoIndex] = useState(0);
+  const autoplayTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const stopAutoplay = useCallback(() => {
+    if (autoplayTimerRef.current) {
+      clearInterval(autoplayTimerRef.current);
+      autoplayTimerRef.current = null;
+    }
+  }, []);
+
+  const startAutoplay = useCallback(() => {
+    stopAutoplay();
+    autoplayTimerRef.current = setInterval(() => {
+      setPromoIndex((prev) => (prev + 1) % promoMessages.length);
+    }, 5000);
+  }, [promoMessages.length, stopAutoplay]);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setPromoIndex((prev) => (prev + 1) % promoMessages.length);
-    }, 4500);
-    return () => clearInterval(interval);
-  }, []);
+    startAutoplay();
+    return () => stopAutoplay();
+  }, [startAutoplay, stopAutoplay]);
+
+  const handleNextPromo = () => {
+    setPromoIndex((prev) => (prev + 1) % promoMessages.length);
+    startAutoplay();
+  };
+
+  const handlePrevPromo = () => {
+    setPromoIndex((prev) => (prev - 1 + promoMessages.length) % promoMessages.length);
+    startAutoplay();
+  };
 
   useEffect(() => {
     const current = NAV_TABS.find(
@@ -1015,33 +1038,132 @@ export default function Navbar() {
         }}
       >
         {/* Promo strip */}
-        <div style={{
-          background: "linear-gradient(90deg, #1a1208 0%, #2a1f0e 50%, #1a1208 100%)",
-          borderBottom: "1px solid rgba(212, 175, 55, 0.18)",
-          color: "#e8d5a3",
-          fontSize: 12,
-          fontWeight: 500,
-          height: 32,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "0 28px",
-          width: "100%",
-          overflow: "hidden",
-          letterSpacing: "0.04em",
-        }}>
-          <div style={{ maxWidth: 1400, width: "100%", margin: "0 auto", display: "flex", justifyContent: "center", alignItems: "center", gap: 16 }}>
-            <span style={{ color: "rgba(212,175,55,0.5)", fontSize: 10 }}>✦</span>
+        <div 
+          className="promo-strip"
+          style={{
+            height: 34,
+            borderBottom: "1px solid rgba(212, 175, 55, 0.25)",
+            background: "linear-gradient(90deg, #151516 0%, #1e1c19 35%, #352f26 50%, #1e1c19 65%, #151516 100%)",
+            color: "#f3e5c8",
+            fontSize: 11,
+            fontWeight: 500,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "0 48px",
+            width: "100%",
+            overflow: "hidden",
+            letterSpacing: "0.08em",
+            position: "relative",
+          }}
+        >
+          {/* Left Arrow */}
+          <button
+            onClick={handlePrevPromo}
+            style={{
+              position: "absolute",
+              left: 16,
+              background: "none",
+              border: "none",
+              color: "rgba(243, 229, 200, 0.45)",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: 4,
+              transition: "color 0.25s, transform 0.25s",
+              zIndex: 10,
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.color = "#d4af37";
+              e.currentTarget.style.transform = "scale(1.15)";
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.color = "rgba(243, 229, 200, 0.45)";
+              e.currentTarget.style.transform = "scale(1)";
+            }}
+            aria-label="Previous message"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+
+          <div style={{ maxWidth: 1400, width: "100%", margin: "0 auto", display: "flex", justifyContent: "center", alignItems: "center", gap: 14 }}>
+            <svg
+              className="promo-sparkle"
+              width="9"
+              height="9"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              style={{
+                fill: "#d4af37",
+                filter: "drop-shadow(0 0 2.5px rgba(212, 175, 55, 0.6))",
+                display: "inline-block",
+              }}
+            >
+              <path d="M12 0L15.2 8.8L24 12L15.2 15.2L12 24L8.8 15.2L0 12L8.8 8.8L12 0Z" />
+            </svg>
+
             <span key={promoIndex} style={{
-              fontSize: 12,
-              letterSpacing: "0.06em",
-              animation: "promoFade 4.5s infinite ease-in-out",
+              fontSize: 11,
+              fontFamily: "var(--font-montserrat), sans-serif",
+              letterSpacing: "0.08em",
+              animation: "promoFade 5s infinite ease-in-out",
               display: "inline-block",
               textTransform: "uppercase" as const,
+              userSelect: "none",
             }}>
               {promoMessages[promoIndex]}
             </span>
-            <span style={{ color: "rgba(212,175,55,0.5)", fontSize: 10 }}>✦</span>
+
+            <svg
+              className="promo-sparkle"
+              width="9"
+              height="9"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              style={{
+                fill: "#d4af37",
+                filter: "drop-shadow(0 0 2.5px rgba(212, 175, 55, 0.6))",
+                display: "inline-block",
+              }}
+            >
+              <path d="M12 0L15.2 8.8L24 12L15.2 15.2L12 24L8.8 15.2L0 12L8.8 8.8L12 0Z" />
+            </svg>
+          </div>
+
+          {/* Right Arrow Controls */}
+          <div style={{ position: "absolute", right: 16, display: "flex", alignItems: "center", zIndex: 10 }}>
+            <button
+              onClick={handleNextPromo}
+              style={{
+                background: "none",
+                border: "none",
+                color: "rgba(243, 229, 200, 0.45)",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: 4,
+                transition: "color 0.25s, transform 0.25s",
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.color = "#d4af37";
+                e.currentTarget.style.transform = "scale(1.15)";
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.color = "rgba(243, 229, 200, 0.45)";
+                e.currentTarget.style.transform = "scale(1)";
+              }}
+              aria-label="Next message"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
           </div>
         </div>
 
@@ -1269,8 +1391,8 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Spacer for fixed nav (top 58 + bottom 40 + promo 32 = 130px) */}
-      <div style={{ height: 130 }} />
+      {/* Spacer for fixed nav (top 58 + bottom 40 + promo 34 = 132px) */}
+      <div style={{ height: 132 }} />
 
       <style>{`
         @keyframes megaFadeIn {
@@ -1282,11 +1404,12 @@ export default function Navbar() {
           to   { opacity: 1; transform: translateY(0) scale(1); }
         }
         @keyframes promoFade {
-          0% { opacity: 0; transform: translateY(8px); }
-          5% { opacity: 1; transform: translateY(0); }
-          95% { opacity: 1; transform: translateY(0); }
-          100% { opacity: 0; transform: translateY(-8px); }
+          0% { opacity: 0; filter: blur(4px); letter-spacing: 0.16em; transform: scale(0.97); }
+          4% { opacity: 1; filter: blur(0); letter-spacing: 0.08em; transform: scale(1); }
+          96% { opacity: 1; filter: blur(0); letter-spacing: 0.08em; transform: scale(1); }
+          100% { opacity: 0; filter: blur(4px); letter-spacing: 0.16em; transform: scale(1.03); }
         }
+
         .nav-link {
           display: flex;
           align-items: center;
