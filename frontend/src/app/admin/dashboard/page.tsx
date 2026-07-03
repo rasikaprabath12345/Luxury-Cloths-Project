@@ -31,6 +31,13 @@ export default function AdminDashboard() {
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // States for report generation
+  const [allProducts, setAllProducts] = useState<any[]>([]);
+  const [allOrders, setAllOrders] = useState<any[]>([]);
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [reportType, setReportType] = useState("sales");
+  const [reportRange, setReportRange] = useState("all");
+
   useEffect(() => {
     async function fetchDashboardData() {
       try {
@@ -44,6 +51,7 @@ export default function AdminDashboard() {
         let productCount = 0;
         if (productsRes.status === "fulfilled") {
           productCount = productsRes.value.data.length;
+          setAllProducts(productsRes.value.data || []);
         }
 
         let categoryCount = 0;
@@ -65,11 +73,13 @@ export default function AdminDashboard() {
               return s !== "cancelled";
             })
             .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+          setAllOrders(ordersList || []);
         }
 
         let userCount = 0;
         if (usersRes.status === "fulfilled") {
           userCount = usersRes.value.data.length;
+          setAllUsers(usersRes.value.data || []);
         }
 
         setStats({
@@ -91,6 +101,78 @@ export default function AdminDashboard() {
 
     fetchDashboardData();
   }, []);
+
+  const handleGenerateReport = (type: string, dateRange: string) => {
+    let data: any[] = [];
+    let headers: string[] = [];
+    const filename = `luxury_report_${type}_${new Date().toISOString().slice(0, 10)}.csv`;
+
+    const filterByDate = (dateStr: string) => {
+      if (!dateStr) return false;
+      const date = new Date(dateStr);
+      const now = new Date();
+      if (dateRange === "7days") {
+        return (now.getTime() - date.getTime()) <= 7 * 24 * 60 * 60 * 1000;
+      }
+      if (dateRange === "30days") {
+        return (now.getTime() - date.getTime()) <= 30 * 24 * 60 * 60 * 1000;
+      }
+      return true; // "all"
+    };
+
+    if (type === "sales") {
+      const filteredOrders = allOrders.filter(o => filterByDate(o.orderDate));
+      headers = ["Order ID", "Total Amount (Rs.)", "Payment Method", "Status", "Date"];
+      data = filteredOrders.map(o => [
+        o.id,
+        o.totalAmount,
+        o.paymentMethod || "N/A",
+        o.status || "Pending",
+        o.orderDate ? new Date(o.orderDate).toLocaleDateString() : "N/A"
+      ]);
+    } else if (type === "products") {
+      headers = ["Product ID", "Name", "Price (Rs.)", "Description"];
+      data = allProducts.map(p => [
+        p.id,
+        `"${p.name?.replace(/"/g, '""') || ""}"`,
+        p.price,
+        `"${p.description?.replace(/"/g, '""') || ""}"`
+      ]);
+    } else if (type === "users") {
+      const filteredUsers = allUsers.filter(u => filterByDate(u.createdAt));
+      headers = ["User ID", "Full Name", "Email", "Phone", "Role", "Joined Date"];
+      data = filteredUsers.map(u => [
+        u.id,
+        `"${u.fullName?.replace(/"/g, '""') || ""}"`,
+        u.email,
+        u.phone || "N/A",
+        u.role || "Customer",
+        u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "N/A"
+      ]);
+    }
+
+    if (data.length === 0) {
+      alert("No data found for the selected criteria.");
+      return;
+    }
+
+    // Build CSV Content
+    const csvContent = [
+      headers.join(","),
+      ...data.map(row => row.join(","))
+    ].join("\n");
+
+    // Download CSV
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const getStatusBadgeClass = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -227,42 +309,86 @@ export default function AdminDashboard() {
               )}
             </div>
 
-            {/* Quick Actions */}
-            <div className="card quick-actions-card">
-              <h2 className="card-heading">Quick Actions</h2>
-              <div className="quick-actions">
-                <Link href="/admin/products" className="action-item">
-                  <div className="action-icon-box purple">📦</div>
+            {/* Right Column Stack */}
+            <div className="dashboard-right-stack" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              {/* Quick Actions */}
+              <div className="card quick-actions-card">
+                <h2 className="card-heading">Quick Actions</h2>
+                <div className="quick-actions">
+                  <Link href="/admin/products" className="action-item">
+                    <div className="action-icon-box purple">📦</div>
+                    <div>
+                      <h4 className="action-title">Products</h4>
+                      <p className="action-desc">Add, edit, or remove store items</p>
+                    </div>
+                    <span className="action-arrow">→</span>
+                  </Link>
+                  <Link href="/admin/categories" className="action-item">
+                    <div className="action-icon-box teal">🏷️</div>
+                    <div>
+                      <h4 className="action-title">Categories</h4>
+                      <p className="action-desc">Organize product collections</p>
+                    </div>
+                    <span className="action-arrow">→</span>
+                  </Link>
+                  <Link href="/admin/orders" className="action-item">
+                    <div className="action-icon-box amber">🛒</div>
+                    <div>
+                      <h4 className="action-title">Orders</h4>
+                      <p className="action-desc">Review and process orders</p>
+                    </div>
+                    <span className="action-arrow">→</span>
+                  </Link>
+                  <Link href="/admin/users" className="action-item">
+                    <div className="action-icon-box blue">👥</div>
+                    <div>
+                      <h4 className="action-title">Users</h4>
+                      <p className="action-desc">Manage accounts & roles</p>
+                    </div>
+                    <span className="action-arrow">→</span>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Report Center */}
+              <div className="card report-generator-card">
+                <h2 className="card-heading" style={{ marginBottom: "16px" }}>Report Center</h2>
+                <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
                   <div>
-                    <h4 className="action-title">Products</h4>
-                    <p className="action-desc">Add, edit, or remove store items</p>
+                    <label style={{ display: "block", fontSize: "11px", fontWeight: "bold", color: "#64748b", textTransform: "uppercase", marginBottom: "6px" }}>Report Type</label>
+                    <select
+                      value={reportType}
+                      onChange={(e) => setReportType(e.target.value)}
+                      style={{ width: "100%", padding: "10px 14px", border: "1px solid #e2e8f0", borderRadius: "10px", fontSize: "13px", color: "#0f172a", background: "#fff", outline: "none", cursor: "pointer" }}
+                    >
+                      <option value="sales">Sales & Revenue Report</option>
+                      <option value="products">Product Catalog Report</option>
+                      <option value="users">User Accounts Report</option>
+                    </select>
                   </div>
-                  <span className="action-arrow">→</span>
-                </Link>
-                <Link href="/admin/categories" className="action-item">
-                  <div className="action-icon-box teal">🏷️</div>
+
                   <div>
-                    <h4 className="action-title">Categories</h4>
-                    <p className="action-desc">Organize product collections</p>
+                    <label style={{ display: "block", fontSize: "11px", fontWeight: "bold", color: "#64748b", textTransform: "uppercase", marginBottom: "6px" }}>Date Range</label>
+                    <select
+                      value={reportRange}
+                      onChange={(e) => setReportRange(e.target.value)}
+                      style={{ width: "100%", padding: "10px 14px", border: "1px solid #e2e8f0", borderRadius: "10px", fontSize: "13px", color: "#0f172a", background: "#fff", outline: "none", cursor: "pointer" }}
+                      disabled={reportType === "products"}
+                    >
+                      <option value="all">All Time</option>
+                      <option value="7days">Last 7 Days</option>
+                      <option value="30days">Last 30 Days</option>
+                    </select>
                   </div>
-                  <span className="action-arrow">→</span>
-                </Link>
-                <Link href="/admin/orders" className="action-item">
-                  <div className="action-icon-box amber">🛒</div>
-                  <div>
-                    <h4 className="action-title">Orders</h4>
-                    <p className="action-desc">Review and process orders</p>
-                  </div>
-                  <span className="action-arrow">→</span>
-                </Link>
-                <Link href="/admin/users" className="action-item">
-                  <div className="action-icon-box blue">👥</div>
-                  <div>
-                    <h4 className="action-title">Users</h4>
-                    <p className="action-desc">Manage accounts & roles</p>
-                  </div>
-                  <span className="action-arrow">→</span>
-                </Link>
+
+                  <button
+                    onClick={() => handleGenerateReport(reportType, reportRange)}
+                    className="btn-primary"
+                    style={{ justifyContent: "center", marginTop: "4px", background: "linear-gradient(135deg, #1e293b, #0f172a)", border: "none", cursor: "pointer", boxShadow: "none" }}
+                  >
+                    📥 Generate CSV Report
+                  </button>
+                </div>
               </div>
             </div>
           </div>
