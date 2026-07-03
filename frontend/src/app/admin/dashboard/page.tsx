@@ -30,6 +30,7 @@ export default function AdminDashboard() {
   });
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [alertFilter, setAlertFilter] = useState<"all" | "critical" | "warning" | "notice">("all");
 
   // States for report generation
   const [allProducts, setAllProducts] = useState<any[]>([]);
@@ -647,6 +648,86 @@ export default function AdminDashboard() {
   const areaD = chartPoints.length > 0
     ? `${pathD} L ${chartPoints[chartPoints.length - 1].x} 160 L ${chartPoints[0].x} 160 Z`
     : "";
+  const getActiveAlerts = () => {
+    const list: Array<{
+      id: string;
+      type: "critical" | "warning" | "notice";
+      title: string;
+      description: string;
+      actionUrl: string;
+      actionText: string;
+    }> = [];
+
+    // 1. Stock Alerts
+    allStock.forEach((p: any) => {
+      if (p.variants && p.variants.length > 0) {
+        p.variants.forEach((v: any) => {
+          if (v.stockQuantity === 0) {
+            list.push({
+              id: `stock-critical-${p.productId}-${v.variantId}`,
+              type: "critical",
+              title: "Critical Out of Stock",
+              description: `"${p.productName}" (Size: ${v.size}${v.color && v.color !== 'Default' ? `, Color: ${v.color}` : ''}) is sold out.`,
+              actionUrl: "/admin/stock",
+              actionText: "Refill Stock",
+            });
+          } else if (v.stockQuantity <= 5) {
+            list.push({
+              id: `stock-warning-${p.productId}-${v.variantId}`,
+              type: "warning",
+              title: "Low Stock Warning",
+              description: `"${p.productName}" (Size: ${v.size}) has only ${v.stockQuantity} items left in inventory.`,
+              actionUrl: "/admin/stock",
+              actionText: "Manage Stock",
+            });
+          }
+        });
+      }
+    });
+
+    // 2. Pending & Delayed Order Alerts
+    allOrders.forEach((o: any) => {
+      const orderStatus = o.status?.toLowerCase();
+      if (orderStatus === "pending") {
+        const orderTime = new Date(o.orderDate).getTime();
+        const hrsOld = (Date.now() - orderTime) / (1000 * 60 * 60);
+
+        if (hrsOld > 24) {
+          list.push({
+            id: `order-delayed-${o.id}`,
+            type: "critical",
+            title: "Delayed Order Alert",
+            description: `Order #${o.id} remains unprocessed after ${Math.floor(hrsOld)} hours.`,
+            actionUrl: `/admin/orders/${o.id}`,
+            actionText: "Fulfill Now",
+          });
+        } else if (o.totalAmount > 30000) {
+          list.push({
+            id: `order-highval-${o.id}`,
+            type: "notice",
+            title: "Premium Order Received",
+            description: `High-value order #${o.id} totaling ${formatCurrency(o.totalAmount)} is awaiting approval.`,
+            actionUrl: `/admin/orders/${o.id}`,
+            actionText: "Verify Order",
+          });
+        } else {
+          list.push({
+            id: `order-pending-${o.id}`,
+            type: "warning",
+            title: "Pending Approval",
+            description: `New order #${o.id} placed by customer is awaiting approval.`,
+            actionUrl: `/admin/orders/${o.id}`,
+            actionText: "Review Order",
+          });
+        }
+      }
+    });
+
+    return list;
+  };
+
+  const activeAlerts = getActiveAlerts();
+  const filteredAlerts = activeAlerts.filter(a => alertFilter === "all" ? true : a.type === alertFilter);
 
   return (
     <div className="dashboard-container">
@@ -741,6 +822,56 @@ export default function AdminDashboard() {
               <div className="stat-value">{stats.totalUsers}</div>
               <div className="stat-footer">Registered accounts</div>
             </div>
+          </div>
+
+          {/* Real-time Diagnostics Alert & Warning Center */}
+          <div className="card alert-center-card" style={{ marginBottom: "28px" }}>
+            <div className="alert-center-header">
+              <div className="alert-center-title-group">
+                <span className="bell-glow-icon">🔔</span>
+                <div>
+                  <h2 className="alert-center-title">System Diagnostics & Active Alerts</h2>
+                  <p className="alert-center-subtitle">Real-time alerts regarding stock outages, order delays, and inventory thresholds.</p>
+                </div>
+              </div>
+              <div className="alert-filter-tabs">
+                {(["all", "critical", "warning", "notice"] as const).map(tab => {
+                  const count = activeAlerts.filter(a => tab === "all" ? true : a.type === tab).length;
+                  return (
+                    <button
+                      key={tab}
+                      onClick={() => setAlertFilter(tab)}
+                      className={`alert-tab-btn type-${tab} ${alertFilter === tab ? "active" : ""}`}
+                    >
+                      {tab === "all" ? "All Alerts" : tab === "critical" ? "🔴 Critical" : tab === "warning" ? "🟡 Warnings" : "🔵 Notices"}
+                      <span className="tab-count-badge">{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {filteredAlerts.length === 0 ? (
+              <div className="empty-alerts">
+                <span className="success-shield-icon">🛡️</span>
+                <p className="empty-title">All Systems Operating Normally</p>
+                <p className="empty-desc">There are no warnings or active inventory alerts at this time.</p>
+              </div>
+            ) : (
+              <div className="alerts-list-wrapper">
+                {filteredAlerts.map(alert => (
+                  <div key={alert.id} className={`alert-list-item severity-${alert.type}`}>
+                    <div className="alert-badge-wrap">
+                      <span className="alert-badge">{alert.title}</span>
+                    </div>
+                    <p className="alert-desc">{alert.description}</p>
+                    <Link href={alert.actionUrl} className="alert-item-btn">
+                      {alert.actionText} →
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Main Dashboard Grid */}
@@ -1107,6 +1238,98 @@ export default function AdminDashboard() {
         .action-desc { font-size: 11px; color: var(--admin-text-muted); margin: 0; }
         .action-arrow { margin-left: auto; color: #cbd5e1; font-size: 16px; transition: all 0.2s; }
         .action-item:hover .action-arrow { color: var(--admin-accent-gold-dark); }
+
+        /* Real-time Diagnostics Alert Center CSS */
+        .alert-center-card {
+          background: #ffffff; border: 1px solid var(--admin-border);
+          border-radius: var(--admin-radius-lg); padding: 24px 28px;
+          box-shadow: 0 10px 30px rgba(15,23,42,0.015);
+        }
+        .alert-center-header {
+          display: flex; justify-content: space-between; align-items: center;
+          border-bottom: 1px solid var(--admin-border); padding-bottom: 18px;
+          margin-bottom: 20px; flex-wrap: wrap; gap: 16px;
+        }
+        .alert-center-title-group { display: flex; align-items: center; gap: 14px; }
+        
+        .bell-glow-icon {
+          width: 44px; height: 44px; border-radius: 12px; background: rgba(197, 168, 128, 0.12);
+          display: flex; align-items: center; justify-content: center; font-size: 20px;
+          animation: bellGlowPulse 2s infinite ease-in-out;
+        }
+        @keyframes bellGlowPulse {
+          0% { box-shadow: 0 0 0 0 rgba(197, 168, 128, 0.4); }
+          70% { box-shadow: 0 0 0 8px rgba(197, 168, 128, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(197, 168, 128, 0); }
+        }
+
+        .alert-center-title { font-size: 18px; font-weight: 800; color: var(--admin-text-main); margin: 0 0 4px; font-family: var(--font-display); }
+        .alert-center-subtitle { font-size: 12.5px; color: var(--admin-text-muted); margin: 0; font-weight: 500; }
+        
+        .alert-filter-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+        .alert-tab-btn {
+          padding: 8px 14px; border-radius: 8px; border: 1px solid var(--admin-border);
+          font-size: 11.5px; font-weight: 700; background: #f8fafc; color: var(--admin-text-muted);
+          cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;
+          font-family: var(--font-body);
+        }
+        .alert-tab-btn:hover { border-color: var(--admin-accent-gold-dark); color: var(--admin-text-main); }
+        .alert-tab-btn.active {
+          background: var(--admin-primary); border-color: var(--admin-primary); color: #ffffff;
+        }
+        .tab-count-badge {
+          font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px;
+          background: rgba(15,23,42,0.06); color: var(--admin-text-main);
+        }
+        .alert-tab-btn.active .tab-count-badge {
+          background: rgba(255,255,255,0.25); color: #ffffff;
+        }
+
+        .empty-alerts { text-align: center; padding: 48px 24px; }
+        .success-shield-icon {
+          width: 52px; height: 52px; border-radius: 50%; background: #f0fdf4;
+          display: flex; align-items: center; justify-content: center; font-size: 26px;
+          margin: 0 auto 16px; color: #16a34a; border: 1px solid #bbf7d0;
+        }
+        .empty-title { font-size: 15px; font-weight: 800; color: var(--admin-text-main); margin: 0 0 6px; }
+        .empty-desc { font-size: 12.5px; color: var(--admin-text-muted); margin: 0; font-weight: 500; }
+
+        .alerts-list-wrapper { display: flex; flex-direction: column; gap: 12px; }
+        .alert-list-item {
+          display: flex; align-items: center; gap: 16px; padding: 14px 20px;
+          background: #f8fafc; border: 1px solid var(--admin-border);
+          border-radius: var(--admin-radius-md); transition: all 0.2s;
+        }
+        .alert-list-item:hover { background: #fafbfc; box-shadow: 0 4px 12px rgba(15,23,42,0.01); }
+        
+        .alert-list-item.severity-critical { border-left: 4px solid #ef4444; }
+        .alert-list-item.severity-warning { border-left: 4px solid #f59e0b; }
+        .alert-list-item.severity-notice { border-left: 4px solid #3b82f6; }
+
+        .alert-badge-wrap { min-width: 140px; }
+        .alert-badge {
+          display: inline-block; font-size: 10.5px; font-weight: 800; padding: 4px 10px;
+          border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .severity-critical .alert-badge { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+        .severity-warning .alert-badge { background: #fffbeb; color: #b45309; border: 1px solid #fef3c7; }
+        .severity-notice .alert-badge { background: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; }
+
+        .alert-desc { flex: 1; font-size: 13.5px; color: var(--admin-text-main); font-weight: 600; margin: 0; }
+        .alert-item-btn {
+          font-size: 12px; font-weight: 700; color: var(--admin-accent-gold-dark);
+          text-decoration: none; padding: 8px 14px; border-radius: 6px;
+          border: 1px solid var(--admin-border); background: #ffffff; transition: all 0.2s;
+          font-family: var(--font-body);
+        }
+        .alert-item-btn:hover {
+          border-color: var(--admin-accent-gold); background: rgba(197, 168, 128, 0.05); color: var(--admin-text-main);
+        }
+        @media (max-width: 768px) {
+          .alert-list-item { flex-direction: column; align-items: flex-start; gap: 10px; padding: 16px; }
+          .alert-badge-wrap { min-width: auto; }
+          .alert-item-btn { width: 100%; text-align: center; }
+        }
       `}</style>
     </div>
   );
