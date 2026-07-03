@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { productsAPI, categoriesAPI, ordersAPI, authAPI } from "@/lib/api";
+import { productsAPI, categoriesAPI, ordersAPI, authAPI, stockAPI } from "@/lib/api";
 import Link from "next/link";
 
 interface OrderItem {
@@ -35,17 +35,19 @@ export default function AdminDashboard() {
   const [allProducts, setAllProducts] = useState<any[]>([]);
   const [allOrders, setAllOrders] = useState<any[]>([]);
   const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [allStock, setAllStock] = useState<any[]>([]);
   const [reportType, setReportType] = useState("sales");
   const [reportRange, setReportRange] = useState("all");
 
   useEffect(() => {
     async function fetchDashboardData() {
       try {
-        const [productsRes, categoriesRes, ordersRes, usersRes] = await Promise.allSettled([
+        const [productsRes, categoriesRes, ordersRes, usersRes, stockRes] = await Promise.allSettled([
           productsAPI.getAllProducts(),
           categoriesAPI.getAllCategories(),
           ordersAPI.getAllOrders(),
           authAPI.getAllUsers(),
+          stockAPI.getAllStock(),
         ]);
 
         let productCount = 0;
@@ -80,6 +82,10 @@ export default function AdminDashboard() {
         if (usersRes.status === "fulfilled") {
           userCount = usersRes.value.data.length;
           setAllUsers(usersRes.value.data || []);
+        }
+
+        if (stockRes.status === "fulfilled") {
+          setAllStock(stockRes.value.data || []);
         }
 
         setStats({
@@ -149,6 +155,26 @@ export default function AdminDashboard() {
         u.role || "Customer",
         u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "N/A"
       ]);
+    } else if (type === "stocks") {
+      headers = ["Product Name", "Size", "Color", "Stock Quantity", "Low Threshold", "Status"];
+      const stockRows: any[] = [];
+      allStock.forEach(p => {
+        if (p.variants && p.variants.length > 0) {
+          p.variants.forEach((v: any) => {
+            stockRows.push([
+              `"${p.productName?.replace(/"/g, '""') || ""}"`,
+              v.size || "N/A",
+              v.color || "N/A",
+              v.stockQuantity,
+              v.lowStockThreshold || 5,
+              v.stockQuantity === 0 ? "Out of Stock" : v.stockQuantity <= (v.lowStockThreshold || 5) ? "Low Stock" : "In Stock"
+            ]);
+          });
+        } else {
+          stockRows.push([`"${p.productName?.replace(/"/g, '""') || ""}"`, "N/A", "N/A", 0, 0, "No Variants"]);
+        }
+      });
+      data = stockRows;
     }
 
     if (data.length === 0) {
@@ -172,6 +198,389 @@ export default function AdminDashboard() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleGeneratePDFReport = (type: string, dateRange: string) => {
+    let data: any[] = [];
+    let headers: string[] = [];
+    let title = "";
+    let summaryHtml = "";
+
+    const filterByDate = (dateStr: string) => {
+      if (!dateStr) return false;
+      const date = new Date(dateStr);
+      const now = new Date();
+      if (dateRange === "7days") {
+        return (now.getTime() - date.getTime()) <= 7 * 24 * 60 * 60 * 1000;
+      }
+      if (dateRange === "30days") {
+        return (now.getTime() - date.getTime()) <= 30 * 24 * 60 * 60 * 1000;
+      }
+      return true; // "all"
+    };
+
+    if (type === "sales") {
+      title = "Sales & Revenue Report";
+      const filteredOrders = allOrders.filter(o => filterByDate(o.orderDate));
+      headers = ["Order ID", "Amount (Rs.)", "Payment Method", "Status", "Date"];
+      data = filteredOrders.map(o => [
+        `#ORD-${o.id}`,
+        (o.totalAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+        o.paymentMethod || "N/A",
+        o.status || "Pending",
+        o.orderDate ? new Date(o.orderDate).toLocaleDateString() : "N/A"
+      ]);
+
+      const totalRevenue = filteredOrders
+        .filter(o => o.status?.toLowerCase() !== "cancelled")
+        .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+
+      summaryHtml = `
+        <div class="summary-box">
+          <div class="summary-item">
+            <span class="label">Total Orders</span>
+            <span class="value">${filteredOrders.length}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Total Revenue</span>
+            <span class="value" style="color: #aa841c;">Rs. ${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Cancelled Orders</span>
+            <span class="value">${filteredOrders.filter(o => o.status?.toLowerCase() === "cancelled").length}</span>
+          </div>
+        </div>
+      `;
+    } else if (type === "products") {
+      title = "Product Catalog Report";
+      headers = ["Product ID", "Product Name", "Price (Rs.)", "Description"];
+      data = allProducts.map(p => [
+        p.id,
+        p.name || "N/A",
+        (p.price || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+        p.description || "N/A"
+      ]);
+
+      summaryHtml = `
+        <div class="summary-box">
+          <div class="summary-item">
+            <span class="label">Total Products</span>
+            <span class="value">${allProducts.length}</span>
+          </div>
+        </div>
+      `;
+    } else if (type === "users") {
+      title = "User Accounts Report";
+      const filteredUsers = allUsers.filter(u => filterByDate(u.createdAt));
+      headers = ["User ID", "Full Name", "Email", "Phone", "Role", "Joined Date"];
+      data = filteredUsers.map(u => [
+        u.id,
+        u.fullName || "N/A",
+        u.email || "N/A",
+        u.phone || "N/A",
+        u.role || "Customer",
+        u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "N/A"
+      ]);
+
+      summaryHtml = `
+        <div class="summary-box">
+          <div class="summary-item">
+            <span class="label">Total Users</span>
+            <span class="value">${filteredUsers.length}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Administrators</span>
+            <span class="value">${filteredUsers.filter(u => u.role?.toLowerCase() === "admin").length}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Customers</span>
+            <span class="value">${filteredUsers.filter(u => u.role?.toLowerCase() !== "admin").length}</span>
+          </div>
+        </div>
+      `;
+    } else if (type === "stocks") {
+      title = "Stocks & Inventory Report";
+      headers = ["Product Name", "Size", "Color", "Stock Quantity", "Low Threshold", "Status"];
+      
+      const stockRows: any[] = [];
+      let totalStockQuantity = 0;
+      let lowStockAlerts = 0;
+      let outOfStockAlerts = 0;
+
+      allStock.forEach(p => {
+        if (p.variants && p.variants.length > 0) {
+          p.variants.forEach((v: any) => {
+            totalStockQuantity += v.stockQuantity || 0;
+            if (v.stockQuantity === 0) outOfStockAlerts++;
+            else if (v.stockQuantity <= (v.lowStockThreshold || 5)) lowStockAlerts++;
+
+            stockRows.push([
+              p.productName,
+              v.size || "N/A",
+              v.color || "N/A",
+              v.stockQuantity,
+              v.lowStockThreshold || 5,
+              v.stockQuantity === 0 ? `<span style="color: #dc2626; font-weight: bold;">Out of Stock</span>` : v.stockQuantity <= (v.lowStockThreshold || 5) ? `<span style="color: #d97706; font-weight: bold;">Low Stock</span>` : "In Stock"
+            ]);
+          });
+        } else {
+          stockRows.push([p.productName, "N/A", "N/A", 0, 0, `<span style="color: #64748b;">No Variants</span>`]);
+        }
+      });
+
+      data = stockRows;
+
+      summaryHtml = `
+        <div class="summary-box">
+          <div class="summary-item">
+            <span class="label">Total Products</span>
+            <span class="value">${allStock.length}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Total Items in Stock</span>
+            <span class="value">${totalStockQuantity}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Low Stock Alerts</span>
+            <span class="value" style="color: #d97706;">${lowStockAlerts}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Out of Stock</span>
+            <span class="value" style="color: #dc2626;">${outOfStockAlerts}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    if (data.length === 0) {
+      alert("No data found for the selected criteria.");
+      return;
+    }
+
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      alert("Please allow popups to generate PDF reports.");
+      return;
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>${title}</title>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap');
+          
+          body {
+            font-family: 'Montserrat', sans-serif;
+            color: #1e293b;
+            margin: 0;
+            padding: 20px;
+            font-size: 11px;
+            line-height: 1.5;
+          }
+          
+          .header {
+            border-bottom: 2px solid #aa841c;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+          }
+          
+          .logo-area {
+            display: flex;
+            flex-direction: column;
+          }
+          
+          .logo-text {
+            font-family: 'Playfair Display', serif;
+            font-size: 26px;
+            font-weight: 700;
+            color: #1c1c1e;
+            letter-spacing: 1px;
+            margin: 0;
+          }
+          
+          .logo-text span {
+            color: #aa841c;
+          }
+          
+          .logo-subtitle {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #64748b;
+            margin-top: 2px;
+          }
+          
+          .report-info {
+            text-align: right;
+          }
+          
+          .report-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: #aa841c;
+            margin: 0 0 5px;
+          }
+          
+          .metadata {
+            color: #64748b;
+            font-size: 9px;
+            margin: 2px 0;
+          }
+          
+          .summary-box {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+          }
+          
+          .summary-item {
+            flex: 1;
+            background: #fafaf9;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+          }
+          
+          .summary-item .label {
+            font-size: 9px;
+            text-transform: uppercase;
+            color: #64748b;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 4px;
+          }
+          
+          .summary-item .value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1c1c1e;
+          }
+          
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+          }
+          
+          th {
+            background-color: #1c1c1e;
+            color: #ffffff;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 9px;
+            letter-spacing: 0.5px;
+            padding: 8px 10px;
+            text-align: left;
+            border: 1px solid #1c1c1e;
+          }
+          
+          td {
+            padding: 8px 10px;
+            border: 1px solid #e2e8f0;
+            color: #334155;
+          }
+          
+          tr:nth-child(even) {
+            background-color: #f8fafc;
+          }
+          
+          .footer {
+            margin-top: 50px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #94a3b8;
+            font-size: 8px;
+          }
+          
+          .signature-area {
+            margin-top: 40px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 50px;
+          }
+          
+          .sig-line {
+            width: 150px;
+            border-top: 1px solid #cbd5e1;
+            text-align: center;
+            padding-top: 5px;
+            font-size: 8px;
+            color: #64748b;
+          }
+
+          @media print {
+            body { padding: 0; }
+            .no-print { display: none; }
+            @page {
+              size: A4;
+              margin: 15mm;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="logo-area">
+            <h1 class="logo-text">LUXURY<span>.LK</span></h1>
+            <span class="logo-subtitle">Premium Boutique</span>
+          </div>
+          <div class="report-info">
+            <h2 class="report-title">${title}</h2>
+            <div class="metadata">Date Range: <strong>${dateRange === "all" ? "All Time" : dateRange === "7days" ? "Last 7 Days" : "Last 30 Days"}</strong></div>
+            <div class="metadata">Generated: <strong>${new Date().toLocaleString()}</strong></div>
+            <div class="metadata">Generated By: <strong>Luxury Administrator</strong></div>
+          </div>
+        </div>
+
+        ${summaryHtml}
+
+        <table>
+          <thead>
+            <tr>
+              ${headers.map((h: string) => `<th>${h}</th>`).join("")}
+            </tr>
+          </thead>
+          <tbody>
+            ${data.map((row: any) => `
+              <tr>
+                ${row.map((cell: any) => `<td>${cell}</td>`).join("")}
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+
+        <div class="signature-area">
+          <div class="sig-line">Prepared By</div>
+          <div class="sig-line">Authorized Signature</div>
+        </div>
+
+        <div class="footer">
+          <span>CONFIDENTIAL - LUXURY.LK BUSINESS INTELLIGENCE SYSTEM</span>
+          <span>Page 1 of 1</span>
+        </div>
+
+        <script>
+          window.onload = function() {
+            window.print();
+          };
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.open();
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
   };
 
   const getStatusBadgeClass = (status: string) => {
@@ -363,6 +772,7 @@ export default function AdminDashboard() {
                     >
                       <option value="sales">Sales & Revenue Report</option>
                       <option value="products">Product Catalog Report</option>
+                      <option value="stocks">Stocks & Inventory Report</option>
                       <option value="users">User Accounts Report</option>
                     </select>
                   </div>
@@ -373,7 +783,7 @@ export default function AdminDashboard() {
                       value={reportRange}
                       onChange={(e) => setReportRange(e.target.value)}
                       style={{ width: "100%", padding: "10px 14px", border: "1px solid #e2e8f0", borderRadius: "10px", fontSize: "13px", color: "#0f172a", background: "#fff", outline: "none", cursor: "pointer" }}
-                      disabled={reportType === "products"}
+                      disabled={reportType === "products" || reportType === "stocks"}
                     >
                       <option value="all">All Time</option>
                       <option value="7days">Last 7 Days</option>
@@ -382,11 +792,19 @@ export default function AdminDashboard() {
                   </div>
 
                   <button
+                    onClick={() => handleGeneratePDFReport(reportType, reportRange)}
+                    className="btn-primary"
+                    style={{ justifyContent: "center", marginTop: "4px", background: "linear-gradient(135deg, #aa841c, #d4af37)", border: "none", cursor: "pointer", boxShadow: "0 4px 12px rgba(170, 132, 28, 0.2)", color: "#fff", fontWeight: "bold" }}
+                  >
+                    📄 Generate PDF Report
+                  </button>
+
+                  <button
                     onClick={() => handleGenerateReport(reportType, reportRange)}
                     className="btn-primary"
-                    style={{ justifyContent: "center", marginTop: "4px", background: "linear-gradient(135deg, #1e293b, #0f172a)", border: "none", cursor: "pointer", boxShadow: "none" }}
+                    style={{ justifyContent: "center", background: "#f8fafc", color: "#475569", border: "1px solid #e2e8f0", cursor: "pointer", boxShadow: "none" }}
                   >
-                    📥 Generate CSV Report
+                    📥 Download CSV Report
                   </button>
                 </div>
               </div>
