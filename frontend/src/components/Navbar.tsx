@@ -236,6 +236,7 @@ function IconBtn({
 }) {
   return (
     <button
+      suppressHydrationWarning
       onClick={onClick}
       aria-label={label}
       style={{
@@ -286,6 +287,7 @@ function IconBtnLabeled({
 }) {
   return (
     <button
+      suppressHydrationWarning
       onClick={onClick}
       aria-label={label}
       style={{
@@ -434,6 +436,7 @@ function SearchBar({ onLinkClick }: { onLinkClick?: () => void }) {
       }}
     >
       <input
+        suppressHydrationWarning
         ref={inputRef}
         type="text"
         value={query}
@@ -504,6 +507,7 @@ function SearchBar({ onLinkClick }: { onLinkClick?: () => void }) {
 
       {/* Search Submission Button */}
       <button
+        suppressHydrationWarning
         onClick={() => handleSearchSubmit(query)}
         style={{
           background: "#1C1C1E",
@@ -570,6 +574,7 @@ function SearchBar({ onLinkClick }: { onLinkClick?: () => void }) {
                   color: "#8E8E93",
                 }}>Recent Searches</p>
                 <button
+                  suppressHydrationWarning
                   onClick={() => {
                     setRecentSearches([]);
                     localStorage.removeItem("luxury_search_history");
@@ -623,6 +628,7 @@ function SearchBar({ onLinkClick }: { onLinkClick?: () => void }) {
                       }}>{term}</span>
                     </div>
                     <button
+                      suppressHydrationWarning
                       onClick={(e) => removeSearchFromHistory(term, e)}
                       style={{
                         background: "none",
@@ -663,6 +669,7 @@ function SearchBar({ onLinkClick }: { onLinkClick?: () => void }) {
             <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
               {["Summer Dresses", "Linen Shirts", "Premium Sarees", "Designer Footwear"].map((term) => (
                 <button
+                  suppressHydrationWarning
                   key={term}
                   onClick={() => handleSearchSubmit(term)}
                   style={{
@@ -776,6 +783,7 @@ function UserMenu({
   return (
     <div ref={ref} style={{ position: "relative" }}>
       <button
+        suppressHydrationWarning
         onClick={() => setOpen(!open)}
         style={{
           display: "flex", flexDirection: "column",
@@ -856,6 +864,7 @@ function UserMenu({
           </div>
           <div style={{ padding: "6px 8px 8px", borderTop: "0.5px solid rgba(0,0,0,0.06)" }}>
             <button
+              suppressHydrationWarning
               onClick={() => { setOpen(false); onLogout(); }}
               style={{
                 width: "100%", display: "flex", alignItems: "center", gap: 10,
@@ -1059,6 +1068,7 @@ export default function Navbar() {
         >
           {/* Left Arrow */}
           <button
+            suppressHydrationWarning
             onClick={handlePrevPromo}
             style={{
               position: "absolute",
@@ -1138,6 +1148,7 @@ export default function Navbar() {
           {/* Right Arrow Controls */}
           <div style={{ position: "absolute", right: 16, display: "flex", alignItems: "center", zIndex: 10 }}>
             <button
+              suppressHydrationWarning
               onClick={handleNextPromo}
               style={{
                 background: "none",

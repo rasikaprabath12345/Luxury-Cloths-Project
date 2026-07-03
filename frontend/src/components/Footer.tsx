@@ -173,6 +173,7 @@ export default function Footer() {
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <input
+            suppressHydrationWarning
             type="email"
             placeholder="your@email.com"
             className="flex-1 sm:flex-none sm:w-52 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm text-[#1D1D1F]
@@ -180,6 +181,7 @@ export default function Footer() {
                        focus:ring-2 focus:ring-blue-500/40"
           />
           <button
+            suppressHydrationWarning
             className="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white
                        text-xs sm:text-sm font-semibold px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl
                        transition-all duration-150 shrink-0"

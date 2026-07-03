@@ -44,7 +44,9 @@ function UserMenu({ user, onLogout }: { user: User; onLogout: () => void }) {
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
-      <button onClick={() => setOpen(!open)}
+      <button
+        suppressHydrationWarning
+        onClick={() => setOpen(!open)}
         style={{ ...glass.pill, display: "flex", alignItems: "center", gap: 8, padding: "5px 14px 5px 5px", cursor: "pointer" }}>
         <span style={{
           width: 30, height: 30, borderRadius: "50%",
@@ -250,6 +252,7 @@ function ProductSlider({ products }: { products: Product[] }) {
       {/* Navigation Arrows */}
       <>
         <button
+          suppressHydrationWarning
           onClick={handlePrev}
           style={{
             position: "absolute", left: -20, top: "50%", transform: "translateY(-50%)",
@@ -267,6 +270,7 @@ function ProductSlider({ products }: { products: Product[] }) {
           </svg>
         </button>
         <button
+          suppressHydrationWarning
           onClick={handleNext}
           style={{
             position: "absolute", right: -20, top: "50%", transform: "translateY(-50%)",
@@ -568,6 +572,7 @@ export default function HomePage() {
               const active = newArrivalsFilter === filter;
               return (
                 <button
+                  suppressHydrationWarning
                   key={filter}
                   onClick={() => setNewArrivalsFilter(filter)}
                   style={{
@@ -635,6 +640,7 @@ export default function HomePage() {
               const active = bestSellersFilter === filter;
               return (
                 <button
+                  suppressHydrationWarning
                   key={filter}
                   onClick={() => setBestSellersFilter(filter)}
                   style={{
@@ -982,6 +988,7 @@ export default function HomePage() {
 
             <div style={{ display: "flex", gap: 10, maxWidth: 440, margin: "0 auto", flexWrap: "wrap", justifyContent: "center" }}>
               <input
+                suppressHydrationWarning
                 type="email" value={email} onChange={e => setEmail(e.target.value)}
                 placeholder="your@email.com"
                 style={{
@@ -990,7 +997,9 @@ export default function HomePage() {
                   outline: "none", boxShadow: "inset 0 1px 3px rgba(0,0,0,0.06)",
                 }}
               />
-              <button style={{
+              <button
+                suppressHydrationWarning
+                style={{
                 background: "#1C1C1E", border: "none", borderRadius: 16, padding: "14px 28px",
                 fontSize: 14, fontWeight: 700, color: "#fff", cursor: "pointer",
                 boxShadow: "0 4px 16px rgba(0,0,0,0.3)", flexShrink: 0,
