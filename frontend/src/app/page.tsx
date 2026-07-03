@@ -309,6 +309,22 @@ const brands = [
   { name: "CRYSTAL", sub: "Men's Wear", color: "#E5E5EA" },
 ];
 
+const filterProductByCategory = (p: Product, filter: "All" | "Women" | "Men" | "Kids") => {
+  if (filter === "All") return true;
+  const catName = p.category?.name?.toLowerCase() || "";
+  const catSlug = p.category?.slug?.toLowerCase() || "";
+  if (filter === "Women") {
+    return catName.includes("women") || catName.includes("girl") || catName.includes("lady") || catSlug.includes("women") || catSlug.includes("girl") || p.categoryId === 7 || p.categoryId === 2;
+  }
+  if (filter === "Men") {
+    return (catName.includes("men") || catName.includes("boy") || catName.includes("gent") || catSlug.includes("men") || catSlug.includes("boy") || p.categoryId === 8 || p.categoryId === 1) && !catName.includes("women");
+  }
+  if (filter === "Kids") {
+    return catName.includes("child") || catName.includes("kids") || catName.includes("children") || catName.includes("baby") || catSlug.includes("child") || catSlug.includes("kids") || catSlug.includes("children") || catSlug.includes("baby") || p.categoryId === 9 || p.categoryId === 3;
+  }
+  return true;
+};
+
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -317,6 +333,7 @@ export default function HomePage() {
   const [user, setUser] = useState<User | null>(null);
   const [activeCategory, setActiveCategory] = useState<"Women" | "Men" | "Kids">("Women");
   const [newArrivalsFilter, setNewArrivalsFilter] = useState<"All" | "Women" | "Men" | "Kids">("All");
+  const [bestSellersFilter, setBestSellersFilter] = useState<"All" | "Women" | "Men" | "Kids">("All");
   const [heroImage, setHeroImage] = useState("/qw.jpg");
 
   const heroRef = useRef<HTMLDivElement>(null);
@@ -364,21 +381,13 @@ export default function HomePage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const filteredNewArrivals = products.filter(p => {
-    if (newArrivalsFilter === "All") return true;
-    const catName = p.category?.name?.toLowerCase() || "";
-    const catSlug = p.category?.slug?.toLowerCase() || "";
-    if (newArrivalsFilter === "Women") {
-      return catName.includes("women") || catName.includes("girl") || catName.includes("lady") || catSlug.includes("women") || catSlug.includes("girl") || p.categoryId === 7 || p.categoryId === 2;
-    }
-    if (newArrivalsFilter === "Men") {
-      return (catName.includes("men") || catName.includes("boy") || catName.includes("gent") || catSlug.includes("men") || catSlug.includes("boy") || p.categoryId === 8 || p.categoryId === 1) && !catName.includes("women");
-    }
-    if (newArrivalsFilter === "Kids") {
-      return catName.includes("child") || catName.includes("kids") || catName.includes("children") || catName.includes("baby") || catSlug.includes("child") || catSlug.includes("kids") || catSlug.includes("children") || catSlug.includes("baby") || p.categoryId === 9 || p.categoryId === 3;
-    }
-    return true;
-  }).slice(0, 10);
+  const filteredNewArrivals = products.filter(p => filterProductByCategory(p, newArrivalsFilter)).slice(0, 10);
+
+  const bestSellersBase = products.filter((p: any) => p.discount > 0).length > 0
+    ? products.filter((p: any) => p.discount > 0)
+    : products;
+
+  const filteredBestSellers = bestSellersBase.filter(p => filterProductByCategory(p, bestSellersFilter)).slice(0, 10);
 
   return (
     <div style={{
@@ -606,32 +615,64 @@ export default function HomePage() {
 
       {/* ─── BEST SELLERS COLLECTION ─────────────────────────────────────────── */}
       <section style={{ maxWidth: 1400, margin: "0 auto", padding: "16px 24px 40px", position: "relative", zIndex: 1 }}>
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 24 }}>
-          <div>
-            <p style={{
-              margin: "0 0 4px", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
-              textTransform: "uppercase", color: "#007AFF"
-            }}>Trending Items</p>
-            <h2 style={{ margin: 0, fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em" }}>Best Sellers 🔥</h2>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 24 }}>
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+            <div>
+              <p style={{
+                margin: "0 0 4px", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
+                textTransform: "uppercase", color: "#007AFF"
+              }}>Trending Items</p>
+              <h2 style={{ margin: 0, fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em" }}>Best Sellers 🔥</h2>
+            </div>
+            <Link href="/storefront/shop?filter=sale" style={{ fontSize: 13, fontWeight: 600, color: "#007AFF", textDecoration: "none" }}>
+              View All Best Sellers →
+            </Link>
           </div>
-          <Link href="/storefront/shop?filter=sale" style={{ fontSize: 13, fontWeight: 600, color: "#007AFF", textDecoration: "none" }}>
-            View All Best Sellers →
-          </Link>
+
+          {/* Filter Pills */}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {(["All", "Women", "Men", "Kids"] as const).map((filter) => {
+              const active = bestSellersFilter === filter;
+              return (
+                <button
+                  key={filter}
+                  onClick={() => setBestSellersFilter(filter)}
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: 20,
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    background: active ? "linear-gradient(135deg, #007AFF, #5856D6)" : "rgba(120,120,128,0.08)",
+                    color: active ? "#fff" : "#48484A",
+                    boxShadow: active ? "0 4px 12px rgba(0,122,255,0.24)" : "none",
+                    transition: "all 0.2s ease-in-out",
+                  }}
+                  onMouseEnter={e => {
+                    if (!active) e.currentTarget.style.background = "rgba(120,120,128,0.14)";
+                  }}
+                  onMouseLeave={e => {
+                    if (!active) e.currentTarget.style.background = "rgba(120,120,128,0.08)";
+                  }}
+                >
+                  {filter === "All" ? "All Bestsellers" : filter === "Women" ? "Women's" : filter === "Men" ? "Men's" : "Children's"}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {[1, 2, 3, 4, 5].map(n => <ProductSkeleton key={n} />)}
           </div>
-        ) : products.length === 0 ? (
+        ) : filteredBestSellers.length === 0 ? (
           <div style={{ ...glass.card, padding: 40, textAlign: "center", color: "#8E8E93", fontSize: 14 }}>
-            No best sellers available.
+            No best sellers available for this selection.
           </div>
         ) : (
-          <ProductSlider products={(products.filter((p: any) => p.discount > 0).length > 0
-            ? products.filter((p: any) => p.discount > 0)
-            : products.slice(4, 12)
-          ).slice(0, 10)} />
+          <ProductSlider products={filteredBestSellers} />
         )}
       </section>
 
