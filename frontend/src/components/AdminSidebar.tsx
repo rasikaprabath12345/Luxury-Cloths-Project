@@ -59,19 +59,24 @@ export default function AdminSidebar() {
         overflowY: "auto",
       }}>
         {/* Brand */}
-        <div className="admin-sidebar-brand" style={{ padding: "28px 24px 24px", borderBottom: "1px solid var(--admin-border)" }}>
-          <div className="admin-sidebar-logo" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <span className="admin-sidebar-logo-icon" style={{ fontSize: "28px", filter: "drop-shadow(0 2px 4px rgba(197, 168, 128, 0.3))" }}>💎</span>
+        <div className="admin-sidebar-brand" style={{ 
+          padding: "16px 20px 14px", 
+          borderBottom: "1px solid var(--admin-border)",
+          borderTop: "3px solid var(--admin-accent-gold)",
+          background: "linear-gradient(to bottom, rgba(197, 168, 128, 0.03), transparent)"
+        }}>
+          <div className="admin-sidebar-logo" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span className="admin-sidebar-logo-icon" style={{ fontSize: "20px", filter: "drop-shadow(0 2px 4px rgba(197, 168, 128, 0.25))" }}>💎</span>
             <div>
-              <h2 className="admin-sidebar-title" style={{ fontFamily: "var(--font-display)", fontSize: "19px", fontWeight: 900, color: "var(--admin-primary)", letterSpacing: "2.5px", margin: 0, lineHeight: 1.2 }}>LUXURY<span style={{ color: "var(--admin-accent-gold)" }}>.LK</span></h2>
-              <p className="admin-sidebar-subtitle" style={{ fontFamily: "var(--font-body)", fontSize: "10px", fontWeight: 700, color: "var(--admin-text-muted)", letterSpacing: "1px", margin: 0, textTransform: "uppercase" }}>Control Center</p>
+              <h2 className="admin-sidebar-title" style={{ fontFamily: "var(--font-display)", fontSize: "15px", fontWeight: 900, color: "var(--admin-primary)", letterSpacing: "2px", margin: 0, lineHeight: 1.2 }}>LUXURY<span style={{ color: "var(--admin-accent-gold)" }}>.LK</span></h2>
+              <p className="admin-sidebar-subtitle" style={{ fontFamily: "var(--font-body)", fontSize: "8.5px", fontWeight: 800, color: "var(--admin-text-muted)", letterSpacing: "1.5px", margin: 0, textTransform: "uppercase" }}>Control Center</p>
             </div>
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="admin-sidebar-nav" style={{ display: "flex", flexDirection: "column", gap: "6px", flex: 1, padding: "24px 16px" }}>
-          <p className="admin-sidebar-nav-label" style={{ fontFamily: "var(--font-display)", fontSize: "10px", fontWeight: 800, color: "var(--admin-text-muted)", letterSpacing: "2px", padding: "0 12px", margin: "0 0 12px" }}>MANAGEMENT</p>
+        <nav className="admin-sidebar-nav" style={{ display: "flex", flexDirection: "column", gap: "4px", flex: 1, padding: "16px 12px" }}>
+          <p className="admin-sidebar-nav-label" style={{ fontFamily: "var(--font-display)", fontSize: "10px", fontWeight: 800, color: "var(--admin-text-muted)", letterSpacing: "2px", padding: "0 12px", margin: "0 0 10px" }}>MANAGEMENT</p>
           {navItems.map((item) => {
             const isActive =
               pathname === item.href || pathname?.startsWith(item.href + "/");
@@ -84,9 +89,9 @@ export default function AdminSidebar() {
                   display: "flex",
                   alignItems: "center",
                   gap: "14px",
-                  padding: "12px 16px",
+                  padding: "9px 14px",
                   borderRadius: "var(--admin-radius-md)",
-                  fontSize: "13.5px",
+                  fontSize: "13px",
                   fontFamily: "var(--font-body)",
                   fontWeight: isActive ? 600 : 500,
                   color: isActive ? "var(--admin-accent-gold-dark)" : "var(--admin-text-muted)",
@@ -95,7 +100,7 @@ export default function AdminSidebar() {
                   textDecoration: "none",
                   transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
                   position: "relative",
-                  marginBottom: "4px",
+                  marginBottom: "2px",
                   boxShadow: isActive ? "0 4px 12px rgba(197, 168, 128, 0.05)" : "none",
                 }}
                 onClick={() => setMobileOpen(false)}
@@ -109,10 +114,10 @@ export default function AdminSidebar() {
         </nav>
 
         {/* Divider */}
-        <div className="admin-sidebar-divider" style={{ height: "1px", background: "var(--admin-border)", margin: "0 24px 12px" }} />
+        <div className="admin-sidebar-divider" style={{ height: "1px", background: "var(--admin-border)", margin: "0 20px 8px" }} />
 
         {/* Storefront Link */}
-        <div style={{ padding: "0 24px", marginBottom: 12 }}>
+        <div style={{ padding: "0 12px", marginBottom: 8 }}>
           <Link
             href="/"
             className="admin-sidebar-link storefront-link"
@@ -120,9 +125,9 @@ export default function AdminSidebar() {
               display: "flex",
               alignItems: "center",
               gap: "14px",
-              padding: "12px 16px",
+              padding: "9px 14px",
               borderRadius: "var(--admin-radius-md)",
-              fontSize: "13.5px",
+              fontSize: "13px",
               fontFamily: "var(--font-body)",
               fontWeight: 500,
               color: "var(--admin-text-muted)",
@@ -139,7 +144,7 @@ export default function AdminSidebar() {
 
         {/* User Info */}
         <div className="admin-sidebar-user" style={{
-          padding: "18px 24px",
+          padding: "10px 16px",
           borderTop: "1px solid var(--admin-border)",
           display: "flex",
           alignItems: "center",
