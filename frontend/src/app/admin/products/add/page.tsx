@@ -15,8 +15,12 @@ export default function AdminAddProductPage() {
     }
   }, [isAuthenticated, user, router]);
 
-  if (!isAuthenticated || user?.role !== "admin") {
-    return <div className="p-4">Access denied. Admin only.</div>;
+  if (!isAuthenticated) {
+    return <div className="p-4 text-center text-gray-500">Redirecting...</div>;
+  }
+
+  if (user?.role !== "admin") {
+    return <div className="p-4 text-center text-red-600">Access denied. Admin only.</div>;
   }
 
   return (

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export function AdminOnly({ children }: { children: ReactNode }) {
-    const { isAdmin, isLoading } = useAuth();
+    const { isAdmin, isLoading, user } = useAuth();
     const router = useRouter();
     const [isClient, setIsClient] = useState(false);
 
@@ -25,6 +25,10 @@ export function AdminOnly({ children }: { children: ReactNode }) {
     }
 
     if (!isAdmin) {
+        if (!user) {
+            return <div className="p-10 text-center text-gray-500">Redirecting...</div>;
+        }
+
         return (
             <div className="p-10 text-center text-red-600">
                 <p>Access denied. Admin only.</p>
