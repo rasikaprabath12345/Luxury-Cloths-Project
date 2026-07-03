@@ -41,6 +41,10 @@ export default function AdminAlertsPage() {
 
   useEffect(() => {
     fetchDiagnostics();
+    const intervalId = setInterval(() => {
+      fetchDiagnostics();
+    }, 10000); // 10 seconds auto-refresh loop
+    return () => clearInterval(intervalId);
   }, []);
 
   const formatCurrency = (amount: number) =>
@@ -166,7 +170,13 @@ export default function AdminAlertsPage() {
             <p className="page-subtitle">Inspect critical inventory thresholds, product outages, and processing delays.</p>
           </div>
         </div>
-        <button onClick={fetchDiagnostics} className="btn-refresh">🔄 Refresh Diagnostics</button>
+        <div className="header-actions-group" style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+          <div className="live-status-badge">
+            <span className="live-dot" />
+            <span>Live Monitoring Active (10s)</span>
+          </div>
+          <button onClick={fetchDiagnostics} className="btn-refresh">🔄 Refresh Diagnostics</button>
+        </div>
       </header>
 
       <div className="alert-center-card">
@@ -312,6 +322,21 @@ export default function AdminAlertsPage() {
           .alert-list-item { flex-direction: column; align-items: flex-start; gap: 10px; padding: 16px; }
           .alert-badge-wrap { min-width: auto; }
           .alert-item-btn { width: 100%; text-align: center; }
+        }
+
+        .live-status-badge {
+          display: flex; align-items: center; gap: 8px; font-size: 11px;
+          color: #16a34a; background: #f0fdf4; border: 1px solid #bbf7d0;
+          padding: 6px 12px; border-radius: 6px; font-weight: 700;
+        }
+        .live-dot {
+          width: 8px; height: 8px; border-radius: 50%; background: #16a34a;
+          display: inline-block; animation: pulseGreen 2s infinite ease-in-out;
+        }
+        @keyframes pulseGreen {
+          0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.4); }
+          70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(22, 163, 74, 0); }
+          100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
         }
       `}</style>
     </div>
