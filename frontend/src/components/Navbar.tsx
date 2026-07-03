@@ -973,9 +973,9 @@ export default function Navbar() {
   const megaMenuTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const promoMessages = [
-    <>Sign up and get <span style={{ color: "#aa841c", fontWeight: 700 }}>10% off</span> on your first order</>,
-    <>Free delivery on orders over <span style={{ color: "#aa841c", fontWeight: 700 }}>Rs. 5,000</span></>,
-    <>Discover the premium <span style={{ color: "#aa841c", fontWeight: 700 }}>Summer Collection — 2026</span></>
+    <>Sign up and get <span style={{ color: "#d4af37", fontWeight: 700 }}>10% off</span> on your first order</>,
+    <>Free delivery on orders over <span style={{ color: "#d4af37", fontWeight: 700 }}>Rs. 5,000</span></>,
+    <>Discover the premium <span style={{ color: "#d4af37", fontWeight: 700 }}>Summer Collection — 2026</span></>
   ];
   const [promoIndex, setPromoIndex] = useState(0);
 
@@ -1016,10 +1016,10 @@ export default function Navbar() {
       >
         {/* Promo strip */}
         <div style={{
-          background: "#FFF5EB", // elegant, warm luxury peach-ivory
-          borderBottom: "1px solid rgba(255, 107, 0, 0.12)",
-          color: "#2C2C2E",
-          fontSize: 13,
+          background: "linear-gradient(90deg, #1a1208 0%, #2a1f0e 50%, #1a1208 100%)",
+          borderBottom: "1px solid rgba(212, 175, 55, 0.18)",
+          color: "#e8d5a3",
+          fontSize: 12,
           fontWeight: 500,
           height: 32,
           display: "flex",
@@ -1028,16 +1028,20 @@ export default function Navbar() {
           padding: "0 28px",
           width: "100%",
           overflow: "hidden",
+          letterSpacing: "0.04em",
         }}>
-          <div style={{ maxWidth: 1400, width: "100%", margin: "0 auto", display: "flex", justifyContent: "center", alignItems: "center" }}>
+          <div style={{ maxWidth: 1400, width: "100%", margin: "0 auto", display: "flex", justifyContent: "center", alignItems: "center", gap: 16 }}>
+            <span style={{ color: "rgba(212,175,55,0.5)", fontSize: 10 }}>✦</span>
             <span key={promoIndex} style={{
-              fontSize: 13,
-              letterSpacing: "0.02em",
+              fontSize: 12,
+              letterSpacing: "0.06em",
               animation: "promoFade 4.5s infinite ease-in-out",
               display: "inline-block",
+              textTransform: "uppercase" as const,
             }}>
               {promoMessages[promoIndex]}
             </span>
+            <span style={{ color: "rgba(212,175,55,0.5)", fontSize: 10 }}>✦</span>
           </div>
         </div>
 
@@ -1175,11 +1179,13 @@ export default function Navbar() {
                 onMouseEnter={e => {
                   if (activeTab !== "/") {
                     (e.currentTarget as HTMLElement).style.background = "rgba(0, 0, 0, 0.04)";
+                    (e.currentTarget as HTMLElement).style.color = "#3C3C43";
                   }
                 }}
                 onMouseLeave={e => {
                   if (activeTab !== "/") {
                     (e.currentTarget as HTMLElement).style.background = "transparent";
+                    (e.currentTarget as HTMLElement).style.color = "#3C3C43";
                   }
                 }}
                 aria-label="Home"
