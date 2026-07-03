@@ -1,115 +1,124 @@
-# LUXURY.LK — Premium Fashion E-Commerce Platform
+# 👑 LUXURY.LK
 
-A professional, full-stack luxury fashion e-commerce platform designed to offer an immersive shopping experience for customers and a high-performance administrative panel for store management. 
-
-Developed with a client-side architecture using Next.js 15 (App Router) and a secure, scalable backend built on ASP.NET Core 9 (Web API).
+*A modern, full-stack luxury fashion e-commerce platform featuring an immersive client storefront and a secure control panel for store administration.*
 
 ---
 
-## 🏗️ Architectural Overview
+## 📐 System Architecture
+
+A clean representation of request lifecycle and data flow through the architecture layers:
 
 ```
- [ Customer Storefront ]          [ Admin Control Panel ]
-        (Next.js)                         (Next.js)
+    [ Customer Client ]               [ Admin Portal ]
+      (Next.js App)                     (Next.js App)
             │                                 │
-            ├─────── HTTP REST Requests ──────┤
+            ├─────────── REST APIs ───────────┤
             ▼                                 ▼
-┌─────────────────────────────────────────────────────────┐
-│                    ASP.NET Core Web API                 │
-│                                                         │
-│   [ AuthController ]           [ ProductsController ]   │
-│   [ OrdersController ]         [ StockController ]      │
-│   [ CategoriesController ]     [ SettingsController ]   │
-└────────────────────────────┬────────────────────────────┘
-                             │
-                  Entity Framework Core ORM
-                             │
-                             ▼
-               ┌───────────────────────────┐
-               │    SQL Server Database    │
-               │   (Users, Products, etc.) │
-               └───────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                 ASP.NET Core 9.0 Web Services               │
+│                                                             │
+│  • AuthController         • ProductsController              │
+│  • OrdersController       • StockController                 │
+│  • CategoriesController   • SettingsController              │
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+                    Entity Framework Core ORM
+                               │
+                               ▼
+               ┌───────────────────────────────┐
+               │    SQL Server Database Layer  │
+               │   (Users, Products, Orders)   │
+               └───────────────────────────────┘
 ```
 
 ---
 
-## 🌟 Core Capabilities
+## 🌟 Key Capabilities
 
-### Client Storefront
-* **Responsive Presentation**: Adaptable layout optimized for desktop, tablet, and mobile viewing.
-* **Shopping Cart & Wishlist**: Real-time sliding cart drawer, wishlist drawer, and streamlined order checkout forms.
-* **Customer Accounts**: Secure registration, login, profile editing (avatar uploads), and purchase history tracking.
-* **Support Integration**: Direct float button connection to WhatsApp support line.
+### 🛍️ Client Storefront
+* **Responsive Layout** — Fully optimized for desktop, tablet, and mobile displays.
+* **Smart Cart Drawer** — Slide-in dynamic shopping cart and wishlist management.
+* **Customer Dashboard** — Order status tracking, history, and profile updates.
+* **Live Chat Bridge** — Float button to connect directly with WhatsApp support.
 
-### Admin Control Panel
-* **Live Dashboard**: Core business telemetry, system health stats, and detailed logs.
-* **Product Manager**: CRUD operations with a tabbed interface for descriptions, pricing, and variants.
-* **Stock & Reservation Management**: Handles inventory status:
-  * **Total Stock**: Physical stock on hand.
-  * **Reserved Stock**: Items tied to pending orders.
-  * **Available Stock**: Net sellable items (Total minus Reserved).
-* **Printable Invoices**: On-demand invoice formatting and rendering for instant browser printing.
+### 👑 Admin Control Panel
+* **Live Dashboard** — Live system telemetry, stats tracking, and logs.
+* **Product Manager** — Tab-based CRUD forms for details, prices, and categories.
+* **Real-time Stock Control** — Detailed inventory tracking:
+  * *Total Stock* (On-Hand)
+  * *Reserved Stock* (Pending Checkout)
+  * *Available Stock* (Total minus Reserved)
+* **Digital Invoices** — Dynamic invoices ready for web printing.
 
 ---
 
 ## 🛠️ Technology Stack
 
-* **Frontend**: Next.js 15 (App Router), React 19, TypeScript, Vanilla CSS
-* **Backend**: ASP.NET Core 9, C#, Web API, Entity Framework Core
-* **Database**: Microsoft SQL Server (LocalDB)
-* **Authentication**: JWT (JSON Web Tokens) & NextAuth.js (Google OAuth Integration)
-* **Notifications**: SMTP Email Integration (OTP verification & customer order receipts)
+| Layer | Component | Description |
+| :--- | :--- | :--- |
+| **Frontend** | Next.js 15 (React 19) | Modern client-side app with App Router |
+| **Styling** | Vanilla CSS | Custom, premium design patterns |
+| **Backend** | ASP.NET Core 9.0 | Scalable C# REST API Gateway |
+| **Database** | SQL Server (LocalDB) | Entity Framework Core (Code-First) |
+| **Auth** | JWT & NextAuth.js | Secured user sessions & Google OAuth |
+| **Mail** | SMTP Server Integration | Transactional OTP and receipt notifications |
 
 ---
 
-## 📁 Project Directory Layout
+## 📁 Repository Directory Layout
 
 ```
 Luxury-Cloths-Project/
-├── backend/                       # ASP.NET Core 9 Web API
-│   ├── Controllers/               # Auth, Products, Orders, Categories, Stock Controllers
-│   ├── Data/                      # ApplicationDbContext & Migrations
-│   ├── Models/                    # Database entities (User, Product, Order, Stock)
-│   └── Program.cs                 # API Configuration & Middleware Routing
+├── backend/                       # ASP.NET Core Web API Server
+│   ├── Controllers/               # REST API Gateways (Auth, Products, Orders, Stock)
+│   ├── Data/                      # DbContext configuration & DB migrations
+│   ├── Models/                    # Database schema representations
+│   └── Program.cs                 # Services configuration & HTTP pipeline
 │
-└── frontend/                      # Next.js 15 App
-    ├── src/
-    │   ├── app/                   # App Router Pages
-    │   │   ├── admin/             # Dashboard, Stock, Products, Orders (Admin Protected)
-    │   │   ├── storefront/        # Shop, Checkout, Cart, Profile (Customer facing)
-    │   │   └── auth/              # Login, Registration, Password Reset Pages
-    │   ├── components/            # Shared UI components (Navbar, Sidebar, Drawers)
-    │   ├── context/               # AuthContext, CartContext, WishlistContext Providers
-    │   └── lib/                   # API utilities & Axios client definitions
-    └── package.json               # Node dependencies
+└── frontend/                      # Next.js Frontend Application
+    └── src/
+        ├── app/                   # App Router Pages
+        │   ├── admin/             # Dashboard, Stock, and Inventory management
+        │   ├── storefront/        # Product displays, Cart, and Checkout pages
+        │   └── auth/              # Registration, Login, and Password recovery
+        ├── components/            # Reusable UI controls (Navbar, Sidebar, Drawers)
+        ├── context/               # Global state providers (Auth, Cart, Wishlist)
+        └── lib/                   # Network services (Axios instances & client actions)
 ```
 
 ---
 
-## 🚀 Quick Start Guide
+## 🚀 Quick Setup Instructions
 
-### 1. Prerequisites
+### 1. Requirements
 * .NET 9.0 SDK
 * Node.js (v18 or higher)
 * SQL Server LocalDB
 
-### 2. Backend Setup
-1. Navigate to the `backend` folder.
-2. Run database updates and start the service:
-   ```bash
-   dotnet ef database update
-   dotnet run
-   ```
-   *The server runs on http://localhost:5165.*
+### 2. Startup Guide
 
-### 3. Frontend Setup
-1. Navigate to the `frontend` folder.
-2. Install the package dependencies:
-   ```bash
-   npm install
-   ```
-3. Start the local development server:
-   ```bash
-   npm run dev
-   ```
-   *The app will be accessible at http://localhost:3000.*
+#### Step A: Initialize Backend Database & Server
+```bash
+# Navigate to the backend folder
+cd backend
+
+# Execute database migrations
+dotnet ef database update
+
+# Boot up the backend API
+dotnet run
+```
+*API runs at:* `http://localhost:5165`
+
+#### Step B: Start Frontend Development Server
+```bash
+# Navigate to the frontend folder
+cd frontend
+
+# Install package dependencies
+npm install
+
+# Launch Next.js dev server
+npm run dev
+```
+*Application runs at:* `http://localhost:3000`
