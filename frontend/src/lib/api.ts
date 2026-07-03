@@ -245,7 +245,12 @@ export const settingsAPI = {
     return apiClient.get('/Settings');
   },
 
-  updateSettings: async (data: { heroImage: string }) => {
+  updateSettings: async (data: {
+    heroImage: string;
+    whatsApp?: string;
+    messenger?: string;
+    facebook?: string;
+  }) => {
     return apiClient.post('/Settings', data);
   },
 };
