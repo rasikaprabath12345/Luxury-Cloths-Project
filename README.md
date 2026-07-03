@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 # 👑 LUXURY.LK
 
@@ -17,11 +17,14 @@
 
 ## 📌 Overview
 
-**LUXURY.LK** is a full-featured e-commerce platform for a premium Sri Lankan fashion brand. It supports browsing, purchasing, and managing luxury clothing, accessories, and gift cards — all wrapped in an elegant, premium UI.
+**LUXURY.LK** is a premium, full-stack fashion e-commerce ecosystem designed to deliver a seamless shopping experience for customers and a high-efficiency dashboard for store administrators. Built with a modern, responsive interface, the application bridges a luxury customer storefront with a robust, enterprise-grade inventory management backend.
 
-- 🛍️ **Customers** — Browse products, manage cart & wishlist, checkout, track orders
-- 🔐 **Authentication** — Register/Login, Google OAuth, Email Verification, Password Reset
-- 👑 **Admin** — Full management of products, orders, users, stock, and reports
+### 🌟 Key Features
+
+* **✨ Immersive Customer Storefront**: A fluid customer interface featuring mega-menus, animated product displays, interactive catalogs, instant cart drawer drawers, wishlists, and direct floating WhatsApp chat support.
+* **👑 Advanced Control Center**: A dedicated workspace for administrators that manages products (tabbed CRUD forms), category lists, printable invoice views, real-time settings live mockup previews, and dedicated system diagnostics with live refresh alerts.
+* **📋 Smart Stock & Reservation Management**: Tracks inventory dynamically across **Total Stock (On-Hand)**, **Reserved Stock (Pending Orders)**, and **Available Stock (Net Sellable)**. Includes configurable low-stock threshold triggers.
+* **🔐 Enterprise-Grade Architecture**: Secured by JWT authorization, NextAuth (Google OAuth integration), automated transactional email workflows, and transactional SQL databases.
 
 ---
 
