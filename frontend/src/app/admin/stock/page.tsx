@@ -563,8 +563,8 @@ export default function AdminStockPage() {
 
         /* Products Table */
         .table-card { background: #ffffff; border: 1px solid var(--admin-border); border-radius: var(--admin-radius-lg); overflow: hidden; box-shadow: 0 4px 18px rgba(0,0,0,0.01); }
-        .table-responsive { overflow-x: auto; }
-        .stock-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .stock-table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 850px; }
         .stock-table th {
           color: var(--admin-text-muted); font-weight: 700; padding: 16px 20px; border-bottom: 1px solid var(--admin-border);
           text-transform: uppercase; font-size: 11px; letter-spacing: 0.8px; text-align: left; background: #f8fafc;
@@ -623,15 +623,16 @@ export default function AdminStockPage() {
         /* Modals & Popups */
         .modal-overlay {
           position: fixed; inset: 0; background: rgba(15,23,42,0.4); backdrop-filter: blur(8px);
-          zIndex: 9990; display: flex; align-items: center; justify-content: center; padding: 16px;
+          z-index: 9990; display: flex; align-items: center; justify-content: center; padding: 16px;
           animation: fadeIn 0.2s ease;
         }
         .modal-card {
-          background: #ffffff; borderRadius: var(--admin-radius-lg); padding: 32px; maxWidth: 440px; width: 100%;
-          boxShadow: 0 24px 48px rgba(15,23,42,0.12); border: 1.5px solid var(--admin-border);
+          background: #ffffff; border-radius: var(--admin-radius-lg); padding: 24px 28px; max-width: 420px; width: 100%;
+          box-shadow: 0 24px 48px rgba(15,23,42,0.12); border: 1.5px solid var(--admin-border);
           animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+          max-height: 90vh; overflow-y: auto;
         }
-        .history-modal-card { maxWidth: 560px; display: flex; flex-direction: column; max-height: 80vh; overflow: hidden; }
+        .history-modal-card { max-width: 500px; display: flex; flex-direction: column; max-height: 80vh; overflow: hidden; }
 
         .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
         .modal-title { font-size: 18px; font-weight: 850; color: var(--admin-text-main); margin: 0 0 2px; }
