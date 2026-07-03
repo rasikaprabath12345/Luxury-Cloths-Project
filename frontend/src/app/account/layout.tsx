@@ -37,7 +37,6 @@ export default function AccountLayout({
 
   const navItems = [
     { label: "Profile", href: "/account/profile" },
-    { label: "Orders", href: "/account/orders" },
     { label: "Settings", href: "/account/settings" },
   ];
 
