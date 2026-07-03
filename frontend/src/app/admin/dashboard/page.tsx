@@ -824,56 +824,6 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Real-time Diagnostics Alert & Warning Center */}
-          <div className="card alert-center-card" style={{ marginBottom: "28px" }}>
-            <div className="alert-center-header">
-              <div className="alert-center-title-group">
-                <span className="bell-glow-icon">🔔</span>
-                <div>
-                  <h2 className="alert-center-title">System Diagnostics & Active Alerts</h2>
-                  <p className="alert-center-subtitle">Real-time alerts regarding stock outages, order delays, and inventory thresholds.</p>
-                </div>
-              </div>
-              <div className="alert-filter-tabs">
-                {(["all", "critical", "warning", "notice"] as const).map(tab => {
-                  const count = activeAlerts.filter(a => tab === "all" ? true : a.type === tab).length;
-                  return (
-                    <button
-                      key={tab}
-                      onClick={() => setAlertFilter(tab)}
-                      className={`alert-tab-btn type-${tab} ${alertFilter === tab ? "active" : ""}`}
-                    >
-                      {tab === "all" ? "All Alerts" : tab === "critical" ? "🔴 Critical" : tab === "warning" ? "🟡 Warnings" : "🔵 Notices"}
-                      <span className="tab-count-badge">{count}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {filteredAlerts.length === 0 ? (
-              <div className="empty-alerts">
-                <span className="success-shield-icon">🛡️</span>
-                <p className="empty-title">All Systems Operating Normally</p>
-                <p className="empty-desc">There are no warnings or active inventory alerts at this time.</p>
-              </div>
-            ) : (
-              <div className="alerts-list-wrapper">
-                {filteredAlerts.map(alert => (
-                  <div key={alert.id} className={`alert-list-item severity-${alert.type}`}>
-                    <div className="alert-badge-wrap">
-                      <span className="alert-badge">{alert.title}</span>
-                    </div>
-                    <p className="alert-desc">{alert.description}</p>
-                    <Link href={alert.actionUrl} className="alert-item-btn">
-                      {alert.actionText} →
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
           {/* Main Dashboard Grid */}
           <div className="dashboard-grid">
             <div className="dashboard-left-stack">
