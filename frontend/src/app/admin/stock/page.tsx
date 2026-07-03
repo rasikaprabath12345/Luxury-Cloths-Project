@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { stockAPI } from "@/lib/api";
 import { showToast } from "@/lib/adminUtils";
 
@@ -299,7 +299,7 @@ export default function AdminStockPage() {
               filteredProducts.map((product) => {
                 const isExpanded = expandedProducts.has(product.productId);
                 return (
-                  <>
+                  <Fragment key={product.productId}>
                     {/* Product Row */}
                     <tr
                       key={product.productId}
@@ -405,7 +405,7 @@ export default function AdminStockPage() {
                         </td>
                       </tr>
                     ))}
-                  </>
+                  </Fragment>
                 );
               })
             )}
