@@ -158,16 +158,16 @@ export default function AdminStockPage() {
 
   const openConfigModal = (variant: StockVariant, productName: string) => {
     setConfigModal({ open: true, variant, productName });
-    setConfigThreshold(variant.lowStockThreshold.toString());
+    const thresholdVal = variant.lowStockThreshold || 5;
+    setConfigThreshold(thresholdVal.toString());
     // configReserved no longer editable — auto managed by order lifecycle
   };
 
   const handleUpdateConfig = async () => {
     if (!configModal.variant) return;
-    const threshold = parseInt(configThreshold);
+    let threshold = parseInt(configThreshold);
     if (isNaN(threshold) || threshold < 0) {
-      showToast("Enter a valid threshold value (0 or above)", "warning");
-      return;
+      threshold = 5;
     }
 
     setConfiguring(true);
@@ -590,7 +590,7 @@ export default function AdminStockPage() {
                   type="number"
                   value={configThreshold}
                   onChange={e => setConfigThreshold(e.target.value)}
-                  placeholder="e.g. 5"
+                  placeholder="5"
                   className="form-input"
                   min="0"
                 />
