@@ -65,6 +65,11 @@ export default function AdminOrdersPage() {
 
   const pendingCount = orders.filter((o) => o.status?.toLowerCase() === "pending").length;
 
+  const getStatusStep = (status: string) => {
+    const steps = ["pending", "approved", "shipped", "delivered"];
+    return steps.indexOf(status?.toLowerCase());
+  };
+
   return (
     <div className="orders-container">
       <header className="page-header">
@@ -84,7 +89,6 @@ export default function AdminOrdersPage() {
         </button>
         {STATUS_OPTIONS.map((s) => {
           const count = orders.filter((o) => o.status?.toLowerCase() === s.toLowerCase()).length;
-          if (count === 0) return null;
           return (
             <button key={s} className={`tab ${statusFilter.toLowerCase() === s.toLowerCase() ? "active" : ""}`} onClick={() => setStatusFilter(s)}>
               {s} <span className="tab-count">{count}</span>
@@ -100,7 +104,7 @@ export default function AdminOrdersPage() {
         </div>
       </div>
 
-      <div className="table-card">
+      <div className="orders-card-wrapper">
         {loading ? (
           <div className="loading-skeleton">
             {[1,2,3,4].map((i) => (
@@ -119,8 +123,10 @@ export default function AdminOrdersPage() {
           <div className="orders-list">
             {filteredOrders.map((order) => {
               const isExpanded = expandedOrderId === order.id;
+              const currentStep = getStatusStep(order.status);
+              
               return (
-                <div key={order.id} className={`order-card ${isExpanded ? "expanded" : ""}`}>
+                <div key={order.id} className={`order-card-row ${isExpanded ? "expanded" : ""}`}>
                   <div className="order-main" onClick={() => setExpandedOrderId(isExpanded ? null : order.id)}>
                     <div className="order-left">
                       <span className="order-id">#{order.id}</span>
@@ -129,7 +135,7 @@ export default function AdminOrdersPage() {
                           {order.orderDate ? new Date(order.orderDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "N/A"}
                         </span>
                         <span className="meta-dot">·</span>
-                        <span className="order-items-count">{order.items?.length || 0} items</span>
+                        <span className="order-items-count">{order.items?.length || 0} item{order.items?.length !== 1 ? 's' : ''}</span>
                       </div>
                     </div>
                     <div className="order-center">
@@ -151,6 +157,23 @@ export default function AdminOrdersPage() {
 
                   {isExpanded && (
                     <div className="order-details">
+                      {/* Flow Timeline Progress Tracker */}
+                      {order.status?.toLowerCase() !== "cancelled" && (
+                        <div className="timeline-container">
+                          {["Pending", "Approved", "Shipped", "Delivered"].map((step, idx) => {
+                            const isDone = idx <= currentStep;
+                            const isCurr = idx === currentStep;
+                            return (
+                              <div key={step} className={`timeline-node ${isDone ? "done" : ""} ${isCurr ? "current" : ""}`}>
+                                <div className="node-circle">{isDone ? "✓" : idx + 1}</div>
+                                <span className="node-text">{step}</span>
+                                {idx < 3 && <div className="node-connector" />}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
                       <div className="order-expanded-content">
                         <div className="expanded-col-items">
                           <div className="details-header">
@@ -169,16 +192,16 @@ export default function AdminOrdersPage() {
 
                         <div className="expanded-col-shipping">
                           <div className="details-header">
-                            <span className="details-label">Delivery & Contact</span>
-                            <Link href={`/admin/orders/${order.id}`} className="details-link">Full Details →</Link>
+                            <span className="details-label">Fulfillment Details</span>
+                            <Link href={`/admin/orders/${order.id}`} className="details-link">Manage Order →</Link>
                           </div>
                           <div className="shipping-info-box">
                             <div className="shipping-info-item">
-                              <span className="shipping-info-label">Customer:</span>
+                              <span className="shipping-info-label">Recipient:</span>
                               <span className="shipping-info-value">{order.firstName} {order.lastName}</span>
                             </div>
                             <div className="shipping-info-item">
-                              <span className="shipping-info-label">Phone:</span>
+                              <span className="shipping-info-label">Contact Phone:</span>
                               <span className="shipping-info-value">{order.phone || "—"}</span>
                             </div>
                             <div className="shipping-info-item">
@@ -189,7 +212,7 @@ export default function AdminOrdersPage() {
                             </div>
                             {order.orderNote && (
                               <div className="shipping-info-item">
-                                <span className="shipping-info-label">Note:</span>
+                                <span className="shipping-info-label">Special instructions:</span>
                                 <span className="shipping-info-value italic">"{order.orderNote}"</span>
                               </div>
                             )}
@@ -206,57 +229,72 @@ export default function AdminOrdersPage() {
       </div>
 
       <style jsx>{`
-        .orders-container { max-width: 1200px; margin: 0 auto; }
-        .page-header { margin-bottom: 24px; }
-        .page-title { font-size: 30px; font-weight: 800; color: #0f172a; margin: 0 0 4px; }
-        .page-subtitle { font-size: 13px; color: #64748b; margin: 0; display: flex; align-items: center; gap: 8px; }
-        .pending-pill { background: rgba(234,179,8,0.15); color: #d97706; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; }
-
-        .status-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
-        .tab {
-          padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;
-          background: transparent; border: 1px solid #e2e8f0; color: #64748b; transition: all 0.2s;
-          display: inline-flex; align-items: center; gap: 6px;
+        .orders-container { max-width: 1200px; margin: 0 auto; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .page-header { margin-bottom: 28px; }
+        .page-title { font-size: 32px; font-weight: 900; color: var(--admin-text-main); margin: 0 0 4px; }
+        .page-subtitle { font-size: 13.5px; color: var(--admin-text-muted); margin: 0; display: flex; align-items: center; gap: 8px; }
+        
+        .pending-pill { 
+          background: rgba(197, 168, 128, 0.15); color: var(--admin-accent-gold-dark); border: 0.5px solid rgba(197, 168, 128, 0.3);
+          padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; 
         }
-        .tab:hover { border-color: #cbd5e1; color: #334155; }
-        .tab.active { background: #2563eb; border-color: #2563eb; color: #fff; }
-        .tab-count { font-size: 10px; opacity: 0.7; }
 
-        .toolbar { margin-bottom: 16px; }
+        .status-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab {
+          padding: 10px 16px; border-radius: var(--admin-radius-md); font-size: 12.5px; font-weight: 600; cursor: pointer;
+          background: #ffffff; border: 1px solid var(--admin-border); color: var(--admin-text-muted); transition: all 0.25s;
+          display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-body);
+        }
+        .tab:hover { border-color: var(--admin-accent-gold-dark); color: var(--admin-text-main); }
+        .tab.active { background: var(--admin-primary); border-color: var(--admin-primary); color: #fff; box-shadow: 0 4px 12px rgba(15,23,42,0.1); }
+        .tab-count { font-size: 10px; background: rgba(15,23,42,0.06); padding: 2px 6px; border-radius: 6px; }
+        .tab.active .tab-count { background: rgba(255,255,255,0.2); }
+
+        .toolbar { margin-bottom: 20px; }
         .search-box { position: relative; max-width: 380px; }
-        .search-svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #64748b; }
-        .toolbar-input { width: 100%; padding: 11px 16px 11px 40px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; color: #0f172a; outline: none; font-size: 13px; }
-        .toolbar-input:focus { border-color: #3b82f6; }
+        .search-svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--admin-text-muted); }
+        .toolbar-input { 
+          width: 100%; padding: 11px 16px 11px 40px; background: #ffffff; border: 1px solid var(--admin-border);
+          border-radius: var(--admin-radius-md); color: var(--admin-text-main); outline: none; font-size: 13.5px;
+          font-family: var(--font-body); transition: all 0.2s;
+        }
+        .toolbar-input:focus { border-color: var(--admin-accent-gold-dark); box-shadow: 0 0 0 3px rgba(197, 168, 128, 0.1); }
 
-        .table-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); }
+        .orders-card-wrapper { background: #ffffff; border: 1px solid var(--admin-border); border-radius: var(--admin-radius-lg); overflow: hidden; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.02); }
         .loading-skeleton { padding: 8px 24px; }
-        .skeleton-row { display: flex; align-items: center; gap: 20px; padding: 18px 0; border-bottom: 1px solid #e2e8f0; }
-        .empty-state { text-align: center; padding: 60px 20px; color: #64748b; }
+        .skeleton-row { display: flex; align-items: center; gap: 20px; padding: 18px 0; border-bottom: 1px solid var(--admin-border); }
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--admin-text-muted); }
         .empty-icon { font-size: 32px; display: block; margin-bottom: 10px; }
 
         .orders-list { display: flex; flex-direction: column; }
-        .order-card { border-bottom: 1px solid #e2e8f0; transition: background 0.15s; }
-        .order-card:last-child { border-bottom: none; }
-        .order-card.expanded { background: rgba(15,23,42,0.01); }
+        .order-card-row { border-bottom: 1px solid var(--admin-border); transition: background-color 0.2s; }
+        .order-card-row:last-child { border-bottom: none; }
+        .order-card-row.expanded { background: #fafbfc; }
 
         .order-main {
-          display: flex; align-items: center; padding: 16px 20px; cursor: pointer;
-          gap: 16px; transition: background 0.15s;
+          display: flex; align-items: center; padding: 18px 24px; cursor: pointer;
+          gap: 16px; transition: background-color 0.2s;
         }
-        .order-main:hover { background: rgba(15,23,42,0.015); }
+        .order-main:hover { background: rgba(15,23,42,0.01); }
 
         .order-left { flex: 1; }
-        .order-id { font-weight: 700; color: #2563eb; font-size: 14px; display: block; margin-bottom: 2px; }
+        .order-id { font-weight: 800; color: var(--admin-text-main); font-size: 14.5px; display: block; margin-bottom: 2px; }
         .order-meta { display: flex; align-items: center; gap: 6px; }
-        .order-date { font-size: 12px; color: #64748b; }
+        .order-date { font-size: 12.5px; color: var(--admin-text-muted); }
         .meta-dot { color: #cbd5e1; font-size: 8px; }
-        .order-items-count { font-size: 12px; color: #64748b; }
+        .order-items-count { font-size: 12.5px; color: var(--admin-text-muted); }
 
-        .order-center { min-width: 90px; }
-        .order-total { font-family: 'SF Mono', monospace; font-weight: 600; color: #0f172a; font-size: 14px; }
+        .order-center { min-width: 100px; }
+        .order-total { font-family: var(--font-display); font-weight: 700; color: var(--admin-text-main); font-size: 14.5px; }
 
-        .order-right { display: flex; align-items: center; gap: 10px; }
-        .badge { display: inline-flex; padding: 3px 9px; border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .order-right { display: flex; align-items: center; gap: 12px; }
+        
+        .badge { 
+          display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 8px; font-size: 10px; 
+          font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; 
+        }
         .badge-green { background: #f0fdf4; color: #16a34a; }
         .badge-blue { background: #eff6ff; color: #2563eb; }
         .badge-yellow { background: #fffbeb; color: #d97706; }
@@ -264,41 +302,73 @@ export default function AdminOrdersPage() {
         .badge-gray { background: #f1f5f9; color: #475569; }
 
         .status-select {
-          padding: 5px 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px;
-          color: #475569; font-size: 11px; outline: none; cursor: pointer;
+          padding: 6px 12px; background: #ffffff; border: 1px solid var(--admin-border); border-radius: var(--admin-radius-sm);
+          color: var(--admin-text-muted); font-size: 11.5px; font-weight: 600; outline: none; cursor: pointer;
+          font-family: var(--font-body); transition: border-color 0.2s;
         }
-        .status-select:focus { border-color: #2563eb; }
+        .status-select:focus { border-color: var(--admin-accent-gold); }
 
-        .chevron { color: #94a3b8; transition: transform 0.2s; flex-shrink: 0; }
-        .chevron.rotated { transform: rotate(180deg); color: #475569; }
+        .chevron { color: #cbd5e1; transition: transform 0.2s; flex-shrink: 0; }
+        .chevron.rotated { transform: rotate(180deg); color: var(--admin-text-main); }
 
-        .order-details { padding: 0 20px 16px; animation: slideDown 0.2s ease; }
-        .details-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px dashed #e2e8f0; }
-        .details-label { font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
-        .details-link { font-size: 12px; font-weight: 600; color: #2563eb; text-decoration: none; }
+        .order-details { padding: 10px 24px 24px; border-top: 1px solid var(--admin-border); animation: slideDown 0.3s ease; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Timeline Tracker Styles */
+        .timeline-container {
+          display: flex; justify-content: space-between; align-items: center; 
+          background: #f8fafc; padding: 18px 24px; border-radius: var(--admin-radius-md); 
+          border: 1px solid var(--admin-border); margin-bottom: 20px;
+        }
+        .timeline-node {
+          position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1;
+        }
+        .node-circle {
+          width: 26px; height: 26px; border-radius: 50%; background: #ffffff; border: 2.5px solid #cbd5e1;
+          color: #cbd5e1; display: flex; align-items: center; justify-content: center; font-size: 11px;
+          font-weight: 800; z-index: 2; transition: all 0.3s;
+        }
+        .node-text { font-size: 11.5px; font-weight: 700; color: var(--admin-text-muted); transition: color 0.3s; }
+        .node-connector {
+          position: absolute; top: 12px; left: calc(50% + 13px); width: calc(100% - 26px); height: 3px;
+          background: #cbd5e1; z-index: 1; transition: background-color 0.3s;
+        }
+        .timeline-node.done .node-circle {
+          background: #16a34a; border-color: #16a34a; color: #ffffff;
+        }
+        .timeline-node.done .node-text { color: var(--admin-text-main); }
+        .timeline-node.done .node-connector { background: #16a34a; }
+        
+        .timeline-node.current .node-circle {
+          background: #ffffff; border-color: var(--admin-accent-gold-dark); color: var(--admin-accent-gold-dark);
+          box-shadow: 0 0 0 3px rgba(197, 168, 128, 0.15);
+        }
+        .timeline-node.current .node-text { color: var(--admin-accent-gold-dark); }
+
+        .details-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1.5px dashed var(--admin-border); }
+        .details-label { font-size: 11.5px; font-weight: 800; color: var(--admin-text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
+        .details-link { font-size: 12px; font-weight: 700; color: var(--admin-accent-gold-dark); text-decoration: none; }
         .details-link:hover { text-decoration: underline; }
 
-        .items-list { display: flex; flex-direction: column; gap: 6px; }
-        .item-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 8px; font-size: 13px; }
-        .item-name { flex: 1; color: #334155; font-weight: 500; }
-        .item-qty { color: #64748b; min-width: 40px; text-align: center; }
-        .item-price { font-family: 'SF Mono', monospace; color: #475569; min-width: 80px; text-align: right; }
+        .items-list { display: flex; flex-direction: column; gap: 8px; }
+        .item-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #ffffff; border: 1px solid var(--admin-border); border-radius: 8px; font-size: 13.5px; }
+        .item-name { flex: 1; color: var(--admin-text-main); font-weight: 600; }
+        .item-qty { color: var(--admin-text-muted); min-width: 40px; text-align: center; font-weight: 500; }
+        .item-price { font-family: var(--font-display); color: var(--admin-text-main); min-width: 80px; text-align: right; font-weight: 700; }
 
         .order-expanded-content { display: flex; gap: 24px; padding-top: 8px; }
         .expanded-col-items { flex: 1.2; min-width: 280px; }
-        .expanded-col-shipping { flex: 1; min-width: 260px; border-left: 1px dashed #e2e8f0; padding-left: 24px; }
-        .shipping-info-box { display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: #334155; }
+        .expanded-col-shipping { flex: 1; min-width: 260px; border-left: 1px dashed var(--admin-border); padding-left: 24px; }
+        .shipping-info-box { display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; color: var(--admin-text-main); }
         .shipping-info-item { display: flex; flex-direction: column; gap: 2px; }
-        .shipping-info-label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
-        .shipping-info-value { font-weight: 500; color: #334155; line-height: 1.4; }
-        .shipping-info-value.italic { font-style: italic; color: #64748b; }
+        .shipping-info-label { font-size: 10px; font-weight: 700; color: var(--admin-text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .shipping-info-value { font-weight: 500; color: var(--admin-text-main); line-height: 1.4; }
+        .shipping-info-value.italic { font-style: italic; color: var(--admin-text-muted); }
 
         @media (max-width: 768px) {
           .order-expanded-content { flex-direction: column; gap: 18px; }
-          .expanded-col-shipping { border-left: none; padding-left: 0; border-top: 1px dashed #e2e8f0; padding-top: 18px; }
+          .expanded-col-shipping { border-left: none; padding-left: 0; border-top: 1px dashed var(--admin-border); padding-top: 18px; }
         }
-
-        @keyframes slideDown { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 800px; } }
 
         @media (max-width: 640px) {
           .order-main { flex-wrap: wrap; }

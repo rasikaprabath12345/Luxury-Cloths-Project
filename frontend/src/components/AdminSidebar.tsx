@@ -44,7 +44,6 @@ export default function AdminSidebar() {
         />
       )}
 
-      {/* Sidebar */}
       <aside className={`admin-sidebar ${mobileOpen ? "open" : ""}`} style={{
         position: "fixed",
         top: 0,
@@ -52,26 +51,26 @@ export default function AdminSidebar() {
         bottom: 0,
         width: "260px",
         backgroundColor: "#ffffff",
-        borderRight: "1px solid #e2e8f0",
+        borderRight: "1px solid var(--admin-border)",
         display: "flex",
         flexDirection: "column",
         zIndex: 1050,
         overflowY: "auto",
       }}>
         {/* Brand */}
-        <div className="admin-sidebar-brand" style={{ padding: "24px 20px 20px", borderBottom: "1px solid #e2e8f0" }}>
+        <div className="admin-sidebar-brand" style={{ padding: "28px 24px 24px", borderBottom: "1px solid var(--admin-border)" }}>
           <div className="admin-sidebar-logo" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <span className="admin-sidebar-logo-icon" style={{ fontSize: "28px" }}>💎</span>
+            <span className="admin-sidebar-logo-icon" style={{ fontSize: "28px", filter: "drop-shadow(0 2px 4px rgba(197, 168, 128, 0.3))" }}>💎</span>
             <div>
-              <h2 className="admin-sidebar-title" style={{ fontSize: "18px", fontWeight: 900, color: "#2563eb", letterSpacing: "3px", margin: 0, lineHeight: 1.2 }}>LUXURY</h2>
-              <p className="admin-sidebar-subtitle" style={{ fontSize: "11px", color: "#64748b", letterSpacing: "1px", margin: 0, textTransform: "uppercase" }}>Admin Panel</p>
+              <h2 className="admin-sidebar-title" style={{ fontFamily: "var(--font-display)", fontSize: "19px", fontWeight: 900, color: "var(--admin-primary)", letterSpacing: "2.5px", margin: 0, lineHeight: 1.2 }}>LUXURY<span style={{ color: "var(--admin-accent-gold)" }}>.LK</span></h2>
+              <p className="admin-sidebar-subtitle" style={{ fontFamily: "var(--font-body)", fontSize: "10px", fontWeight: 700, color: "var(--admin-text-muted)", letterSpacing: "1px", margin: 0, textTransform: "uppercase" }}>Control Center</p>
             </div>
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="admin-sidebar-nav" style={{ display: "flex", flexDirection: "column", gap: "6px", flex: 1, padding: "20px 12px" }}>
-          <p className="admin-sidebar-nav-label" style={{ fontSize: "10px", fontWeight: 700, color: "#94a3b8", letterSpacing: "2px", padding: "0 12px", margin: "0 0 12px" }}>MAIN MENU</p>
+        <nav className="admin-sidebar-nav" style={{ display: "flex", flexDirection: "column", gap: "6px", flex: 1, padding: "24px 16px" }}>
+          <p className="admin-sidebar-nav-label" style={{ fontFamily: "var(--font-display)", fontSize: "10px", fontWeight: 800, color: "var(--admin-text-muted)", letterSpacing: "2px", padding: "0 12px", margin: "0 0 12px" }}>MANAGEMENT</p>
           {navItems.map((item) => {
             const isActive =
               pathname === item.href || pathname?.startsWith(item.href + "/");
@@ -83,70 +82,74 @@ export default function AdminSidebar() {
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "12px",
+                  gap: "14px",
                   padding: "12px 16px",
-                  borderRadius: "12px",
-                  fontSize: "14px",
+                  borderRadius: "var(--admin-radius-md)",
+                  fontSize: "13.5px",
+                  fontFamily: "var(--font-body)",
                   fontWeight: isActive ? 600 : 500,
-                  color: isActive ? "#1d4ed8" : "#475569",
-                  background: isActive ? "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)" : "transparent",
+                  color: isActive ? "var(--admin-accent-gold-dark)" : "var(--admin-text-muted)",
+                  background: isActive ? "linear-gradient(135deg, rgba(197, 168, 128, 0.06) 0%, rgba(197, 168, 128, 0.12) 100%)" : "transparent",
+                  border: isActive ? "1px solid rgba(197, 168, 128, 0.15)" : "1px solid transparent",
                   textDecoration: "none",
-                  transition: "all 0.2s",
+                  transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
                   position: "relative",
                   marginBottom: "4px",
-                  boxShadow: isActive ? "0 4px 12px rgba(59, 130, 246, 0.08)" : "none",
+                  boxShadow: isActive ? "0 4px 12px rgba(197, 168, 128, 0.05)" : "none",
                 }}
                 onClick={() => setMobileOpen(false)}
               >
-                <span className="admin-sidebar-link-icon" style={{ fontSize: "18px", width: "24px", textAlign: "center" }}>{item.icon}</span>
+                <span className="admin-sidebar-link-icon" style={{ fontSize: "16px", width: "24px", textAlign: "center", filter: isActive ? "grayscale(0)" : "grayscale(0.6)" }}>{item.icon}</span>
                 <span>{item.label}</span>
-                {isActive && <span className="admin-sidebar-active-dot" style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#2563eb", marginLeft: "auto" }} />}
+                {isActive && <span className="admin-sidebar-active-dot" style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--admin-accent-gold)", marginLeft: "auto" }} />}
               </Link>
             );
           })}
         </nav>
 
         {/* Divider */}
-        <div className="admin-sidebar-divider" style={{ height: "1px", background: "#e2e8f0", margin: "0 20px 12px" }} />
+        <div className="admin-sidebar-divider" style={{ height: "1px", background: "var(--admin-border)", margin: "0 24px 12px" }} />
 
         {/* Storefront Link */}
-        <div style={{ padding: "0 20px", marginBottom: 12 }}>
+        <div style={{ padding: "0 24px", marginBottom: 12 }}>
           <Link
             href="/"
-            className="admin-sidebar-link"
+            className="admin-sidebar-link storefront-link"
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "12px",
+              gap: "14px",
               padding: "12px 16px",
-              borderRadius: "12px",
-              fontSize: "14px",
+              borderRadius: "var(--admin-radius-md)",
+              fontSize: "13.5px",
+              fontFamily: "var(--font-body)",
               fontWeight: 500,
-              color: "#475569",
+              color: "var(--admin-text-muted)",
               textDecoration: "none",
               transition: "all 0.2s",
+              border: "1px solid transparent",
             }}
             onClick={() => setMobileOpen(false)}
           >
-            <span className="admin-sidebar-link-icon" style={{ fontSize: "18px", width: "24px", textAlign: "center" }}>🏪</span>
-            <span>Home</span>
+            <span className="admin-sidebar-link-icon" style={{ fontSize: "16px", width: "24px", textAlign: "center" }}>🏪</span>
+            <span>Customer Store</span>
           </Link>
         </div>
 
         {/* User Info */}
         <div className="admin-sidebar-user" style={{
-          padding: "16px 20px",
-          borderTop: "1px solid #e2e8f0",
+          padding: "18px 24px",
+          borderTop: "1px solid var(--admin-border)",
           display: "flex",
           alignItems: "center",
           gap: "12px",
           marginTop: "auto",
         }}>
           <div className="admin-sidebar-user-avatar" style={{
-            width: "36px",
-            height: "36px",
-            borderRadius: "10px",
-            background: "linear-gradient(135deg, #3b82f6, #2563eb)",
+            width: "38px",
+            height: "38px",
+            borderRadius: "var(--admin-radius-md)",
+            background: "linear-gradient(135deg, var(--admin-primary), var(--admin-primary-light))",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -154,20 +157,22 @@ export default function AdminSidebar() {
             fontWeight: 800,
             color: "#fff",
             flexShrink: 0,
+            border: "1.5px solid var(--admin-accent-gold)",
           }}>
             {user?.fullName?.charAt(0)?.toUpperCase() || "A"}
           </div>
           <div className="admin-sidebar-user-info" style={{ flex: 1, minWidth: 0 }}>
             <p className="admin-sidebar-user-name" style={{
+              fontFamily: "var(--font-body)",
               fontSize: "13px",
               fontWeight: 600,
-              color: "#0f172a",
+              color: "var(--admin-text-main)",
               margin: 0,
               whiteSpace: "nowrap",
               overflow: "hidden",
               textOverflow: "ellipsis",
             }}>{user?.fullName || "Admin"}</p>
-            <p className="admin-sidebar-user-role" style={{ fontSize: "11px", color: "#64748b", margin: 0 }}>Administrator</p>
+            <p className="admin-sidebar-user-role" style={{ fontFamily: "var(--font-body)", fontSize: "10px", color: "var(--admin-text-muted)", margin: 0, fontWeight: 500 }}>Administrator</p>
           </div>
           <button
             onClick={handleLogout}
@@ -175,11 +180,11 @@ export default function AdminSidebar() {
             title="Logout"
             style={{
               background: "none",
-              border: "1px solid #cbd5e1",
+              border: "1px solid var(--admin-border)",
               borderRadius: "8px",
               padding: "6px 8px",
               cursor: "pointer",
-              fontSize: "16px",
+              fontSize: "15px",
               transition: "all 0.2s",
               flexShrink: 0,
             }}
@@ -197,19 +202,20 @@ export default function AdminSidebar() {
           left: 16px;
           z-index: 1100;
           background: #ffffff;
-          border: 1px solid #cbd5e1;
-          color: #0f172a;
+          border: 1px solid var(--admin-border);
+          color: var(--admin-text-main);
           width: 44px;
           height: 44px;
-          border-radius: 12px;
+          border-radius: var(--admin-radius-md);
           cursor: pointer;
           align-items: center;
           justify-content: center;
           transition: all 0.2s;
+          box-shadow: 0 4px 12px rgba(15,23,42,0.05);
         }
         .admin-sidebar-toggle:hover {
-          background: #f1f5f9;
-          border-color: #2563eb;
+          background: #f8fafc;
+          border-color: var(--admin-accent-gold);
         }
 
         .admin-sidebar-overlay {
@@ -228,151 +234,30 @@ export default function AdminSidebar() {
           bottom: 0;
           width: 260px;
           background: #ffffff;
-          border-right: 1px solid #e2e8f0;
+          border-right: 1px solid var(--admin-border);
           display: flex;
           flex-direction: column;
           z-index: 1050;
           overflow-y: auto;
-          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        .admin-sidebar-brand {
-          padding: 24px 20px 20px;
-          border-bottom: 1px solid #e2e8f0;
-        }
-        .admin-sidebar-logo {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-        .admin-sidebar-logo-icon {
-          font-size: 28px;
-        }
-        .admin-sidebar-title {
-          font-size: 18px;
-          font-weight: 900;
-          color: #2563eb;
-          letter-spacing: 3px;
-          margin: 0;
-          line-height: 1.2;
-        }
-        .admin-sidebar-subtitle {
-          font-size: 11px;
-          color: #64748b;
-          letter-spacing: 1px;
-          margin: 0;
-          text-transform: uppercase;
-        }
-
-        .admin-sidebar-nav {
-          flex: 1;
-          padding: 20px 12px;
-        }
-        .admin-sidebar-nav-label {
-          font-size: 10px;
-          font-weight: 700;
-          color: #94a3b8;
-          letter-spacing: 2px;
-          padding: 0 12px;
-          margin: 0 0 12px;
-        }
-
-        .admin-sidebar-link {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 12px 16px;
-          border-radius: 12px;
-          font-size: 14px;
-          font-weight: 500;
-          color: #475569;
-          text-decoration: none;
-          transition: all 0.2s;
-          position: relative;
-          margin-bottom: 4px;
-        }
         .admin-sidebar-link:hover {
-          background: #f1f5f9;
-          color: #0f172a;
+          background: #f8fafc !important;
+          color: var(--admin-text-main) !important;
         }
-        .admin-sidebar-link.active {
-          background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-          color: #1d4ed8;
-          font-weight: 600;
-          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
+        .admin-sidebar-link:hover .admin-sidebar-link-icon {
+          filter: grayscale(0) !important;
         }
-        .admin-sidebar-link-icon {
-          font-size: 18px;
-          width: 24px;
-          text-align: center;
-          flex-shrink: 0;
-        }
-        .admin-sidebar-active-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: #2563eb;
-          margin-left: auto;
+        
+        .admin-sidebar-link.active:hover {
+          background: linear-gradient(135deg, rgba(197, 168, 128, 0.08) 0%, rgba(197, 168, 128, 0.15) 100%) !important;
+          color: var(--admin-accent-gold-dark) !important;
         }
 
-        .admin-sidebar-divider {
-          height: 1px;
-          background: #e2e8f0;
-          margin: 0 20px 12px;
-        }
-
-        .admin-sidebar-user {
-          padding: 16px 20px;
-          border-top: 1px solid #e2e8f0;
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          margin-top: auto;
-        }
-        .admin-sidebar-user-avatar {
-          width: 36px;
-          height: 36px;
-          border-radius: 10px;
-          background: linear-gradient(135deg, #3b82f6, #2563eb);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 14px;
-          font-weight: 800;
-          color: #fff;
-          flex-shrink: 0;
-        }
-        .admin-sidebar-user-info {
-          flex: 1;
-          min-width: 0;
-        }
-        .admin-sidebar-user-name {
-          font-size: 13px;
-          font-weight: 600;
-          color: #0f172a;
-          margin: 0;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .admin-sidebar-user-role {
-          font-size: 11px;
-          color: #64748b;
-          margin: 0;
-        }
-        .admin-sidebar-logout {
-          background: none;
-          border: 1px solid #cbd5e1;
-          border-radius: 8px;
-          padding: 6px 8px;
-          cursor: pointer;
-          font-size: 16px;
-          transition: all 0.2s;
-          flex-shrink: 0;
-        }
         .admin-sidebar-logout:hover {
-          background: #dc2626;
-          border-color: #dc2626;
+          background: #fef2f2 !important;
+          border-color: #fecaca !important;
         }
 
         @media (max-width: 860px) {
@@ -393,3 +278,4 @@ export default function AdminSidebar() {
     </>
   );
 }
+

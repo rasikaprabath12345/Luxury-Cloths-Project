@@ -65,14 +65,18 @@ export default function AdminOrderDetailPage() {
   const getStatusStep = (status: string) => {
     const steps = ["pending", "approved", "shipped", "delivered"];
     return steps.indexOf(status?.toLowerCase());
-  };
-
-  return (
+  };  return (
     <div className="detail-container">
-      <Link href="/admin/orders" className="back-link">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg>
-        Back to Orders
-      </Link>
+      <div className="detail-navigation no-print">
+        <Link href="/admin/orders" className="back-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg>
+          Back to Orders
+        </Link>
+        
+        <button onClick={() => window.print()} className="btn-print no-print">
+          🖨️ Print Invoice
+        </button>
+      </div>
 
       {loading ? (
         <div className="loading-grid">
@@ -87,7 +91,20 @@ export default function AdminOrderDetailPage() {
         </div>
       ) : (
         <>
-          <div className="detail-title-row">
+          {/* Printable Invoice Header */}
+          <div className="print-only-header">
+            <div className="print-brand">
+              <h1>LUXURY.LK</h1>
+              <p>Premium Boutique</p>
+            </div>
+            <div className="print-invoice-meta">
+              <h2>INVOICE</h2>
+              <p>Order ID: <strong>#ORD-{order.id}</strong></p>
+              <p>Date: <strong>{order.orderDate ? new Date(order.orderDate).toLocaleDateString() : "N/A"}</strong></p>
+            </div>
+          </div>
+
+          <div className="detail-title-row no-print">
             <div>
               <h1 className="detail-title">Order #{order.id}</h1>
               <p className="detail-date">
@@ -99,7 +116,7 @@ export default function AdminOrderDetailPage() {
 
           {/* Status Timeline */}
           {order.status?.toLowerCase() !== "cancelled" && (
-            <div className="status-timeline">
+            <div className="status-timeline no-print">
               {["Pending", "Approved", "Shipped", "Delivered"].map((step, i) => {
                 const current = getStatusStep(order.status);
                 const isActive = i <= current;
@@ -117,7 +134,7 @@ export default function AdminOrderDetailPage() {
 
           <div className="detail-grid">
             {/* Items Card */}
-            <div className="card">
+            <div className="card items-card">
               <h2 className="card-heading">Order Items</h2>
               <div className="items-list">
                 {order.items?.map((item) => (
@@ -131,7 +148,7 @@ export default function AdminOrderDetailPage() {
                 ))}
               </div>
               <div className="total-row">
-                <span>Total</span>
+                <span>Grand Total</span>
                 <span className="total-value">{formatCurrency(order.totalAmount || 0)}</span>
               </div>
             </div>
@@ -139,10 +156,10 @@ export default function AdminOrderDetailPage() {
             {/* Right Column: Info Card & Shipping Card */}
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               {/* Info Card */}
-              <div className="card">
-                <h2 className="card-heading">Order Information</h2>
+              <div className="card info-card">
+                <h2 className="card-heading no-print">Order Status</h2>
                 <div className="info-list">
-                  <div className="info-item">
+                  <div className="info-item no-print">
                     <span className="info-label">Update Status</span>
                     <select
                       value={order.status} onChange={(e) => handleStatusChange(e.target.value)}
@@ -155,15 +172,19 @@ export default function AdminOrderDetailPage() {
                     <span className="info-label">Payment Method</span>
                     <span className="info-value capitalize">{order.paymentMethod || "—"}</span>
                   </div>
+                  <div className="info-item print-only">
+                    <span className="info-label">Fulfillment Status</span>
+                    <span className="info-value">{order.status}</span>
+                  </div>
                   <div className="info-item">
                     <span className="info-label">Customer ID</span>
                     <span className="info-value mono">#{order.userId}</span>
                   </div>
                   {order.paymentSlipUrl && (
-                    <div className="info-item">
-                      <span className="info-label">Payment Receipt</span>
+                    <div className="info-item no-print">
+                      <span className="info-label">Bank Receipt</span>
                       <a href={order.paymentSlipUrl} target="_blank" rel="noopener noreferrer" className="receipt-btn">
-                        🖼️ View Receipt
+                        🖼️ View Bank Slip Image
                       </a>
                     </div>
                   )}
@@ -171,8 +192,8 @@ export default function AdminOrderDetailPage() {
               </div>
 
               {/* Shipping & Contact Card */}
-              <div className="card">
-                <h2 className="card-heading">Shipping & Contact Details</h2>
+              <div className="card shipping-card">
+                <h2 className="card-heading">Delivery Address</h2>
                 <div className="info-list">
                   <div className="info-item">
                     <span className="info-label">Customer Name</span>
@@ -188,7 +209,7 @@ export default function AdminOrderDetailPage() {
                   </div>
                   <div className="info-item">
                     <span className="info-label">Delivery Address</span>
-                    <span className="info-value" style={{ lineHeight: "1.5" }}>
+                    <span className="info-value" style={{ lineHeight: "1.6" }}>
                       {order.address}<br />
                       {order.city && `${order.city}, `}{order.state && `${order.state}, `}{order.country || ""}<br />
                       {order.postalCode && `Postal Code: ${order.postalCode}`}
@@ -202,8 +223,8 @@ export default function AdminOrderDetailPage() {
                   )}
                   {order.orderNote && (
                     <div className="info-item">
-                      <span className="info-label">Order Note</span>
-                      <span className="info-value" style={{ fontStyle: "italic", color: "#475569" }}>
+                      <span className="info-label">Special instructions</span>
+                      <span className="info-value" style={{ fontStyle: "italic", color: "var(--admin-text-muted)" }}>
                         "{order.orderNote}"
                       </span>
                     </div>
@@ -216,73 +237,131 @@ export default function AdminOrderDetailPage() {
       )}
 
       <style jsx>{`
-        .detail-container { max-width: 1200px; margin: 0 auto; }
+        .detail-container { max-width: 1200px; margin: 0 auto; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-        .back-link { display: inline-flex; align-items: center; gap: 6px; color: #64748b; text-decoration: none; font-size: 13px; font-weight: 500; margin-bottom: 20px; transition: color 0.2s; }
-        .back-link:hover { color: #2563eb; }
+        .detail-navigation { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        
+        .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--admin-text-muted); text-decoration: none; font-size: 13.5px; font-weight: 700; transition: color 0.2s; }
+        .back-link:hover { color: var(--admin-accent-gold-dark); }
+
+        .btn-print {
+          background: linear-gradient(135deg, var(--admin-accent-gold-dark), var(--admin-accent-gold));
+          color: #ffffff; border: none; font-size: 13px; font-weight: 700; padding: 10px 18px;
+          border-radius: var(--admin-radius-md); cursor: pointer; transition: all 0.2s;
+          box-shadow: 0 4px 14px rgba(197, 168, 128, 0.25);
+        }
+        .btn-print:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(197, 168, 128, 0.35); }
 
         .loading-grid { display: grid; grid-template-columns: 3fr 2fr; gap: 20px; }
         @media (max-width: 768px) { .loading-grid { grid-template-columns: 1fr; } }
 
-        .not-found { text-align: center; padding: 80px 20px; color: #64748b; }
+        .not-found { text-align: center; padding: 80px 20px; color: var(--admin-text-muted); }
         .nf-icon { font-size: 40px; display: block; margin-bottom: 16px; }
-        .not-found h2 { color: #0f172a; font-size: 20px; margin: 0 0 6px; }
+        .not-found h2 { color: var(--admin-text-main); font-size: 20px; margin: 0 0 6px; }
         .not-found p { margin: 0; font-size: 14px; }
 
-        .detail-title-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
-        .detail-title { font-size: 30px; font-weight: 800; color: #0f172a; margin: 0 0 4px; }
-        .detail-date { font-size: 13px; color: #64748b; margin: 0; }
-        .badge-lg { padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-        .badge-green { background: #f0fdf4; color: #16a34a; }
-        .badge-blue { background: #eff6ff; color: #2563eb; }
-        .badge-yellow { background: #fffbeb; color: #d97706; }
-        .badge-red { background: #fef2f2; color: #dc2626; }
-        .badge-gray { background: #f1f5f9; color: #475569; }
+        .detail-title-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+        .detail-title { font-size: 32px; font-weight: 900; color: var(--admin-text-main); margin: 0 0 4px; }
+        .detail-date { font-size: 13.5px; color: var(--admin-text-muted); margin: 0; }
+        
+        .badge-lg { padding: 6px 14px; border-radius: var(--admin-radius-md); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge-green { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+        .badge-blue { background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; }
+        .badge-yellow { background: #fffbeb; color: #d97706; border: 1px solid #fef3c7; }
+        .badge-red { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+        .badge-gray { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
 
         /* Status Timeline */
-        .status-timeline { display: flex; align-items: flex-start; gap: 0; margin-bottom: 28px; padding: 20px 24px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; overflow-x: auto; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); }
+        .status-timeline { 
+          display: flex; align-items: flex-start; gap: 0; margin-bottom: 28px; padding: 24px; 
+          background: #ffffff; border: 1px solid var(--admin-border); border-radius: var(--admin-radius-lg); 
+          overflow-x: auto; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.02); 
+        }
         .timeline-step { display: flex; flex-direction: column; align-items: center; position: relative; flex: 1; }
         .step-dot {
           width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-          font-size: 11px; font-weight: 700; background: #f8fafc; border: 2px solid #e2e8f0; color: #64748b; transition: all 0.3s; z-index: 1;
+          font-size: 11px; font-weight: 800; background: #ffffff; border: 2.5px solid #e2e8f0; color: var(--admin-text-muted); transition: all 0.3s; z-index: 1;
         }
-        .timeline-step.active .step-dot { background: #2563eb; border-color: #2563eb; color: #fff; }
-        .timeline-step.current .step-dot { background: #2563eb; border-color: #3b82f6; box-shadow: 0 0 16px rgba(59,130,246,0.3); }
-        .step-label { font-size: 11px; color: #64748b; margin-top: 8px; font-weight: 600; }
-        .timeline-step.active .step-label { color: #0f172a; }
-        .step-line { position: absolute; top: 15px; left: calc(50% + 18px); width: calc(100% - 36px); height: 2px; background: #e2e8f0; }
-        .step-line.filled { background: #2563eb; }
+        .timeline-step.active .step-dot { background: #16a34a; border-color: #16a34a; color: #fff; }
+        .timeline-step.current .step-dot { background: #ffffff; border-color: var(--admin-accent-gold-dark); color: var(--admin-accent-gold-dark); box-shadow: 0 0 12px rgba(197,168,128,0.25); }
+        .step-label { font-size: 11.5px; color: var(--admin-text-muted); margin-top: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .timeline-step.active .step-label { color: var(--admin-text-main); }
+        .timeline-step.current .step-label { color: var(--admin-accent-gold-dark); }
+        .step-line { position: absolute; top: 15px; left: calc(50% + 18px); width: calc(100% - 36px); height: 3px; background: #e2e8f0; }
+        .step-line.filled { background: #16a34a; }
 
         .detail-grid { display: grid; grid-template-columns: 3fr 2fr; gap: 20px; }
-        @media (max-width: 768px) { .detail-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 860px) { .detail-grid { grid-template-columns: 1fr; } }
 
-        .card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); }
-        .card-heading { font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 18px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0; }
+        .card { background: #ffffff; border: 1px solid var(--admin-border); border-radius: var(--admin-radius-lg); padding: 28px; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.02); }
+        .card-heading { font-size: 17px; font-weight: 800; color: var(--admin-text-main); margin: 0 0 20px; padding-bottom: 12px; border-bottom: 1.5px solid var(--admin-border); }
 
         .items-list { display: flex; flex-direction: column; gap: 0; }
-        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid #e2e8f0; }
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--admin-border); }
         .item-row:last-child { border-bottom: none; }
-        .item-left { display: flex; flex-direction: column; gap: 2px; }
-        .item-name { font-weight: 600; color: #0f172a; font-size: 14px; }
-        .item-unit { font-size: 12px; color: #64748b; }
-        .item-total { font-family: 'SF Mono', monospace; font-weight: 600; color: #0f172a; font-size: 14px; }
+        .item-left { display: flex; flex-direction: column; gap: 4px; }
+        .item-name { font-weight: 700; color: var(--admin-text-main); font-size: 14.5px; }
+        .item-unit { font-size: 12.5px; color: var(--admin-text-muted); font-weight: 500; }
+        .item-total { font-family: var(--font-display); font-weight: 700; color: var(--admin-text-main); font-size: 14.5px; }
 
-        .total-row { display: flex; justify-content: space-between; align-items: center; padding: 18px 0 0; border-top: 2px solid #e2e8f0; margin-top: 8px; font-weight: 700; }
-        .total-row span { color: #475569; font-size: 14px; }
-        .total-value { font-family: 'SF Mono', monospace; font-size: 20px; color: #2563eb; }
+        .total-row { display: flex; justify-content: space-between; align-items: center; padding: 20px 0 0; border-top: 2px solid var(--admin-border); margin-top: 10px; font-weight: 800; }
+        .total-row span { color: var(--admin-text-muted); font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .total-value { font-family: var(--font-display); font-size: 22px; color: var(--admin-accent-gold-dark); }
 
         .info-list { display: flex; flex-direction: column; gap: 18px; }
         .info-item { display: flex; flex-direction: column; gap: 6px; }
-        .info-label { font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
-        .info-value { font-size: 14px; color: #0f172a; font-weight: 500; }
+        .info-label { font-size: 10px; font-weight: 700; color: var(--admin-text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
+        .info-value { font-size: 14px; color: var(--admin-text-main); font-weight: 600; }
         .capitalize { text-transform: capitalize; }
-        .mono { font-family: 'SF Mono', monospace; }
+        .mono { font-family: var(--font-display); }
 
-        .status-select { width: 100%; padding: 11px 14px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; color: #0f172a; font-size: 13px; outline: none; cursor: pointer; }
-        .status-select:focus { border-color: #2563eb; }
+        .status-select { 
+          width: 100%; padding: 11px 14px; background: #ffffff; border: 1.5px solid var(--admin-border); 
+          border-radius: var(--admin-radius-md); color: var(--admin-text-main); font-size: 13.5px; 
+          font-weight: 600; outline: none; cursor: pointer; font-family: var(--font-body);
+        }
+        .status-select:focus { border-color: var(--admin-accent-gold-dark); }
 
-        .receipt-btn { display: inline-flex; padding: 10px 14px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; color: #2563eb; text-decoration: none; font-size: 13px; font-weight: 500; transition: all 0.2s; }
-        .receipt-btn:hover { border-color: #3b82f6; background: rgba(59,130,246,0.05); }
+        .receipt-btn { 
+          display: inline-flex; justify-content: center; padding: 11px 16px; background: #ffffff; 
+          border: 1.5px solid var(--admin-border); border-radius: var(--admin-radius-md); 
+          color: var(--admin-accent-gold-dark); text-decoration: none; font-size: 13px; font-weight: 700; 
+          transition: all 0.2s; 
+        }
+        .receipt-btn:hover { border-color: var(--admin-accent-gold-dark); background: rgba(197, 168, 128, 0.05); }
+
+        .print-only-header { display: none; }
+        .print-only { display: none; }
+
+        @media print {
+          body {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            font-size: 12px;
+          }
+          .no-print { display: none !important; }
+          .print-only-header { 
+            display: flex; justify-content: space-between; align-items: flex-end; 
+            border-bottom: 3px double #000000; padding-bottom: 20px; margin-bottom: 30px; 
+          }
+          .print-brand h1 { font-family: var(--font-display); font-size: 28px; font-weight: 900; margin: 0; }
+          .print-brand p { font-size: 11px; text-transform: uppercase; margin: 0; color: #555; }
+          .print-invoice-meta h2 { font-size: 22px; font-weight: 800; margin: 0 0 6px; text-align: right; }
+          .print-invoice-meta p { font-size: 11px; margin: 2px 0; text-align: right; }
+          
+          .print-only { display: flex !important; }
+          
+          .detail-grid { display: grid; grid-template-columns: 1fr; gap: 30px; }
+          .card { border: none !important; box-shadow: none !important; padding: 0 !important; }
+          .card-heading { border-bottom: 2px solid #000000 !important; padding-bottom: 8px; font-size: 14px; }
+          .total-row { border-top: 2px solid #000000 !important; }
+          .total-value { color: #000000 !important; font-size: 18px; }
+          .info-list { gap: 12px; }
+          .info-item { gap: 2px; }
+          .info-label { font-size: 9px; color: #555; }
+          .info-value { font-size: 12px; }
+        }
       `}</style>
     </div>
   );

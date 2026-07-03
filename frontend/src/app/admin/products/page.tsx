@@ -56,6 +56,13 @@ export default function AdminProductsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
 
+  // UI States
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
+  const [inlineEditingId, setInlineEditingId] = useState<number | null>(null);
+  const [inlinePrice, setInlinePrice] = useState("");
+  const [isInlineSaving, setIsInlineSaving] = useState(false);
+  const [activeModalTab, setActiveModalTab] = useState<"basics" | "promo" | "options" | "media">("basics");
+
   const fetchProducts = async () => {
     try {
       const response = await productsAPI.getAllProducts();
@@ -98,6 +105,7 @@ export default function AdminProductsPage() {
     setNewSoldCount(product.soldCount !== undefined ? product.soldCount.toString() : "0");
     setNewPromoText(product.promoText || "");
     setNewShopperSavingText(product.shopperSavingText || "");
+    setActiveModalTab("basics");
     setIsModalOpen(true);
   };
 
@@ -107,6 +115,7 @@ export default function AdminProductsPage() {
     setNewDiscount("0"); setNewSizes("S,M,L,XL");
     setNewIsChoice(false); setNewIsSale(false); setNewRating("4.5"); setNewSoldCount("0");
     setNewPromoText(""); setNewShopperSavingText("");
+    setActiveModalTab("basics");
   };
 
   const handleImageUploadGeneric = async (file: File, setter: (url: string) => void, setUploading: (u: boolean) => void) => {
@@ -165,6 +174,37 @@ export default function AdminProductsPage() {
         }
       }
     );
+  };
+
+  const handleInlineSave = async (product: Product) => {
+    const parsedPrice = parseFloat(inlinePrice);
+    if (isNaN(parsedPrice) || parsedPrice <= 0) {
+      showToast("Please enter a valid price", "warning");
+      return;
+    }
+    setIsInlineSaving(true);
+    try {
+      const mainImg = product.images?.find(img => img.isMainImage)?.imageUrl || product.imageUrl || product.image || "";
+      const additionalImgs = product.images?.filter(img => !img.isMainImage) || [];
+      const imagesList = [];
+      if (mainImg) imagesList.push({ imageUrl: mainImg, isMainImage: true });
+      additionalImgs.forEach(img => imagesList.push({ imageUrl: img.imageUrl, isMainImage: false }));
+
+      const productPayload = {
+        ...product,
+        price: parsedPrice,
+        images: imagesList
+      };
+
+      await productsAPI.updateProduct(product.id, productPayload);
+      showToast(`"${product.name}" price updated to Rs. ${parsedPrice}`, "success");
+      setProducts((prev) => prev.map((p) => p.id === product.id ? { ...p, price: parsedPrice } : p));
+      setInlineEditingId(null);
+    } catch (err) {
+      showToast("Failed to update price", "error");
+    } finally {
+      setIsInlineSaving(false);
+    }
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -249,33 +289,53 @@ export default function AdminProductsPage() {
           <input type="text" placeholder="Search products..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="toolbar-input" />
           {searchTerm && <button className="search-clear" onClick={() => setSearchTerm("")}>✕</button>}
         </div>
+        
         <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="toolbar-select">
           <option value="">All Categories</option>
           {categories.map((cat) => (<option key={cat.id} value={cat.id}>{cat.name}</option>))}
         </select>
+
+        <div className="view-toggle">
+          <button 
+            type="button" 
+            className={`toggle-btn ${viewMode === "list" ? "active" : ""}`}
+            onClick={() => setViewMode("list")}
+            title="List View"
+          >
+            📋 List
+          </button>
+          <button 
+            type="button" 
+            className={`toggle-btn ${viewMode === "grid" ? "active" : ""}`}
+            onClick={() => setViewMode("grid")}
+            title="Grid View"
+          >
+            🎂 Grid
+          </button>
+        </div>
       </div>
 
-      {/* Table */}
-      <div className="table-card">
-        {loading ? (
-          <div className="loading-skeleton">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="skeleton-row">
-                <div className="shimmer" style={{ width: 44, height: 44, borderRadius: 10 }} />
-                <div style={{ flex: 1 }}>
-                  <div className="shimmer" style={{ width: '60%', height: 14, marginBottom: 8 }} />
-                  <div className="shimmer" style={{ width: '40%', height: 12 }} />
-                </div>
-                <div className="shimmer" style={{ width: 60, height: 14 }} />
+      {loading ? (
+        <div className="loading-skeleton">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="skeleton-row">
+              <div className="shimmer" style={{ width: 44, height: 44, borderRadius: 10 }} />
+              <div style={{ flex: 1 }}>
+                <div className="shimmer" style={{ width: '60%', height: 14, marginBottom: 8 }} />
+                <div className="shimmer" style={{ width: '40%', height: 12 }} />
               </div>
-            ))}
-          </div>
-        ) : filteredProducts.length === 0 ? (
-          <div className="empty-state">
-            <span className="empty-icon">📭</span>
-            <p>No products found{searchTerm && ` for "${searchTerm}"`}</p>
-          </div>
-        ) : (
+              <div className="shimmer" style={{ width: 60, height: 14 }} />
+            </div>
+          ))}
+        </div>
+      ) : filteredProducts.length === 0 ? (
+        <div className="empty-state">
+          <span className="empty-icon">📭</span>
+          <p>No products found{searchTerm && ` for "${searchTerm}"`}</p>
+        </div>
+      ) : viewMode === "list" ? (
+        /* List View */
+        <div className="table-card">
           <div className="table-responsive">
             <table className="admin-table">
               <thead>
@@ -303,7 +363,32 @@ export default function AdminProductsPage() {
                       </div>
                     </td>
                     <td><span className="category-tag">{getCategoryName(product.categoryId)}</span></td>
-                    <td className="price-cell">Rs. {(product.price || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td className="price-cell">
+                      {inlineEditingId === product.id ? (
+                        <div className="inline-edit-wrapper" onClick={(e) => e.stopPropagation()}>
+                          <input 
+                            type="number" 
+                            className="inline-input"
+                            value={inlinePrice}
+                            onChange={(e) => setInlinePrice(e.target.value)}
+                            disabled={isInlineSaving}
+                          />
+                          <button onClick={() => handleInlineSave(product)} disabled={isInlineSaving} className="inline-btn save">✓</button>
+                          <button onClick={() => setInlineEditingId(null)} disabled={isInlineSaving} className="inline-btn cancel">✕</button>
+                        </div>
+                      ) : (
+                        <div className="price-display-wrapper">
+                          <span>Rs. {(product.price || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                          <button 
+                            className="inline-edit-trigger" 
+                            title="Quick edit price"
+                            onClick={(e) => { e.stopPropagation(); setInlineEditingId(product.id); setInlinePrice(product.price.toString()); }}
+                          >
+                            ✏️
+                          </button>
+                        </div>
+                      )}
+                    </td>
                     <td className="text-right">
                       <div className="actions-group">
                         <button onClick={() => openEditModal(product)} className="btn-icon btn-edit" title="Edit">
@@ -319,8 +404,60 @@ export default function AdminProductsPage() {
               </tbody>
             </table>
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        /* Grid View */
+        <div className="products-grid">
+          {filteredProducts.map((product) => (
+            <div key={product.id} className="product-card">
+              <div className="product-card-img-wrap">
+                <img
+                  src={product.imageUrl || product.image || "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=600&auto=format&fit=crop"}
+                  alt={product.name}
+                  onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=600&auto=format&fit=crop"; }}
+                />
+                {product.discount > 0 && <span className="grid-discount-badge">{product.discount}% OFF</span>}
+              </div>
+              <div className="product-card-info">
+                <div className="grid-category">{getCategoryName(product.categoryId)}</div>
+                <h3 className="grid-product-name">{product.name}</h3>
+                
+                <div className="grid-price-section">
+                  {inlineEditingId === product.id ? (
+                    <div className="inline-edit-wrapper" onClick={(e) => e.stopPropagation()}>
+                      <input 
+                        type="number" 
+                        className="inline-input"
+                        value={inlinePrice}
+                        onChange={(e) => setInlinePrice(e.target.value)}
+                        disabled={isInlineSaving}
+                      />
+                      <button onClick={() => handleInlineSave(product)} disabled={isInlineSaving} className="inline-btn save">✓</button>
+                      <button onClick={() => setInlineEditingId(null)} disabled={isInlineSaving} className="inline-btn cancel">✕</button>
+                    </div>
+                  ) : (
+                    <div className="price-display-wrapper">
+                      <span className="grid-price">Rs. {(product.price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                      <button 
+                        className="inline-edit-trigger" 
+                        title="Quick edit price"
+                        onClick={(e) => { e.stopPropagation(); setInlineEditingId(product.id); setInlinePrice(product.price.toString()); }}
+                      >
+                        ✏️
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid-actions">
+                  <button onClick={() => openEditModal(product)} className="grid-btn edit">Edit</button>
+                  <button onClick={() => handleDelete(product.id, product.name)} className="grid-btn delete">Delete</button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Modal */}
       {isModalOpen && (
@@ -331,93 +468,104 @@ export default function AdminProductsPage() {
               <button onClick={closeModal} className="modal-close">✕</button>
             </div>
 
-            {/* Image preview */}
-            {(newImageUrl || newImageUrl1 || newImageUrl2 || newImageUrl3) && (
-              <div className="image-preview" style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap" }}>
-                {newImageUrl && <img src={newImageUrl} alt="Main" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #cbd5e1" }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
-                {newImageUrl1 && <img src={newImageUrl1} alt="Alt 1" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #cbd5e1" }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
-                {newImageUrl2 && <img src={newImageUrl2} alt="Alt 2" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #cbd5e1" }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
-                {newImageUrl3 && <img src={newImageUrl3} alt="Alt 3" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #cbd5e1" }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
+            {/* Modal Tabs Bar */}
+            <div className="modal-tabs">
+              <button type="button" className={`tab-item ${activeModalTab === "basics" ? "active" : ""}`} onClick={() => setActiveModalTab("basics")}>General</button>
+              <button type="button" className={`tab-item ${activeModalTab === "promo" ? "active" : ""}`} onClick={() => setActiveModalTab("promo")}>Marketing</button>
+              <button type="button" className={`tab-item ${activeModalTab === "options" ? "active" : ""}`} onClick={() => setActiveModalTab("options")}>Specs</button>
+              <button type="button" className={`tab-item ${activeModalTab === "media" ? "active" : ""}`} onClick={() => setActiveModalTab("media")}>Images</button>
+            </div>
+
+            {/* Image preview in media tab */}
+            {activeModalTab === "media" && (newImageUrl || newImageUrl1 || newImageUrl2 || newImageUrl3) && (
+              <div className="image-preview" style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap", margin: "16px 24px 0" }}>
+                {newImageUrl && <img src={newImageUrl} alt="Main" style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8, border: "1px solid #cbd5e1" }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
+                {newImageUrl1 && <img src={newImageUrl1} alt="Alt 1" style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8, border: "1px solid #cbd5e1" }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
+                {newImageUrl2 && <img src={newImageUrl2} alt="Alt 2" style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8, border: "1px solid #cbd5e1" }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
+                {newImageUrl3 && <img src={newImageUrl3} alt="Alt 3" style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8, border: "1px solid #cbd5e1" }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
               </div>
             )}
 
             <form onSubmit={handleFormSubmit} className="modal-form">
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">Product Name <span className="req">*</span></label>
-                  <input type="text" required value={newName} onChange={(e) => setNewName(e.target.value)} className="form-input" placeholder="e.g. Luxury Silk Shirt" />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Price (LKR) <span className="req">*</span></label>
-                  <input type="number" step="0.01" min="0" required value={newPrice} onChange={(e) => setNewPrice(e.target.value)} className="form-input" placeholder="17805.36" />
-                </div>
-              </div>
+              {activeModalTab === "basics" && (
+                <div className="tab-pane-content" style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">Product Name <span className="req">*</span></label>
+                      <input type="text" required value={newName} onChange={(e) => setNewName(e.target.value)} className="form-input" placeholder="e.g. Luxury Silk Shirt" />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Price (LKR) <span className="req">*</span></label>
+                      <input type="number" step="0.01" min="0" required value={newPrice} onChange={(e) => setNewPrice(e.target.value)} className="form-input" placeholder="17805.36" />
+                    </div>
+                  </div>
 
-              <div className="form-group">
-                <label className="form-label">Category <span className="req">*</span></label>
-                <select required value={selectedCategoryId} onChange={(e) => setSelectedCategoryId(e.target.value)} className="form-select">
-                  <option value="" disabled>Select a category</option>
-                  {categories.map((cat) => (<option key={cat.id} value={cat.id}>{cat.name}</option>))}
-                </select>
-              </div>
+                  <div className="form-group">
+                    <label className="form-label">Category <span className="req">*</span></label>
+                    <select required value={selectedCategoryId} onChange={(e) => setSelectedCategoryId(e.target.value)} className="form-select">
+                      <option value="" disabled>Select a category</option>
+                      {categories.map((cat) => (<option key={cat.id} value={cat.id}>{cat.name}</option>))}
+                    </select>
+                  </div>
 
-              <div className="form-group">
-                <label className="form-label">Description</label>
-                <textarea value={newDescription} onChange={(e) => setNewDescription(e.target.value)} className="form-textarea" placeholder="Premium quality fabric with a modern cut..." />
-              </div>
+                  <div className="form-group">
+                    <label className="form-label">Description</label>
+                    <textarea value={newDescription} onChange={(e) => setNewDescription(e.target.value)} className="form-textarea" placeholder="Premium quality fabric with a modern cut..." />
+                  </div>
+                </div>
+              )}
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">Available Sizes (comma separated)</label>
-                  <input type="text" value={newSizes} onChange={(e) => setNewSizes(e.target.value)} className="form-input" placeholder="e.g. S,M,L,XL" />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Discount Percentage (%)</label>
-                  <input type="number" min="0" max="100" value={newDiscount} onChange={(e) => setNewDiscount(e.target.value)} className="form-input" placeholder="0" />
-                </div>
-              </div>
+              {activeModalTab === "promo" && (
+                <div className="tab-pane-content" style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                  <div className="form-group">
+                    <label className="form-label">Discount Percentage (%)</label>
+                    <input type="number" min="0" max="100" value={newDiscount} onChange={(e) => setNewDiscount(e.target.value)} className="form-input" placeholder="0" />
+                  </div>
 
-              {/* Badges Toggle Row */}
-              <div className="form-row" style={{ marginTop: "4px" }}>
-                <div className="form-group" style={{ flexDirection: "row", alignItems: "center", gap: "8px" }}>
-                  <input type="checkbox" id="isChoiceCheckbox" checked={newIsChoice} onChange={(e) => setNewIsChoice(e.target.checked)} style={{ cursor: "pointer", width: "16px", height: "16px" }} />
-                  <label htmlFor="isChoiceCheckbox" className="form-label" style={{ cursor: "pointer", marginBottom: 0 }}>Choice Badge (Store Pick)</label>
-                </div>
-                <div className="form-group" style={{ flexDirection: "row", alignItems: "center", gap: "8px" }}>
-                  <input type="checkbox" id="isSaleCheckbox" checked={newIsSale} onChange={(e) => setNewIsSale(e.target.checked)} style={{ cursor: "pointer", width: "16px", height: "16px" }} />
-                  <label htmlFor="isSaleCheckbox" className="form-label" style={{ cursor: "pointer", marginBottom: 0 }}>Sale Badge (Discount Item)</label>
-                </div>
-              </div>
+                  <div className="form-row" style={{ marginTop: "4px" }}>
+                    <div className="form-group" style={{ flexDirection: "row", alignItems: "center", gap: "8px" }}>
+                      <input type="checkbox" id="isChoiceCheckbox" checked={newIsChoice} onChange={(e) => setNewIsChoice(e.target.checked)} style={{ cursor: "pointer", width: "16px", height: "16px" }} />
+                      <label htmlFor="isChoiceCheckbox" className="form-label" style={{ cursor: "pointer", marginBottom: 0 }}>Choice Badge (Store Pick)</label>
+                    </div>
+                    <div className="form-group" style={{ flexDirection: "row", alignItems: "center", gap: "8px" }}>
+                      <input type="checkbox" id="isSaleCheckbox" checked={newIsSale} onChange={(e) => setNewIsSale(e.target.checked)} style={{ cursor: "pointer", width: "16px", height: "16px" }} />
+                      <label htmlFor="isSaleCheckbox" className="form-label" style={{ cursor: "pointer", marginBottom: 0 }}>Sale Badge (On Discount)</label>
+                    </div>
+                  </div>
 
-              {/* Rating and Sold Count Row */}
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">Rating Value (0.0 to 5.0)</label>
-                  <input type="number" step="0.1" min="0" max="5" value={newRating} onChange={(e) => setNewRating(e.target.value)} className="form-input" placeholder="4.5" />
+                  <div className="form-group">
+                    <label className="form-label">Custom Promo Label</label>
+                    <input type="text" value={newPromoText} onChange={(e) => setNewPromoText(e.target.value)} className="form-input" placeholder="e.g. LKR1,500 off on LKR11,000" />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Shopper Saving Label</label>
+                    <input type="text" value={newShopperSavingText} onChange={(e) => setNewShopperSavingText(e.target.value)} className="form-input" placeholder="e.g. New shoppers save LKR230" />
+                  </div>
                 </div>
-                <div className="form-group">
-                  <label className="form-label">Items Sold Count</label>
-                  <input type="number" min="0" value={newSoldCount} onChange={(e) => setNewSoldCount(e.target.value)} className="form-input" placeholder="0" />
-                </div>
-              </div>
+              )}
 
-              {/* Promo and Saving text Row */}
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">Custom Promo Label</label>
-                  <input type="text" value={newPromoText} onChange={(e) => setNewPromoText(e.target.value)} className="form-input" placeholder="e.g. LKR1,500 off on LKR11,000" />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Shopper Saving Label</label>
-                  <input type="text" value={newShopperSavingText} onChange={(e) => setNewShopperSavingText(e.target.value)} className="form-input" placeholder="e.g. New shoppers save LKR230" />
-                </div>
-              </div>
+              {activeModalTab === "options" && (
+                <div className="tab-pane-content" style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                  <div className="form-group">
+                    <label className="form-label">Available Sizes (comma separated)</label>
+                    <input type="text" value={newSizes} onChange={(e) => setNewSizes(e.target.value)} className="form-input" placeholder="e.g. S,M,L,XL" />
+                  </div>
 
-              <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: "14px", marginTop: "4px" }}>
-                <p style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a", marginBottom: "12px" }}>Product Images (Main + 3 Additional)</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">Rating Value (0.0 to 5.0)</label>
+                      <input type="number" step="0.1" min="0" max="5" value={newRating} onChange={(e) => setNewRating(e.target.value)} className="form-input" placeholder="4.5" />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Items Sold Count</label>
+                      <input type="number" min="0" value={newSoldCount} onChange={(e) => setNewSoldCount(e.target.value)} className="form-input" placeholder="0" />
+                    </div>
+                  </div>
+                </div>
+              )}
 
-                  {/* Main Image */}
+              {activeModalTab === "media" && (
+                <div className="tab-pane-content" style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
                   <div className="form-group">
                     <label className="form-label">Main Image URL</label>
                     <div style={{ display: "flex", gap: "8px" }}>
@@ -429,7 +577,6 @@ export default function AdminProductsPage() {
                     </div>
                   </div>
 
-                  {/* Additional Image 1 */}
                   <div className="form-group">
                     <label className="form-label">Additional Image 1 URL</label>
                     <div style={{ display: "flex", gap: "8px" }}>
@@ -441,7 +588,6 @@ export default function AdminProductsPage() {
                     </div>
                   </div>
 
-                  {/* Additional Image 2 */}
                   <div className="form-group">
                     <label className="form-label">Additional Image 2 URL</label>
                     <div style={{ display: "flex", gap: "8px" }}>
@@ -453,7 +599,6 @@ export default function AdminProductsPage() {
                     </div>
                   </div>
 
-                  {/* Additional Image 3 */}
                   <div className="form-group">
                     <label className="form-label">Additional Image 3 URL</label>
                     <div style={{ display: "flex", gap: "8px" }}>
@@ -464,9 +609,8 @@ export default function AdminProductsPage() {
                       </label>
                     </div>
                   </div>
-
                 </div>
-              </div>
+              )}
 
               <div className="form-actions">
                 <button type="button" onClick={closeModal} className="btn-cancel">Cancel</button>
@@ -482,128 +626,236 @@ export default function AdminProductsPage() {
       )}
 
       <style jsx>{`
-        .products-container { max-width: 1200px; margin: 0 auto; }
+        .products-container { max-width: 1200px; margin: 0 auto; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        
         .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
-        .page-title { font-size: 30px; font-weight: 800; color: #0f172a; margin: 0 0 4px; }
-        .page-subtitle { font-size: 13px; color: #64748b; margin: 0; }
+        .page-title { font-size: 32px; font-weight: 900; color: var(--admin-text-main); margin: 0 0 4px; }
+        .page-subtitle { font-size: 13.5px; color: var(--admin-text-muted); margin: 0; }
+        
         .btn-primary {
-          background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; font-weight: 600; font-size: 13px;
-          padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer;
+          background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-light)); 
+          color: #fff; font-weight: 600; font-size: 13px;
+          padding: 10px 20px; border-radius: var(--admin-radius-md); border: none; cursor: pointer;
           display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;
-          box-shadow: 0 4px 16px rgba(59,130,246,0.25);
+          box-shadow: 0 4px 16px rgba(15,23,42,0.15);
         }
-        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(59,130,246,0.35); }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(15,23,42,0.25); }
 
-        .toolbar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-        .search-box { position: relative; flex: 1; min-width: 220px; }
-        .search-svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #64748b; }
+        .toolbar { display: flex; gap: 14px; margin-bottom: 24px; flex-wrap: wrap; align-items: center; }
+        .search-box { position: relative; flex: 1; min-width: 240px; }
+        .search-svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--admin-text-muted); }
+        
         .toolbar-input {
-          width: 100%; padding: 11px 36px 11px 40px; background: #ffffff; border: 1px solid #e2e8f0;
-          border-radius: 10px; color: #0f172a; outline: none; font-size: 13px; transition: border-color 0.2s;
+          width: 100%; padding: 11px 36px 11px 40px; background: #ffffff; border: 1px solid var(--admin-border);
+          border-radius: var(--admin-radius-md); color: var(--admin-text-main); outline: none; font-size: 13.5px; transition: all 0.2s;
+          font-family: var(--font-body);
         }
-        .toolbar-input:focus { border-color: #3b82f6; }
+        .toolbar-input:focus { border-color: var(--admin-accent-gold-dark); box-shadow: 0 0 0 3px rgba(197, 168, 128, 0.1); }
         .search-clear {
           position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
           background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 12px;
         }
-        .search-clear:hover { color: #475569; }
+        .search-clear:hover { color: var(--admin-text-main); }
+        
         .toolbar-select {
-          padding: 11px 16px; background: #ffffff; border: 1px solid #e2e8f0;
-          border-radius: 10px; color: #0f172a; outline: none; font-size: 13px; cursor: pointer; min-width: 160px;
+          padding: 11px 16px; background: #ffffff; border: 1px solid var(--admin-border);
+          border-radius: var(--admin-radius-md); color: var(--admin-text-main); outline: none; font-size: 13.5px; cursor: pointer; min-width: 170px;
+          font-family: var(--font-body);
         }
-        .toolbar-select:focus { border-color: #3b82f6; }
+        .toolbar-select:focus { border-color: var(--admin-accent-gold-dark); }
 
-        .table-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); }
+        /* View Mode Toggle */
+        .view-toggle { display: flex; border: 1px solid var(--admin-border); border-radius: var(--admin-radius-md); overflow: hidden; background: #fff; }
+        .view-toggle .toggle-btn {
+          padding: 10px 16px; border: none; background: #ffffff; color: var(--admin-text-muted);
+          font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+          font-family: var(--font-body);
+        }
+        .view-toggle .toggle-btn.active {
+          background: var(--admin-primary); color: #ffffff;
+        }
+        .view-toggle .toggle-btn:hover:not(.active) {
+          background: #f8fafc; color: var(--admin-text-main);
+        }
+
+        /* Table view custom styles */
+        .table-card { background: #ffffff; border: 1px solid var(--admin-border); border-radius: var(--admin-radius-lg); overflow: hidden; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.02); }
         .loading-skeleton { padding: 8px 24px; }
-        .skeleton-row { display: flex; align-items: center; gap: 16px; padding: 16px 0; border-bottom: 1px solid #e2e8f0; }
+        .skeleton-row { display: flex; align-items: center; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--admin-border); }
         .skeleton-row:last-child { border-bottom: none; }
-        .empty-state { text-align: center; padding: 60px 20px; color: #64748b; }
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--admin-text-muted); }
         .empty-icon { font-size: 32px; display: block; margin-bottom: 10px; }
-        .empty-state p { font-size: 13px; margin: 0; }
+        .empty-state p { font-size: 13.5px; margin: 0; }
 
         .table-responsive { overflow-x: auto; }
-        .admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .admin-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
         .admin-table th {
-          color: #64748b; font-weight: 600; padding: 14px 20px; border-bottom: 1px solid #e2e8f0;
-          text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; text-align: left; background: #f8fafc;
+          color: var(--admin-text-muted); font-weight: 700; padding: 16px 20px; border-bottom: 1px solid var(--admin-border);
+          text-transform: uppercase; font-size: 11px; letter-spacing: 0.8px; text-align: left; background: #f8fafc;
         }
-        .admin-table td { padding: 14px 20px; border-bottom: 1px solid #e2e8f0; color: #334155; vertical-align: middle; }
+        .admin-table td { padding: 16px 20px; border-bottom: 1px solid var(--admin-border); color: var(--admin-text-main); vertical-align: middle; }
         .admin-table tr:last-child td { border-bottom: none; }
-        .admin-table tr:hover td { background: rgba(15,23,42,0.015); }
+        .admin-table tr:hover td { background: rgba(15,23,42,0.01); }
         .text-right { text-align: right; }
 
         .product-cell { display: flex; align-items: center; gap: 14px; }
-        .product-thumb { width: 44px; height: 44px; object-fit: cover; border-radius: 10px; background: #f1f5f9; flex-shrink: 0; }
-        .product-name { display: block; font-weight: 600; color: #0f172a; font-size: 14px; margin-bottom: 2px; }
+        .product-thumb { width: 46px; height: 46px; object-fit: cover; border-radius: var(--admin-radius-md); background: #f1f5f9; flex-shrink: 0; border: 1.5px solid var(--admin-border); }
+        .product-name { display: block; font-weight: 700; color: var(--admin-text-main); font-size: 14.5px; margin-bottom: 2px; }
         .product-desc {
-          display: block; font-size: 12px; color: #64748b; max-width: 260px;
+          display: block; font-size: 12px; color: var(--admin-text-muted); max-width: 280px;
           white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         .category-tag {
-          background: rgba(139,92,246,0.08); color: #7c3aed; padding: 3px 10px;
-          border-radius: 6px; font-size: 11px; font-weight: 600;
+          background: rgba(197, 168, 128, 0.1); color: var(--admin-accent-gold-dark); padding: 4px 10px;
+          border-radius: var(--admin-radius-sm); font-size: 11px; font-weight: 700; border: 0.5px solid rgba(197, 168, 128, 0.2);
         }
-        .price-cell { font-family: 'SF Mono', monospace; font-weight: 600; color: #0f172a; font-size: 14px; }
+        .price-cell { font-family: var(--font-display); font-weight: 700; color: var(--admin-text-main); font-size: 14px; }
+
+        /* Inline Editing styling */
+        .inline-edit-wrapper { display: flex; align-items: center; gap: 6px; }
+        .inline-input {
+          width: 95px; padding: 6px 10px; border: 1.5px solid var(--admin-accent-gold);
+          border-radius: 6px; font-size: 13px; color: var(--admin-text-main); outline: none;
+          font-family: var(--font-display); font-weight: 700;
+        }
+        .inline-input:focus { box-shadow: 0 0 0 2px rgba(197, 168, 128, 0.15); }
+        .inline-btn {
+          width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center;
+          border: none; color: #fff; font-weight: 700; font-size: 12px; cursor: pointer; transition: opacity 0.2s;
+        }
+        .inline-btn.save { background: #16a34a; }
+        .inline-btn.cancel { background: #dc2626; }
+        .inline-btn:hover { opacity: 0.85; }
+
+        .price-display-wrapper { display: flex; align-items: center; gap: 8px; }
+        .inline-edit-trigger { background: none; border: none; font-size: 11px; cursor: pointer; opacity: 0.0; transition: opacity 0.2s; padding: 4px; }
+        .admin-table tr:hover .inline-edit-trigger { opacity: 0.6; }
+        .price-display-wrapper:hover .inline-edit-trigger { opacity: 1; }
 
         .actions-group { display: flex; gap: 6px; justify-content: flex-end; }
         .btn-icon {
-          width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
-          background: #ffffff; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.2s;
+          width: 34px; height: 34px; border-radius: var(--admin-radius-sm); display: flex; align-items: center; justify-content: center;
+          background: #ffffff; border: 1px solid var(--admin-border); cursor: pointer; transition: all 0.2s;
         }
-        .btn-edit { color: #2563eb; }
-        .btn-edit:hover { border-color: #3b82f6; background: rgba(59,130,246,0.05); }
+        .btn-edit { color: var(--admin-primary); }
+        .btn-edit:hover { border-color: var(--admin-accent-gold); background: rgba(197, 168, 128, 0.05); }
         .btn-del { color: #dc2626; }
-        .btn-del:hover { border-color: #ef4444; background: rgba(239,68,68,0.05); }
+        .btn-del:hover { border-color: #fca5a5; background: #fff5f5; }
 
-        /* Modal */
+        /* Grid Layout */
+        .products-grid {
+          display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px;
+        }
+        .product-card {
+          background: #ffffff; border: 1px solid var(--admin-border);
+          border-radius: var(--admin-radius-lg); overflow: hidden;
+          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.01);
+          display: flex; flex-direction: column;
+        }
+        .product-card:hover {
+          transform: translateY(-3px); border-color: var(--admin-accent-gold-dark);
+          box-shadow: 0 12px 24px rgba(15,23,42,0.04);
+        }
+        .product-card-img-wrap {
+          position: relative; width: 100%; padding-top: 105%; background: #f8fafc;
+          border-bottom: 1px solid var(--admin-border);
+        }
+        .product-card-img-wrap img {
+          position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+          transition: transform 0.5s ease;
+        }
+        .product-card:hover .product-card-img-wrap img {
+          transform: scale(1.05);
+        }
+        .grid-discount-badge {
+          position: absolute; top: 12px; left: 12px; background: #b91c1c; color: #fff;
+          font-size: 9px; font-weight: 800; padding: 4px 8px; border-radius: 6px;
+          letter-spacing: 0.5px;
+        }
+        
+        .product-card-info { padding: 16px; display: flex; flex-direction: column; flex: 1; }
+        .grid-category { font-size: 10px; font-weight: 700; color: var(--admin-text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+        .grid-product-name { font-size: 15px; font-weight: 700; color: var(--admin-text-main); margin: 0 0 8px; line-height: 1.3; height: 40px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        .grid-price-section { margin-bottom: 16px; height: 32px; display: flex; align-items: center; }
+        .grid-price { font-family: var(--font-display); font-size: 16px; font-weight: 800; color: var(--admin-text-main); }
+        .product-card .inline-edit-trigger { opacity: 0.3; }
+        .product-card:hover .inline-edit-trigger { opacity: 0.8; }
+
+        .grid-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: auto; }
+        .grid-btn {
+          padding: 8px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;
+          transition: all 0.2s; text-align: center; border: 1px solid var(--admin-border);
+          background: #ffffff; font-family: var(--font-body);
+        }
+        .grid-btn.edit { color: var(--admin-text-main); }
+        .grid-btn.edit:hover { background: #f8fafc; border-color: var(--admin-accent-gold); }
+        .grid-btn.delete { color: #dc2626; }
+        .grid-btn.delete:hover { background: #fff5f5; border-color: #fca5a5; }
+
+        /* Modal tabs and panel styling */
         .modal-overlay {
-          position: fixed; inset: 0; background: rgba(15,23,42,0.3); backdrop-filter: blur(6px);
+          position: fixed; inset: 0; background: rgba(15,23,42,0.4); backdrop-filter: blur(8px);
           display: flex; align-items: center; justify-content: center; z-index: 1200; padding: 16px;
-          animation: fadeIn 0.2s ease;
+          animation: fadeIn 0.25s ease;
         }
         .modal-card {
-          background: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px; width: 100%;
-          max-width: 520px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); animation: scaleIn 0.25s cubic-bezier(0.4,0,0.2,1);
-          max-height: 90vh; overflow-y: auto;
+          background: #ffffff; border: 1px solid var(--admin-border); border-radius: var(--admin-radius-lg); width: 100%;
+          max-width: 540px; box-shadow: 0 24px 48px rgba(15,23,42,0.12); animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+          max-height: 90vh; display: flex; flex-direction: column; overflow: hidden;
         }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #e2e8f0; }
-        .modal-title { font-size: 18px; font-weight: 700; color: #0f172a; margin: 0; }
-        .modal-close { background: none; border: none; color: #64748b; font-size: 18px; cursor: pointer; transition: color 0.2s; padding: 4px; }
-        .modal-close:hover { color: #0f172a; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 24px 28px 16px; border-bottom: 1.5px solid var(--admin-border); }
+        .modal-title { font-size: 20px; font-weight: 800; color: var(--admin-text-main); margin: 0; }
+        .modal-close { background: none; border: none; color: var(--admin-text-muted); font-size: 18px; cursor: pointer; transition: color 0.2s; padding: 4px; }
+        .modal-close:hover { color: var(--admin-text-main); }
 
-        .image-preview {
-          padding: 16px 24px 0; display: flex; justify-content: center;
+        .modal-tabs { display: flex; background: #f8fafc; border-bottom: 1px solid var(--admin-border); padding: 0 28px; }
+        .modal-tabs .tab-item {
+          padding: 14px 16px; border: none; background: none; font-size: 12px; font-weight: 700;
+          color: var(--admin-text-muted); cursor: pointer; position: relative; font-family: var(--font-body);
+          text-transform: uppercase; letter-spacing: 0.5px;
         }
-        .image-preview img {
-          max-height: 120px; border-radius: 12px; object-fit: cover;
-          border: 1px solid #e2e8f0;
+        .modal-tabs .tab-item.active {
+          color: var(--admin-accent-gold-dark);
+        }
+        .modal-tabs .tab-item.active::after {
+          content: ""; position: absolute; bottom: 0; left: 16px; right: 16px; height: 2px;
+          background: var(--admin-accent-gold);
         }
 
-        .modal-form { padding: 20px 24px 24px; display: flex; flex-direction: column; gap: 14px; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .modal-form { padding: 24px 28px 28px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; flex: 1; }
+        .tab-pane-content { animation: paneFadeIn 0.25s ease; }
+        @keyframes paneFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
         @media (max-width: 480px) { .form-row { grid-template-columns: 1fr; } }
-        .form-group { display: flex; flex-direction: column; gap: 5px; }
-        .form-label { font-size: 12px; font-weight: 600; color: #475569; }
-        .req { color: #ef4444; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-label { font-size: 12.5px; font-weight: 700; color: var(--admin-text-main); }
+        .req { color: #b91c1c; }
         .form-input, .form-select, .form-textarea {
-          width: 100%; padding: 11px 14px; background: #ffffff; border: 1px solid #e2e8f0;
-          border-radius: 10px; color: #0f172a; font-size: 14px; outline: none; transition: border-color 0.2s;
+          width: 100%; padding: 11px 14px; background: #ffffff; border: 1.5px solid var(--admin-border);
+          border-radius: var(--admin-radius-md); color: var(--admin-text-main); font-size: 13.5px; outline: none; transition: all 0.2s;
+          font-family: var(--font-body);
         }
-        .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: #3b82f6; }
-        .form-textarea { height: 80px; resize: none; }
+        .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--admin-accent-gold-dark); box-shadow: 0 0 0 3px rgba(197, 168, 128, 0.1); }
+        .form-textarea { height: 90px; resize: none; }
 
-        .form-actions { display: flex; gap: 10px; margin-top: 8px; }
+        .form-actions { display: flex; gap: 12px; margin-top: 14px; border-top: 1px solid var(--admin-border); padding-top: 20px; }
         .btn-cancel {
-          flex: 1; padding: 12px; background: #ffffff; border: 1px solid #e2e8f0; color: #475569;
-          border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 13px;
+          flex: 1; padding: 12px; background: #f8fafc; border: 1px solid var(--admin-border); color: var(--admin-text-muted);
+          border-radius: var(--admin-radius-md); font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 13px;
         }
-        .btn-cancel:hover { background: #f1f5f9; color: #0f172a; }
+        .btn-cancel:hover { background: #f1f5f9; color: var(--admin-text-main); }
+        
         .btn-submit {
-          flex: 1; padding: 12px; background: linear-gradient(135deg,#3b82f6,#2563eb); border: none;
-          color: #fff; border-radius: 10px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+          flex: 1; padding: 12px; background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-light)); border: none;
+          color: #fff; border-radius: var(--admin-radius-md); font-weight: 700; cursor: pointer; transition: all 0.25s;
           font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 8px;
+          box-shadow: 0 4px 16px rgba(15,23,42,0.1);
         }
-        .btn-submit:hover { box-shadow: 0 4px 16px rgba(59,130,246,0.3); }
+        .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(15,23,42,0.2); }
         .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 
         .spinner {
@@ -611,38 +863,18 @@ export default function AdminProductsPage() {
           border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block;
         }
         .btn-upload {
-          cursor: pointer;
-          padding: 12px;
-          border-radius: 10px;
-          border: 1px dashed #cbd5e1;
-          background: #f8fafc;
-          font-size: 13px;
-          font-weight: 600;
-          color: #475569;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 6px;
-          transition: all 0.2s;
-          width: 100%;
+          cursor: pointer; padding: 11px 14px; border-radius: var(--admin-radius-md);
+          border: 1.5px dashed var(--admin-border); background: #f8fafc; font-size: 13px;
+          font-weight: 600; color: var(--admin-text-muted); display: inline-flex;
+          align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;
         }
-        .btn-upload:hover {
-          background: #f1f5f9;
-          border-color: #94a3b8;
-          color: #334155;
-        }
+        .btn-upload:hover { background: #f1f5f9; border-color: var(--admin-accent-gold); color: var(--admin-text-main); }
+        
         .spinner-dark {
-          width: 14px;
-          height: 14px;
-          border: 2px solid rgba(0,0,0,0.1);
-          border-top-color: #475569;
-          border-radius: 50%;
-          animation: spin 0.6s linear infinite;
-          display: inline-block;
+          width: 14px; height: 14px; border: 2px solid rgba(0,0,0,0.1); border-top-color: var(--admin-text-muted);
+          border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes scaleIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
       `}</style>
     </div>
   );
