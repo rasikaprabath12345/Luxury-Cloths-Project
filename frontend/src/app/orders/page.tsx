@@ -12,6 +12,7 @@ interface OrderItem {
   productName: string;
   quantity: number;
   price: number;
+  productImageUrl?: string;
 }
 
 interface Order {
@@ -308,33 +309,52 @@ export default function OrderHistoryPage() {
 
                   {/* Order items nested list */}
                   <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
-                    {order.items.map((item, idx) => (
-                      <div
-                        key={idx}
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          borderBottom: idx === order.items.length - 1 ? "none" : "0.5px solid rgba(0,0,0,0.05)",
-                          paddingBottom: idx === order.items.length - 1 ? 0 : 12
-                        }}
-                      >
-                        <div>
-                          <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#1C1C1E" }}>{item.productName}</h4>
-                          <p style={{ margin: "4px 0 0", fontSize: 12, color: "#8E8E93" }}>
-                            Quantity: <span style={{ fontWeight: 600 }}>{item.quantity}</span>
-                          </p>
+                    {order.items.map((item, idx) => {
+                      const img = item.productImageUrl || "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=600&auto=format&fit=crop";
+                      return (
+                        <div
+                          key={idx}
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            borderBottom: idx === order.items.length - 1 ? "none" : "0.5px solid rgba(0,0,0,0.05)",
+                            paddingBottom: idx === order.items.length - 1 ? 0 : 12
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                            <div style={{
+                              width: 60,
+                              height: 75,
+                              borderRadius: 10,
+                              overflow: "hidden",
+                              border: "1px solid rgba(0,0,0,0.06)",
+                              flexShrink: 0
+                            }}>
+                              <img
+                                src={img}
+                                alt={item.productName}
+                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                              />
+                            </div>
+                            <div>
+                              <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#1C1C1E" }}>{item.productName}</h4>
+                              <p style={{ margin: "4px 0 0", fontSize: 12, color: "#8E8E93" }}>
+                                Quantity: <span style={{ fontWeight: 600 }}>{item.quantity}</span>
+                              </p>
+                            </div>
+                          </div>
+                          <div style={{ textAlign: "right" }}>
+                            <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: "#1C1C1E" }}>
+                              Rs. {(item.price * item.quantity).toLocaleString()}
+                            </p>
+                            <p style={{ margin: "2px 0 0", fontSize: 11, color: "#8E8E93" }}>
+                              Rs. {item.price.toLocaleString()} each
+                            </p>
+                          </div>
                         </div>
-                        <div style={{ textAlign: "right" }}>
-                          <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: "#1C1C1E" }}>
-                            Rs. {(item.price * item.quantity).toLocaleString()}
-                          </p>
-                          <p style={{ margin: "2px 0 0", fontSize: 11, color: "#8E8E93" }}>
-                            Rs. {item.price.toLocaleString()} each
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   {/* Payment Slip Upload section */}

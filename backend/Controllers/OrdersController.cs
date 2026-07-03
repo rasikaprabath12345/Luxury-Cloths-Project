@@ -28,6 +28,7 @@ namespace backend.Controllers
                     .Include(o => o.OrderItems)
                         .ThenInclude(oi => oi.ProductVariant)
                             .ThenInclude(pv => pv!.Product)
+                                .ThenInclude(p => p!.Images)
                     .Select(o => new
                     {
                         id = o.Id,
@@ -53,6 +54,9 @@ namespace backend.Controllers
                             productName = item.ProductVariant != null && item.ProductVariant.Product != null 
                                 ? item.ProductVariant.Product.Name 
                                 : "Unknown Product",
+                            productImageUrl = item.ProductVariant != null && item.ProductVariant.Product != null && item.ProductVariant.Product.Images.Any()
+                                ? item.ProductVariant.Product.Images.OrderByDescending(img => img.IsMainImage).Select(img => img.ImageUrl).FirstOrDefault()
+                                : null,
                             quantity = item.Quantity,
                             price = item.UnitPrice
                         }).ToList()
@@ -85,6 +89,7 @@ namespace backend.Controllers
                     .Include(o => o.OrderItems)
                         .ThenInclude(oi => oi.ProductVariant)
                             .ThenInclude(pv => pv!.Product)
+                                .ThenInclude(p => p!.Images)
                     .Where(o => o.UserId == userId)
                     .Select(o => new
                     {
@@ -111,6 +116,9 @@ namespace backend.Controllers
                             productName = item.ProductVariant != null && item.ProductVariant.Product != null 
                                 ? item.ProductVariant.Product.Name 
                                 : "Unknown Product",
+                            productImageUrl = item.ProductVariant != null && item.ProductVariant.Product != null && item.ProductVariant.Product.Images.Any()
+                                ? item.ProductVariant.Product.Images.OrderByDescending(img => img.IsMainImage).Select(img => img.ImageUrl).FirstOrDefault()
+                                : null,
                             quantity = item.Quantity,
                             price = item.UnitPrice
                         }).ToList()
@@ -140,6 +148,7 @@ namespace backend.Controllers
                     .Include(o => o.OrderItems)
                         .ThenInclude(oi => oi.ProductVariant)
                             .ThenInclude(pv => pv!.Product)
+                                .ThenInclude(p => p!.Images)
                     .FirstOrDefaultAsync(o => o.Id == id);
 
                 if (order == null)
@@ -179,6 +188,9 @@ namespace backend.Controllers
                         productName = item.ProductVariant != null && item.ProductVariant.Product != null 
                             ? item.ProductVariant.Product.Name 
                             : "Unknown Product",
+                        productImageUrl = item.ProductVariant != null && item.ProductVariant.Product != null && item.ProductVariant.Product.Images.Any()
+                            ? item.ProductVariant.Product.Images.OrderByDescending(img => img.IsMainImage).Select(img => img.ImageUrl).FirstOrDefault()
+                            : null,
                         quantity = item.Quantity,
                         price = item.UnitPrice
                     }).ToList()

@@ -12,6 +12,7 @@ interface OrderItem {
   productName: string;
   quantity: number;
   price: number;
+  productImageUrl?: string;
 }
 
 interface Order {
@@ -271,28 +272,47 @@ export default function OrderDetailPage() {
             <div style={{ marginBottom: 32 }}>
               <h2 style={{ fontSize: 16, fontWeight: 800, color: "#1C1C1E", margin: "0 0 16px" }}>Purchased Items</h2>
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                {order.items.map((item, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      borderBottom: idx === order.items.length - 1 ? "none" : "0.5px solid rgba(0,0,0,0.05)",
-                      paddingBottom: idx === order.items.length - 1 ? 0 : 16
-                    }}
-                  >
-                    <div>
-                      <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#1C1C1E" }}>{item.productName}</h4>
-                      <p style={{ margin: "4px 0 0", fontSize: 12, color: "#8E8E93" }}>
-                        Quantity: <span style={{ fontWeight: 600, color: "#1C1C1E" }}>{item.quantity}</span> × Rs. {item.price.toLocaleString()}
+                {order.items.map((item, idx) => {
+                  const img = item.productImageUrl || "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=600&auto=format&fit=crop";
+                  return (
+                    <div
+                      key={idx}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        borderBottom: idx === order.items.length - 1 ? "none" : "0.5px solid rgba(0,0,0,0.05)",
+                        paddingBottom: idx === order.items.length - 1 ? 0 : 16
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                        <div style={{
+                          width: 60,
+                          height: 75,
+                          borderRadius: 10,
+                          overflow: "hidden",
+                          border: "1px solid rgba(0,0,0,0.06)",
+                          flexShrink: 0
+                        }}>
+                          <img
+                            src={img}
+                            alt={item.productName}
+                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          />
+                        </div>
+                        <div>
+                          <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#1C1C1E" }}>{item.productName}</h4>
+                          <p style={{ margin: "4px 0 0", fontSize: 12, color: "#8E8E93" }}>
+                            Quantity: <span style={{ fontWeight: 600, color: "#1C1C1E" }}>{item.quantity}</span> × Rs. {item.price.toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                      <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: "#aa841c" }}>
+                        Rs. {(item.price * item.quantity).toLocaleString()}
                       </p>
                     </div>
-                    <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: "#aa841c" }}>
-                      Rs. {(item.price * item.quantity).toLocaleString()}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
