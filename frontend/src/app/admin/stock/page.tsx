@@ -595,20 +595,6 @@ export default function AdminStockPage() {
                   min="0"
                 />
               </div>
-
-              {/* Reserved Quantity — Read Only (Auto-managed by order system) */}
-              <div className="form-group">
-                <div className="readonly-info-box">
-                  <div className="readonly-info-header">
-                    <span className="readonly-info-icon">🔒</span>
-                    <div>
-                      <span className="readonly-info-title">Reserved Quantity (Auto-Managed)</span>
-                      <p className="readonly-info-desc">Automatically updated by the order system — increases when an order is placed, decreases when delivered or cancelled.</p>
-                    </div>
-                  </div>
-                  <div className="readonly-info-value">{configModal.variant.reservedQuantity} units currently reserved</div>
-                </div>
-              </div>
             </div>
 
             <div className="modal-actions">
