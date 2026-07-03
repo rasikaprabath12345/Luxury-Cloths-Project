@@ -186,7 +186,7 @@ export default function ProfilePage() {
         {/* ─── Cover Banner + Avatar ─── */}
         <div className="relative">
           {/* Banner */}
-          <div className="h-44 bg-gradient-to-br from-[#1C1C1E] via-[#2C2C2E] to-[#1C1C1E] relative overflow-hidden">
+          <div className="h-28 bg-gradient-to-br from-[#1C1C1E] via-[#2C2C2E] to-[#1C1C1E] relative overflow-hidden">
             {/* Decorative elements */}
             <div className="absolute inset-0 opacity-[0.07]"
               style={{
@@ -197,21 +197,21 @@ export default function ProfilePage() {
             <div className="absolute left-10 bottom-0 w-48 h-48 bg-[#d4af37]/8 rounded-full blur-[60px] pointer-events-none" />
             
             {/* Header Text */}
-            <div className="relative z-10 px-8 pt-6">
-              <span className="text-[10px] font-bold tracking-[0.2em] text-[#d4af37] uppercase block mb-1 font-montserrat">
+            <div className="relative z-10 px-8 pt-3.5">
+              <span className="text-[10px] font-bold tracking-[0.2em] text-[#d4af37] uppercase block mb-0.5 font-montserrat">
                 Member Area
               </span>
-              <h1 className="text-2xl font-bold font-playfair tracking-tight text-white">
+              <h1 className="text-lg font-bold font-playfair tracking-tight text-white">
                 Your Profile
               </h1>
-              <p className="text-gray-500 mt-1 text-[11px] font-montserrat font-light">
+              <p className="text-gray-500 mt-0.5 text-[9px] font-montserrat font-light">
                 Manage your personal details and profile photo
               </p>
             </div>
           </div>
 
           {/* Avatar - overlapping the banner */}
-          <div className="absolute -bottom-14 left-8">
+          <div className="absolute -bottom-10 left-8">
             <div
               className="relative group cursor-pointer"
               onClick={() => fileInputRef.current?.click()}
@@ -220,7 +220,7 @@ export default function ProfilePage() {
               onDragOver={handleDrag}
               onDrop={handleDrop}
             >
-              <div className={`w-28 h-28 rounded-full overflow-hidden border-4 border-white shadow-lg transition-all duration-300 ${dragActive ? 'ring-4 ring-[#aa841c]/40 scale-105' : ''}`}>
+              <div className={`w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-lg transition-all duration-300 ${dragActive ? 'ring-4 ring-[#aa841c]/40 scale-105' : ''}`}>
                 {(formData.avatar || user?.avatar) ? (
                   <img
                     src={formData.avatar || user?.avatar || ""}
@@ -300,8 +300,8 @@ export default function ProfilePage() {
         </div>
 
         {/* ─── User Info Section ─── */}
-        <div className="pt-18 px-8 pb-2">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-6" style={{ paddingTop: '60px' }}>
+        <div className="pt-6 px-8 pb-2">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-6" style={{ paddingTop: '30px' }}>
             <div>
               <h2 className="text-2xl font-bold font-playfair text-[#1C1C1E] leading-tight">
                 {user?.fullName}
@@ -348,39 +348,14 @@ export default function ProfilePage() {
         </div>
 
         {/* ─── Content ─── */}
-        <div className="px-8 pb-8">
-          {/* Image Upload Area (always visible) */}
-          <div className="mb-8 p-5 rounded-2xl border border-dashed border-gray-200 bg-[#FAFAF9] hover:border-[#aa841c]/30 hover:bg-[#aa841c]/[0.02] transition-all duration-300">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-[#aa841c]/8 flex items-center justify-center flex-shrink-0">
-                <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#aa841c" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                  <circle cx="8.5" cy="8.5" r="1.5" />
-                  <polyline points="21 15 16 10 5 21" />
-                </svg>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-[#1C1C1E] font-montserrat">Profile Photo</p>
-                <p className="text-[11px] text-gray-400 font-montserrat mt-0.5">
-                  Click avatar above or drag & drop an image. JPG, PNG, GIF or WebP · Max 5MB
-                </p>
-              </div>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-                className="px-4 py-2 bg-[#1C1C1E] text-white rounded-xl hover:bg-[#aa841c] disabled:opacity-50 text-[10px] font-bold tracking-wider uppercase font-montserrat transition-all duration-300 flex-shrink-0"
-              >
-                {isUploading ? "Uploading..." : "Upload Photo"}
-              </button>
-            </div>
-          </div>
+        <div className="px-8 pb-6">
 
           {/* Form / Details */}
           {isEditing ? (
-            <form onSubmit={handleSubmit} className="space-y-5 font-montserrat">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <form onSubmit={handleSubmit} className="space-y-3.5 font-montserrat">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="flex items-center gap-2 text-[10px] font-bold tracking-[0.15em] text-gray-400 uppercase mb-2.5">
+                  <label className="flex items-center gap-2 text-[10px] font-bold tracking-[0.15em] text-gray-400 uppercase mb-1.5">
                     <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#aa841c" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                       <circle cx="12" cy="7" r="4" />
@@ -392,14 +367,14 @@ export default function ProfilePage() {
                     name="fullName"
                     value={formData.fullName}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#aa841c]/15 focus:border-[#aa841c] text-sm text-gray-900 transition-all duration-200 bg-white"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#aa841c]/15 focus:border-[#aa841c] text-xs text-gray-900 transition-all duration-200 bg-white"
                     placeholder="John Doe"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="flex items-center gap-2 text-[10px] font-bold tracking-[0.15em] text-gray-400 uppercase mb-2.5">
+                  <label className="flex items-center gap-2 text-[10px] font-bold tracking-[0.15em] text-gray-400 uppercase mb-1.5">
                     <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#aa841c" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                       <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
                     </svg>
@@ -410,14 +385,14 @@ export default function ProfilePage() {
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#aa841c]/15 focus:border-[#aa841c] text-sm text-gray-900 transition-all duration-200 bg-white"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#aa841c]/15 focus:border-[#aa841c] text-xs text-gray-900 transition-all duration-200 bg-white"
                     placeholder="+94 77 123 4567"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="flex items-center gap-2 text-[10px] font-bold tracking-[0.15em] text-gray-400 uppercase mb-2.5">
+                <label className="flex items-center gap-2 text-[10px] font-bold tracking-[0.15em] text-gray-400 uppercase mb-1.5">
                   <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#aa841c" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
@@ -429,19 +404,19 @@ export default function ProfilePage() {
                   name="avatar"
                   value={formData.avatar}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#aa841c]/15 focus:border-[#aa841c] text-sm text-gray-900 transition-all duration-200 bg-white font-mono text-xs"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#aa841c]/15 focus:border-[#aa841c] text-xs text-gray-900 transition-all duration-200 bg-white font-mono text-[10px]"
                   placeholder="https://example.com/avatar.jpg"
                 />
-                <p className="text-[10px] text-gray-400 mt-1.5 font-montserrat">
-                  Or use the upload button above to add a photo directly
+                <p className="text-[9px] text-gray-400 mt-1 font-montserrat">
+                  Or click the avatar circle above to select a file directly
                 </p>
               </div>
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-3 pt-1">
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="flex-1 py-3.5 px-6 bg-gradient-to-r from-[#1C1C1E] to-[#2C2C2E] text-white rounded-xl hover:from-[#aa841c] hover:to-[#c9a534] disabled:opacity-50 font-bold text-[11px] tracking-[0.12em] uppercase transition-all duration-300 shadow-lg shadow-[#1C1C1E]/10 hover:shadow-[#aa841c]/20 flex items-center justify-center gap-2"
+                  className="flex-1 py-3 px-6 bg-gradient-to-r from-[#1C1C1E] to-[#2C2C2E] text-white rounded-xl hover:from-[#aa841c] hover:to-[#c9a534] disabled:opacity-50 font-bold text-[11px] tracking-[0.12em] uppercase transition-all duration-300 shadow-lg shadow-[#1C1C1E]/10 hover:shadow-[#aa841c]/20 flex items-center justify-center gap-2"
                 >
                   {isLoading ? (
                     <>
@@ -464,72 +439,72 @@ export default function ProfilePage() {
           ) : (
             <div className="space-y-0 font-montserrat">
               {/* Info Cards Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* Email */}
-                <div className="p-5 rounded-2xl bg-[#FAFAF9] border border-gray-100/80 hover:border-[#aa841c]/15 transition-all duration-300 group">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-9 h-9 rounded-xl bg-[#aa841c]/8 flex items-center justify-center group-hover:bg-[#aa841c]/12 transition-colors duration-300">
-                      <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="#aa841c" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                        <polyline points="22,6 12,13 2,6" />
-                      </svg>
-                    </div>
-                    <h3 className="text-[10px] font-bold tracking-[0.15em] text-gray-400 uppercase">Email Address</h3>
+                <div className="p-3 rounded-xl bg-[#FAFAF9] border border-gray-100/70 flex items-center gap-3.5 hover:border-[#aa841c]/15 transition-all duration-300 group">
+                  <div className="w-8 h-8 rounded-lg bg-[#aa841c]/8 flex items-center justify-center flex-shrink-0 group-hover:bg-[#aa841c]/12 transition-colors duration-300">
+                    <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#aa841c" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                      <polyline points="22,6 12,13 2,6" />
+                    </svg>
                   </div>
-                  <p className="text-[15px] text-[#1C1C1E] font-medium pl-12">{user?.email}</p>
+                  <div>
+                    <h3 className="text-[9px] font-bold tracking-[0.1em] text-gray-400 uppercase">Email Address</h3>
+                    <p className="text-xs text-[#1C1C1E] font-medium mt-0.5">{user?.email}</p>
+                  </div>
                 </div>
 
                 {/* Phone */}
-                <div className="p-5 rounded-2xl bg-[#FAFAF9] border border-gray-100/80 hover:border-[#aa841c]/15 transition-all duration-300 group">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-9 h-9 rounded-xl bg-[#aa841c]/8 flex items-center justify-center group-hover:bg-[#aa841c]/12 transition-colors duration-300">
-                      <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="#aa841c" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-[10px] font-bold tracking-[0.15em] text-gray-400 uppercase">Phone Number</h3>
+                <div className="p-3 rounded-xl bg-[#FAFAF9] border border-gray-100/70 flex items-center gap-3.5 hover:border-[#aa841c]/15 transition-all duration-300 group">
+                  <div className="w-8 h-8 rounded-lg bg-[#aa841c]/8 flex items-center justify-center flex-shrink-0 group-hover:bg-[#aa841c]/12 transition-colors duration-300">
+                    <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#aa841c" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+                    </svg>
                   </div>
-                  <p className="text-[15px] text-[#1C1C1E] font-medium pl-12">{user?.phone || "Not provided"}</p>
+                  <div>
+                    <h3 className="text-[9px] font-bold tracking-[0.1em] text-gray-400 uppercase">Phone Number</h3>
+                    <p className="text-xs text-[#1C1C1E] font-medium mt-0.5">{user?.phone || "Not provided"}</p>
+                  </div>
                 </div>
 
                 {/* Account Status */}
-                <div className="p-5 rounded-2xl bg-[#FAFAF9] border border-gray-100/80 hover:border-[#aa841c]/15 transition-all duration-300 group">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-9 h-9 rounded-xl bg-[#aa841c]/8 flex items-center justify-center group-hover:bg-[#aa841c]/12 transition-colors duration-300">
-                      <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="#aa841c" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-[10px] font-bold tracking-[0.15em] text-gray-400 uppercase">Account Status</h3>
+                <div className="p-3 rounded-xl bg-[#FAFAF9] border border-gray-100/70 flex items-center gap-3.5 hover:border-[#aa841c]/15 transition-all duration-300 group">
+                  <div className="w-8 h-8 rounded-lg bg-[#aa841c]/8 flex items-center justify-center flex-shrink-0 group-hover:bg-[#aa841c]/12 transition-colors duration-300">
+                    <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#aa841c" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    </svg>
                   </div>
-                  <div className="flex items-center gap-2 pl-12">
-                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                    <p className="text-[15px] text-[#aa841c] font-bold capitalize">{user?.role || "Customer"}</p>
+                  <div>
+                    <h3 className="text-[9px] font-bold tracking-[0.1em] text-gray-400 uppercase">Account Status</h3>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                      <p className="text-xs text-[#aa841c] font-bold capitalize">{user?.role || "Customer"}</p>
+                    </div>
                   </div>
                 </div>
 
                 {/* Member Since */}
-                <div className="p-5 rounded-2xl bg-[#FAFAF9] border border-gray-100/80 hover:border-[#aa841c]/15 transition-all duration-300 group">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-9 h-9 rounded-xl bg-[#aa841c]/8 flex items-center justify-center group-hover:bg-[#aa841c]/12 transition-colors duration-300">
-                      <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="#aa841c" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                        <line x1="16" y1="2" x2="16" y2="6" />
-                        <line x1="8" y1="2" x2="8" y2="6" />
-                        <line x1="3" y1="10" x2="21" y2="10" />
-                      </svg>
-                    </div>
-                    <h3 className="text-[10px] font-bold tracking-[0.15em] text-gray-400 uppercase">Joined</h3>
+                <div className="p-3 rounded-xl bg-[#FAFAF9] border border-gray-100/70 flex items-center gap-3.5 hover:border-[#aa841c]/15 transition-all duration-300 group">
+                  <div className="w-8 h-8 rounded-lg bg-[#aa841c]/8 flex items-center justify-center flex-shrink-0 group-hover:bg-[#aa841c]/12 transition-colors duration-300">
+                    <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#aa841c" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                      <line x1="16" y1="2" x2="16" y2="6" />
+                      <line x1="8" y1="2" x2="8" y2="6" />
+                      <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
                   </div>
-                  <p className="text-[15px] text-[#1C1C1E] font-medium pl-12">
-                    {user?.createdAt
-                      ? new Date(user.createdAt).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })
-                      : "Recently"}
-                  </p>
+                  <div>
+                    <h3 className="text-[9px] font-bold tracking-[0.1em] text-gray-400 uppercase">Joined</h3>
+                    <p className="text-xs text-[#1C1C1E] font-medium mt-0.5">
+                      {user?.createdAt
+                        ? new Date(user.createdAt).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })
+                        : "Recently"}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

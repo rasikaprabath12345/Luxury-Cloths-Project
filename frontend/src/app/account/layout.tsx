@@ -42,7 +42,7 @@ export default function AccountLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-[#F9F8F6] py-12 md:py-16">
+    <div className="min-h-screen bg-[#F9F8F6] py-8 md:py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           {/* Sidebar */}
