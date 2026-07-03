@@ -416,7 +416,7 @@ export default function AdminProductsPage() {
                   alt={product.name}
                   onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=600&auto=format&fit=crop"; }}
                 />
-                {product.discount > 0 && <span className="grid-discount-badge">{product.discount}% OFF</span>}
+                {(product.discount ?? 0) > 0 && <span className="grid-discount-badge">{product.discount}% OFF</span>}
               </div>
               <div className="product-card-info">
                 <div className="grid-category">{getCategoryName(product.categoryId)}</div>
