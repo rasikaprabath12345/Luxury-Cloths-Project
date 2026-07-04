@@ -32,6 +32,16 @@ export default function CartPage() {
   const [orderNote, setOrderNote] = useState<string>("");
   const [paymentSlipUrl, setPaymentSlipUrl] = useState<string>("");
   const [uploadingSlip, setUploadingSlip] = useState<boolean>(false);
+  const [alertState, setAlertState] = useState<{
+    show: boolean;
+    message: string;
+    isError?: boolean;
+    onClose?: () => void;
+  } | null>(null);
+
+  const triggerAlert = (message: string, isError: boolean = false, onClose?: () => void) => {
+    setAlertState({ show: true, message, isError, onClose });
+  };
 
   useEffect(() => {
     const savedUserStr = localStorage.getItem("luxury_user");
@@ -88,7 +98,7 @@ export default function CartPage() {
     if (coupon.trim().toUpperCase() === "LUXURY10") {
       setCouponApplied(true);
     } else {
-      alert("Invalid coupon code. Try LUXURY10 for 10% off.");
+      triggerAlert("Invalid coupon code. Try LUXURY10 for 10% off.", true);
     }
   };
 
@@ -100,10 +110,10 @@ export default function CartPage() {
     try {
       const uploadRes = await uploadAPI.uploadImage(file);
       setPaymentSlipUrl(uploadRes.data.url);
-      alert("🎉 Receipt uploaded successfully!");
+      triggerAlert("🎉 Receipt uploaded successfully!");
     } catch (error: any) {
       console.error("Receipt upload failed:", error);
-      alert(error.response?.data?.message || "Failed to upload receipt. Please try again.");
+      triggerAlert(error.response?.data?.message || "Failed to upload receipt. Please try again.", true);
     } finally {
       setUploadingSlip(false);
       e.target.value = "";
@@ -120,9 +130,10 @@ export default function CartPage() {
     // Legacy cart safeguard
     const hasLegacy = cartItems.some(item => !item.variantId || item.variantId === item.id);
     if (hasLegacy) {
-      alert("Your cart contains outdated items. The cart will be cleared. Please add the items to the cart again.");
-      clearCart();
-      router.push("/storefront/shop");
+      triggerAlert("Your cart contains outdated items. The cart will be cleared. Please add the items to the cart again.", true, () => {
+        clearCart();
+        router.push("/storefront/shop");
+      });
       return;
     }
 
@@ -130,46 +141,47 @@ export default function CartPage() {
     const savedUserStr = localStorage.getItem("luxury_user");
     const token = localStorage.getItem("luxury_token");
     if (!savedUserStr || !token) {
-      alert("Please log in to place an order.");
-      router.push("/auth/login");
+      triggerAlert("Please log in to place an order.", true, () => {
+        router.push("/auth/login");
+      });
       return;
     }
 
     if (!firstName.trim()) {
-      alert("Please enter your first name.");
+      triggerAlert("Please enter your first name.", true);
       return;
     }
     if (!lastName.trim()) {
-      alert("Please enter your last name.");
+      triggerAlert("Please enter your last name.", true);
       return;
     }
     if (!email.trim()) {
-      alert("Please enter your email address.");
+      triggerAlert("Please enter your email address.", true);
       return;
     }
     if (!phone.trim()) {
-      alert("Please enter your phone number.");
+      triggerAlert("Please enter your phone number.", true);
       return;
     }
     if (!country.trim()) {
-      alert("Please enter your country.");
+      triggerAlert("Please enter your country.", true);
       return;
     }
     if (!state.trim()) {
-      alert("Please enter your state or province.");
+      triggerAlert("Please enter your state or province.", true);
       return;
     }
     if (!city.trim()) {
-      alert("Please enter your city.");
+      triggerAlert("Please enter your city.", true);
       return;
     }
     if (!address.trim()) {
-      alert("Please enter your street address.");
+      triggerAlert("Please enter your street address.", true);
       return;
     }
 
     if (paymentMethod === "BankTransfer" && !paymentSlipUrl) {
-      alert("Please upload your bank deposit receipt/slip.");
+      triggerAlert("Please upload your bank deposit receipt/slip.", true);
       return;
     }
 
@@ -202,16 +214,17 @@ export default function CartPage() {
         }
       });
       if (response.status === 200 || response.status === 201) {
-        alert("🎉 " + (response.data.message || "Order placed successfully!"));
-        clearCart();
-        router.push("/orders");
+        triggerAlert("🎉 " + (response.data.message || "Order placed successfully!"), false, () => {
+          clearCart();
+          router.push("/orders");
+        });
       }
     } catch (error: any) {
       console.error("Order failed:", error);
       const errorMsg = typeof error.response?.data === "string"
         ? error.response.data
         : (error.response?.data?.message || "Order failed. Please try again.");
-      alert(errorMsg);
+      triggerAlert(errorMsg, true);
     } finally {
       setIsOrdering(false);
     }
@@ -1191,12 +1204,127 @@ export default function CartPage() {
 
           </div>
         )}
+
+        {/* Custom Premium Alert Modal */}
+        {alertState?.show && (
+          <div className="custom-alert-overlay">
+            <div className="custom-alert-modal">
+              <div className="custom-alert-header">
+                <div className="custom-alert-icon-container" style={{
+                  background: alertState.isError ? "#FDF2F2" : "#FEF9E7",
+                  color: alertState.isError ? "#FF4B4B" : "#aa841c"
+                }}>
+                  {alertState.isError ? "⚠️" : "✨"}
+                </div>
+                <h3 className="custom-alert-title">
+                  {alertState.isError ? "Notification" : "Success"}
+                </h3>
+              </div>
+              <p className="custom-alert-message">{alertState.message}</p>
+              <button
+                className="custom-alert-btn"
+                onClick={() => {
+                  setAlertState(null);
+                  if (alertState.onClose) alertState.onClose();
+                }}
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Styled classes and keyframe animations */}
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes modalScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        .custom-alert-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 9999;
+          background: rgba(0, 0, 0, 0.4);
+          backdrop-filter: blur(6px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          animation: fadeIn 0.3s ease-out;
+        }
+
+        .custom-alert-modal {
+          background: #FFFFFF;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+          border-radius: 32px;
+          padding: 32px 24px;
+          width: 90%;
+          max-width: 350px;
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          animation: modalScale 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .custom-alert-header {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          margin-bottom: 16px;
+        }
+
+        .custom-alert-icon-container {
+          width: 72px;
+          height: 72px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 28px;
+          margin-bottom: 16px;
+        }
+
+        .custom-alert-title {
+          font-size: 22px;
+          font-weight: 700;
+          color: #111827;
+          margin: 0;
+          font-family: var(--font-body), -apple-system, BlinkMacSystemFont, sans-serif;
+          letter-spacing: -0.2px;
+        }
+
+        .custom-alert-message {
+          font-size: 14px;
+          line-height: 1.5;
+          color: #6B7280;
+          margin: 0 0 24px;
+          max-width: 300px;
+          font-family: var(--font-body), -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .custom-alert-btn {
+          width: 100%;
+          height: 48px;
+          background: #A83232;
+          color: white;
+          border: none;
+          border-radius: 14px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .custom-alert-btn:hover {
+          background: #902B2B;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(168, 50, 50, 0.2);
+        }
+
+        .custom-alert-btn:active {
+          transform: translateY(0);
+        }
 
         .slip-upload-zone:hover {
           border-color: rgba(170,132,28,0.6) !important;

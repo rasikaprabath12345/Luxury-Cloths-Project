@@ -404,7 +404,7 @@ export default function WishlistPage() {
             }}>
               ⚠️
             </div>
-            
+
             {/* Modal Heading & Description */}
             <div>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "#1C1C1E" }}>Clear Wishlist</h3>

@@ -326,12 +326,12 @@ namespace backend.Controllers
                 // ට්‍රාන්සෙක්ෂන් එක සාර්ථකව අවසන් කිරීම
                 await transaction.CommitAsync();
 
-                return Ok(new { message = "ඇණවුම සාර්ථකව සිදු කරන ලදී!", orderId = newOrder.Id });
+                return Ok(new { message = "Order placed successfully!", orderId = newOrder.Id });
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                return StatusCode(500, $"ඇණවුම සිදු කිරීමට නොහැකි විය: {ex.Message}");
+                return StatusCode(500, $"Failed to place order: {ex.Message}");
             }
         }
 
