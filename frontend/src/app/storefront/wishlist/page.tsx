@@ -70,7 +70,7 @@ export default function WishlistPage() {
   return (
     <div style={{
       position: "relative", minHeight: "100vh", background: "#F4F4F6",
-      paddingTop: 24, paddingBottom: 80, fontFamily: "var(--font-body)"
+      paddingTop: 4, paddingBottom: 80, fontFamily: "var(--font-body)"
     }}>
       {/* Dynamic blurred gold background blobs */}
       <div style={{
@@ -95,8 +95,8 @@ export default function WishlistPage() {
 
         {/* Navigation & Header */}
         <div style={{
-          display: "flex", flexDirection: "column", gap: 8, marginBottom: 20,
-          borderBottom: "1px solid rgba(0,0,0,0.05)", paddingBottom: 24
+          display: "flex", flexDirection: "column", gap: 6, marginBottom: 12,
+          borderBottom: "1px solid rgba(0,0,0,0.05)", paddingBottom: 12
         }}>
           <Link href="/storefront/shop" style={{
             display: "inline-flex", alignItems: "center", gap: 8, textDecoration: "none",
@@ -194,27 +194,27 @@ export default function WishlistPage() {
                       style={{
                         ...glass.card,
                         display: "flex",
-                        gap: 16,
-                        padding: "12px 18px",
+                        gap: 12,
+                        padding: "8px 12px",
                         border: "1px solid rgba(255,255,255,0.9)",
                         background: "rgba(255,255,255,0.65)"
                       }}
                       className="wishlist-item-card"
                     >
-                      {/* Image with hover transition (Compact Size) */}
+                      {/* Image with hover transition (Ultra Compact Size) */}
                       <div style={{
                         position: "relative",
                         flexShrink: 0,
-                        borderRadius: 12,
+                        borderRadius: 10,
                         overflow: "hidden",
                         border: "1px solid rgba(0,0,0,0.06)",
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.03)"
+                        boxShadow: "0 1px 6px rgba(0,0,0,0.03)"
                       }} className="wishlist-img-box">
                         <img
                           src={img}
                           alt={item.name}
                           style={{
-                            width: 80, height: 100, objectFit: "cover",
+                            width: 65, height: 80, objectFit: "cover",
                             transition: "transform 0.4s ease-out"
                           }}
                           className="wishlist-item-image"
@@ -225,11 +225,11 @@ export default function WishlistPage() {
                       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", minWidth: 0 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
                           <div>
-                            <h3 style={{ margin: 0, fontSize: 14.5, fontWeight: 700, color: "#1C1C1E", lineHeight: 1.3 }}>
+                            <h3 style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: "#1C1C1E", lineHeight: 1.3 }}>
                               {item.name}
                             </h3>
                             <p style={{
-                              margin: "3px 0 0", fontSize: 11, fontWeight: 700,
+                              margin: "2px 0 0", fontSize: 10.5, fontWeight: 700,
                               color: isOutOfStock ? "#FF3B30" : "#34C759"
                             }}>
                               {isOutOfStock ? "Out of Stock" : "In Stock"}
@@ -240,20 +240,20 @@ export default function WishlistPage() {
                             onClick={() => removeFromWishlist(item.id)}
                             style={{
                               background: "rgba(255,59,48,0.06)", border: "none",
-                              width: 28, height: 28, borderRadius: "50%",
+                              width: 24, height: 24, borderRadius: "50%",
                               display: "flex", alignItems: "center", justifyContent: "center",
                               cursor: "pointer", transition: "all 0.2s"
                             }}
                             className="remove-item-btn"
                           >
-                            <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#FF3B30" strokeWidth={2.5}>
+                            <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="#FF3B30" strokeWidth={2.5}>
                               <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" strokeLinecap="round" strokeLinejoin="round"/>
                             </svg>
                           </button>
                         </div>
 
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 12 }}>
-                          <span style={{ fontSize: 16, fontWeight: 800, color: "#1C1C1E", fontFamily: "var(--font-display)" }}>
+                          <span style={{ fontSize: 14.5, fontWeight: 800, color: "#1C1C1E", fontFamily: "var(--font-display)" }}>
                             Rs. {item.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                           </span>
 
@@ -262,9 +262,9 @@ export default function WishlistPage() {
                             disabled={isOutOfStock}
                             style={{
                               background: "linear-gradient(135deg, #d4af37 0%, #aa841c 100%)",
-                              color: "#fff", border: "none", borderRadius: 8,
-                              padding: "6px 14px", fontSize: 11, fontWeight: 700,
-                              cursor: "pointer", boxShadow: "0 2px 6px rgba(170,132,28,0.15)",
+                              color: "#fff", border: "none", borderRadius: 6,
+                              padding: "4px 10px", fontSize: 10, fontWeight: 700,
+                              cursor: "pointer", boxShadow: "0 2px 4px rgba(170,132,28,0.12)",
                               transition: "all 0.2s", opacity: isOutOfStock ? 0.5 : 1
                             }}
                             className="move-cart-btn"
