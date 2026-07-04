@@ -8,6 +8,7 @@ import WishlistDrawer from "@/components/WishlistDrawer";
 import { useAuth } from "@/context/AuthContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { useCart } from "@/context/CartContext";
+import { showStorefrontToast } from "@/utils/toast";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 const NAV_TABS = [
@@ -1251,13 +1252,31 @@ export default function Navbar() {
               <IconBtnLabeled
                 label="Wishlist"
                 badge={wishlistCount}
-                onClick={() => setIsWishlistDrawerOpen(!isWishlistDrawerOpen)}
+                onClick={() => {
+                  if (!user) {
+                    showStorefrontToast("Please login or signup to view your wishlist.", "info");
+                    setTimeout(() => {
+                      window.location.href = "/auth/login";
+                    }, 1500);
+                  } else {
+                    setIsWishlistDrawerOpen(!isWishlistDrawerOpen);
+                  }
+                }}
                 icon={<WishlistIcon />}
               />
               <IconBtnLabeled
                 label="Cart"
                 badge={cartCount}
-                onClick={() => setIsDrawerOpen(!isDrawerOpen)}
+                onClick={() => {
+                  if (!user) {
+                    showStorefrontToast("Please login or signup to view your cart.", "info");
+                    setTimeout(() => {
+                      window.location.href = "/auth/login";
+                    }, 1500);
+                  } else {
+                    setIsDrawerOpen(!isDrawerOpen);
+                  }
+                }}
                 icon={<CartIcon />}
               />
 
