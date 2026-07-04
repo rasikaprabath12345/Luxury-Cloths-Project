@@ -186,16 +186,13 @@ export default function CartPage() {
       return;
     }
 
-    // ✅ Pre-flight stock check — catches out-of-stock items before hitting the API
-    const outOfStockItems = cartItems.filter(
-      (item) => item.availableStock !== undefined && (item.quantity || 1) > item.availableStock
-    );
-    if (outOfStockItems.length > 0) {
-      const names = outOfStockItems
-        .map((item) => `"${item.name}${item.size ? ` (${item.size})` : ``}"`)
-        .join(", ");
+
+    // ✅ Pre-flight: block items with quantity = 0
+    const zeroQtyItems = cartItems.filter((item) => (item.quantity || 0) <= 0);
+    if (zeroQtyItems.length > 0) {
+      const names = zeroQtyItems.map((item) => `"${item.name}${item.size ? ` (${item.size})` : ""}"`).join(", ");
       triggerAlert(
-        `Some items in your cart are out of stock or exceed available quantity: ${names}. Please update your cart before placing the order.`,
+        `The following items are out of stock (quantity 0): ${names}. Please remove them before placing the order.`,
         true
       );
       return;
@@ -203,7 +200,63 @@ export default function CartPage() {
 
     const user = JSON.parse(savedUserStr);
     setIsOrdering(true);
+
     try {
+      // ✅ Live stock validation — fetch fresh stock data from server for each product
+      const uniqueProductIds = [...new Set(cartItems.map((item) => item.id))];
+      const stockResults: Record<number, number> = {}; // variantId -> availableStock
+
+      await Promise.all(
+        uniqueProductIds.map(async (productId) => {
+          try {
+            const res = await axios.get(`http://localhost:5226/api/Stock/${productId}`);
+            const variants = res.data?.variants || [];
+            variants.forEach((v: { variantId: number; availableStock: number }) => {
+              stockResults[v.variantId] = v.availableStock;
+            });
+          } catch {
+            // If stock fetch fails for a product, skip — let the server decide
+          }
+        })
+      );
+
+      // Check each cart item against live stock
+      const stockFailures: string[] = [];
+      for (const item of cartItems) {
+        const variantId = item.variantId;
+        if (variantId !== undefined && stockResults[variantId] !== undefined) {
+          const liveStock = stockResults[variantId];
+          if ((item.quantity || 1) > liveStock) {
+            stockFailures.push(
+              `"${item.name}${item.size ? ` (${item.size})` : ""}" — requested: ${item.quantity}, available: ${liveStock}`
+            );
+          }
+        }
+      }
+
+      if (stockFailures.length > 0) {
+        triggerAlert(
+          `The following items exceed available stock:\n${stockFailures.join("\n")}\n\nPlease reduce quantity or remove these items.`,
+          true
+        );
+        setIsOrdering(false);
+        return;
+      }
+
+      // Build payload — skip any items with quantity <= 0 as a final safety net
+      const validItems = cartItems
+        .filter((item) => (item.quantity || 0) > 0)
+        .map((item) => ({
+          productVariantId: item.variantId,
+          quantity: item.quantity || 1,
+        }));
+
+      if (validItems.length === 0) {
+        triggerAlert("Your cart has no valid items to order.", true);
+        setIsOrdering(false);
+        return;
+      }
+
       const orderData = {
         userId: user.id,
         paymentMethod,
@@ -219,11 +272,9 @@ export default function CartPage() {
         orderNote,
         shippingAddress: `${address}, ${city}, ${state}, ${country}. Postal Code: ${postalCode}`,
         paymentSlipUrl,
-        items: cartItems.map(item => ({
-          productVariantId: item.variantId,
-          quantity: item.quantity || 1,
-        })),
+        items: validItems,
       };
+
       const response = await axios.post("http://localhost:5226/api/Orders", orderData, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -438,9 +489,11 @@ export default function CartPage() {
                   const img = item.imageUrl || item.image || PLACEHOLDER_IMG;
                   const itemKey = `${item.id}-${item.size || ''}-${item.color || ''}`;
                   const isRemoving = removingId === itemKey;
+                  const isOverStock = item.availableStock !== undefined && item.availableStock > 0 && (item.quantity || 1) > item.availableStock;
                   return (
                     <div
                       key={itemKey}
+                      className="cart-item-card"
                       style={{
                         ...glass.card,
                         display: "flex",
@@ -449,12 +502,12 @@ export default function CartPage() {
                         opacity: isRemoving ? 0 : 1,
                         transform: isRemoving ? "scale(0.96) translateY(-12px)" : "scale(1)",
                         transition: "all 0.38s cubic-bezier(0.16, 1, 0.3, 1)",
-                        border: "1px solid rgba(255,255,255,0.9)",
-                        background: "rgba(255,255,255,0.65)"
+                        border: isOverStock ? "1.5px solid rgba(255,59,48,0.35)" : "1px solid rgba(255,255,255,0.9)",
+                        background: isOverStock ? "rgba(255,59,48,0.02)" : "rgba(255,255,255,0.65)"
                       }}
-                      className="cart-item-card"
                     >
                       {/* Image container with zoom hover */}
+
                       <div style={{
                         position: "relative",
                         flexShrink: 0,
@@ -513,12 +566,19 @@ export default function CartPage() {
                                   padding: "2px 8px", borderRadius: 6
                                 }}>Color: {item.color}</span>
                               )}
-                              {item.availableStock !== undefined && item.availableStock <= 5 && item.availableStock > 0 && (
+                              {item.availableStock !== undefined && item.availableStock <= 5 && item.availableStock > 0 && !isOverStock && (
                                 <span style={{
                                   fontSize: 10, fontWeight: 600, color: "#FF9500",
                                   background: "rgba(255,149,0,0.1)", border: "0.5px solid rgba(255,149,0,0.2)",
                                   padding: "2px 8px", borderRadius: 6
                                 }}>Only {item.availableStock} left</span>
+                              )}
+                              {isOverStock && (
+                                <span style={{
+                                  fontSize: 10, fontWeight: 600, color: "#FF3B30",
+                                  background: "rgba(255,59,48,0.1)", border: "0.5px solid rgba(255,59,48,0.25)",
+                                  padding: "2px 8px", borderRadius: 6
+                                }}>⚠ Only {item.availableStock} available</span>
                               )}
                               {item.availableStock !== undefined && item.availableStock <= 0 && (
                                 <span style={{
@@ -527,6 +587,7 @@ export default function CartPage() {
                                   padding: "2px 8px", borderRadius: 6
                                 }}>Out of stock</span>
                               )}
+
                             </div>
                           </div>
 
