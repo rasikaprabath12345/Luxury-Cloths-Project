@@ -2,6 +2,18 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { signIn as nextAuthSignIn, signOut as nextAuthSignOut, useSession } from "next-auth/react";
 import { authAPI } from "@/lib/api";
+import { md5 } from "@/utils/md5";
+
+function getAvatar(avatar: string | undefined | null, email: string, googleImage?: string | null): string {
+    if (avatar && avatar.trim() !== "") {
+        return avatar;
+    }
+    if (googleImage && googleImage.trim() !== "") {
+        return googleImage;
+    }
+    const cleanEmail = (email || "").trim().toLowerCase();
+    return `https://www.gravatar.com/avatar/${md5(cleanEmail)}?d=identicon`;
+}
 
 export interface User {
     id: number;
@@ -53,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     fullName: (session as any).fullName || session.user?.name || "",
                     email: session.user?.email || "",
                     role: ((session as any).role || "customer").toLowerCase() as "admin" | "customer",
-                    avatar: (session as any).avatar || session.user?.image || "",
+                    avatar: getAvatar((session as any).avatar || session.user?.image, session.user?.email || "", session.user?.image),
                 };
                 setUser(userData);
                 setToken((session as any).backendToken);
@@ -160,6 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 fullName: data.fullName,
                 email: data.email,
                 role: data.role.toLowerCase(),
+                avatar: getAvatar(data.avatar, data.email, session?.user?.image),
             };
 
             setUser(userData);
@@ -255,7 +268,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 fullName: response.data.fullName,
                 email: response.data.email,
                 phone: response.data.phone,
-                avatar: response.data.avatar,
+                avatar: getAvatar(response.data.avatar, response.data.email, session?.user?.image),
                 role: response.data.role.toLowerCase(),
                 createdAt: response.data.createdAt,
             };
@@ -280,7 +293,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 fullName: response.data.user.fullName,
                 email: response.data.user.email,
                 phone: response.data.user.phone,
-                avatar: response.data.user.avatar,
+                avatar: getAvatar(response.data.user.avatar, response.data.user.email, session?.user?.image),
                 role: response.data.user.role.toLowerCase(),
                 createdAt: response.data.user.createdAt,
             };
