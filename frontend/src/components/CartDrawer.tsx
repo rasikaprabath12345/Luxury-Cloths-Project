@@ -5,12 +5,14 @@ import { useWishlist } from "../context/WishlistContext";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { showStorefrontToast } from "@/utils/toast";
+import axios from "axios";
 
 export default function CartDrawer({ onClose }: { onClose: () => void }) {
     const { cartItems, updateQuantity, removeFromCart } = useCart();
     const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
     const router = useRouter();
     const [removingId, setRemovingId] = useState<string | null>(null);
+    const [liveStockMap, setLiveStockMap] = useState<Record<number, number>>({});
 
     useEffect(() => {
         document.body.style.overflow = "hidden";
@@ -18,6 +20,27 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
             document.body.style.overflow = "unset";
         };
     }, []);
+
+    // Fetch live stock for all cart items on mount/cart change
+    useEffect(() => {
+        if (cartItems.length === 0) return;
+        const uniqueProductIds = [...new Set(cartItems.map((item) => item.id))];
+        
+        uniqueProductIds.forEach((productId) => {
+            axios.get(`http://localhost:5226/api/Stock/${productId}`)
+                .then((res) => {
+                    const variants = res.data?.variants || [];
+                    const stockUpdates: Record<number, number> = {};
+                    variants.forEach((v: { variantId: number; availableStock: number }) => {
+                        stockUpdates[v.variantId] = v.availableStock;
+                    });
+                    setLiveStockMap(prev => ({ ...prev, ...stockUpdates }));
+                })
+                .catch((err) => {
+                    console.error("Failed to load live stock in CartDrawer:", err);
+                });
+        });
+    }, [cartItems]);
 
     const totalPrice = cartItems.reduce(
         (acc, item: any) => acc + item.price * (item.quantity || 1),
@@ -165,6 +188,13 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                                             const itemKey = getItemKey(item);
                                             const isSelected = selectedItems.includes(itemKey);
 
+                                            // Derive live stock levels
+                                            const liveStock = item.variantId !== undefined && liveStockMap[item.variantId] !== undefined
+                                                ? liveStockMap[item.variantId]
+                                                : item.availableStock;
+
+                                            const isOutOfStock = liveStock !== undefined && liveStock <= 0;
+
                                             return (
                                                 <div key={itemKey} className="ali-item-row" style={{ opacity: removingId === itemKey ? 0.3 : 1, transition: "opacity 0.3s" }}>
                                                     <input
@@ -176,10 +206,10 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
 
                                                     <div className="ali-item-img-container">
                                                         <img src={itemImg} alt={item.name} className="ali-item-img" />
-                                                        {item.availableStock !== undefined && item.availableStock <= 5 && item.availableStock > 0 && (
-                                                            <div className="ali-item-img-overlay">Only {item.availableStock} left</div>
+                                                        {liveStock !== undefined && liveStock <= 5 && liveStock > 0 && (
+                                                            <div className="ali-item-img-overlay">Only {liveStock} left</div>
                                                         )}
-                                                        {item.availableStock !== undefined && item.availableStock <= 0 && (
+                                                        {isOutOfStock && (
                                                             <div className="ali-item-img-overlay" style={{ background: "rgba(255, 59, 48, 0.85)" }}>Sold Out</div>
                                                         )}
                                                     </div>
@@ -227,9 +257,9 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                                                                 <span className="ali-discount-tag">Save LKR {(originalPrice - item.price).toLocaleString()}</span>
                                                             </div>
                                                             <div className="ali-qty-controls">
-                                                                <button className="ali-qty-btn" disabled={itemQuantity <= 1} onClick={() => updateQuantity(item.id, itemQuantity - 1, item.size, item.color)}>−</button>
+                                                                <button className="ali-qty-btn" disabled={itemQuantity <= 1 || isOutOfStock} onClick={() => updateQuantity(item.id, itemQuantity - 1, item.size, item.color)}>−</button>
                                                                 <span className="ali-qty-val">{itemQuantity}</span>
-                                                                <button className="ali-qty-btn" disabled={item.availableStock !== undefined && itemQuantity >= item.availableStock} onClick={() => updateQuantity(item.id, itemQuantity + 1, item.size, item.color)}>+</button>
+                                                                <button className="ali-qty-btn" disabled={isOutOfStock || (liveStock !== undefined && itemQuantity >= liveStock)} onClick={() => updateQuantity(item.id, itemQuantity + 1, item.size, item.color)}>+</button>
                                                             </div>
                                                         </div>
 
