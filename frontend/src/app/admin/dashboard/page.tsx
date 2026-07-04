@@ -848,9 +848,9 @@ export default function AdminDashboard() {
                     <line x1="40" y1="150" x2="480" y2="150" stroke="#cbd5e1" strokeWidth="1.5" />
                     
                     {/* Y Axis helper labels */}
-                    <text x="32" y="44" className="chart-axis-label" textAnchor="end">{formatCurrency(maxAmount).split(".")[0]}</text>
-                    <text x="32" y="99" className="chart-axis-label" textAnchor="end">{formatCurrency(maxAmount / 2).split(".")[0]}</text>
-                    <text x="32" y="154" className="chart-axis-label" textAnchor="end">Rs.0</text>
+                    <text x="32" y="44" className="chart-axis-label" textAnchor="end">Rs. {Math.round(maxAmount).toLocaleString()}</text>
+                    <text x="32" y="99" className="chart-axis-label" textAnchor="end">Rs. {Math.round(maxAmount / 2).toLocaleString()}</text>
+                    <text x="32" y="154" className="chart-axis-label" textAnchor="end">Rs. 0</text>
 
                     {/* Gradient Area */}
                     {areaD && <path d={areaD} fill="url(#chartGrad)" />}
@@ -1130,8 +1130,8 @@ export default function AdminDashboard() {
         .chart-svg { width: 100%; height: auto; display: block; overflow: visible; }
         .chart-axis-label { font-size: 8px; fill: var(--admin-text-muted); font-family: var(--font-body); font-weight: 500; }
         .chart-hover-trigger { cursor: pointer; }
-        .chart-dot-group circle { transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), r 0.2s; }
-        .chart-dot-group:hover circle:first-child { r: 7.5; transform: scale(1.2); }
+        .chart-dot-group circle { transition: r 0.2s ease; }
+        .chart-dot-group:hover circle:first-child { r: 8; }
 
         /* Empty box */
         .empty-box { text-align: center; padding: 40px 20px; color: var(--admin-text-muted); }
