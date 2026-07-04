@@ -38,6 +38,7 @@ export default function CartPage() {
     isError?: boolean;
     onClose?: () => void;
   } | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const triggerAlert = (message: string, isError: boolean = false, onClose?: () => void) => {
     setAlertState({ show: true, message, isError, onClose });
@@ -370,7 +371,7 @@ export default function CartPage() {
             </div>
             {cartItems.length > 0 && (
               <button
-                onClick={clearCart}
+                onClick={() => setShowClearConfirm(true)}
                 style={{
                   background: "transparent", border: "none", color: "#FF3B30",
                   fontSize: 13, fontWeight: 600, cursor: "pointer",
@@ -1254,6 +1255,55 @@ export default function CartPage() {
               >
                 OK
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Clear Cart Confirmation Modal */}
+        {showClearConfirm && (
+          <div className="custom-alert-overlay" onClick={() => setShowClearConfirm(false)}>
+            <div
+              className="custom-alert-modal"
+              onClick={(e) => e.stopPropagation()}
+              style={{ maxWidth: 340 }}
+            >
+              <div className="custom-alert-header">
+                <div className="custom-alert-icon-container" style={{ background: "#FDF2F2", color: "#FF4B4B" }}>
+                  🗑️
+                </div>
+                <h3 className="custom-alert-title">Clear Cart?</h3>
+              </div>
+              <p className="custom-alert-message" style={{ color: "#555", lineHeight: 1.6 }}>
+                Are you sure you want to remove all items from your cart? This action cannot be undone.
+              </p>
+              <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+                <button
+                  onClick={() => setShowClearConfirm(false)}
+                  style={{
+                    flex: 1, padding: "12px 0", borderRadius: 14,
+                    border: "1.5px solid #E5E5EA", background: "#fff",
+                    fontSize: 14, fontWeight: 700, color: "#444", cursor: "pointer",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    clearCart();
+                    setShowClearConfirm(false);
+                  }}
+                  style={{
+                    flex: 1, padding: "12px 0", borderRadius: 14,
+                    border: "none", background: "#FF4B4B",
+                    fontSize: 14, fontWeight: 700, color: "#fff", cursor: "pointer",
+                    boxShadow: "0 4px 14px rgba(255,75,75,0.3)",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  Yes, Clear
+                </button>
+              </div>
             </div>
           </div>
         )}
