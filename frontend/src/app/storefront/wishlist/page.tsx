@@ -12,6 +12,7 @@ export default function WishlistPage() {
   const { wishlistItems, removeFromWishlist, clearWishlist } = useWishlist();
   const { addToCart } = useCart();
   const [copied, setCopied] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const handleMoveToCart = (item: any) => {
     const firstAvailableVariant = item.variants?.find((v: any) => v.stockQuantity > 0) || item.variants?.[0];
@@ -33,6 +34,7 @@ export default function WishlistPage() {
   };
 
   const handleAddAllToCart = () => {
+    if (hasOutOfStockItems) return;
     let addedCount = 0;
     wishlistItems.forEach((item) => {
       const firstAvailableVariant = item.variants?.find((v: any) => v.stockQuantity > 0) || item.variants?.[0];
@@ -65,7 +67,14 @@ export default function WishlistPage() {
     }
   };
 
+  const handleClearAll = () => {
+    setShowConfirmModal(true);
+  };
+
   const totalPrice = wishlistItems.reduce((sum, item) => sum + item.price, 0);
+  const hasOutOfStockItems = wishlistItems.some(
+    (item) => item.variants && item.variants.length > 0 && item.variants.every((v: any) => v.stockQuantity === 0)
+  );
 
   return (
     <div style={{
@@ -120,7 +129,7 @@ export default function WishlistPage() {
             </div>
             {wishlistItems.length > 0 && (
               <button
-                onClick={clearWishlist}
+                onClick={handleClearAll}
                 style={{
                   background: "transparent", border: "none", color: "#FF3B30",
                   fontSize: 13, fontWeight: 600, cursor: "pointer",
@@ -303,14 +312,16 @@ export default function WishlistPage() {
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   <button
                     onClick={handleAddAllToCart}
+                    disabled={hasOutOfStockItems}
                     style={{
                       background: "linear-gradient(135deg, #d4af37 0%, #aa841c 100%)",
                       color: "#fff", border: "none", borderRadius: 12,
                       padding: "12px 20px", fontSize: 12.5, fontWeight: 700,
-                      cursor: "pointer", transition: "all 0.25s ease",
-                      boxShadow: "0 4px 12px rgba(170,132,28,0.15)",
+                      cursor: hasOutOfStockItems ? "not-allowed" : "pointer", transition: "all 0.25s ease",
+                      boxShadow: hasOutOfStockItems ? "none" : "0 4px 12px rgba(170,132,28,0.15)",
                       display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                      width: "100%", letterSpacing: "0.2px", textTransform: "uppercase"
+                      width: "100%", letterSpacing: "0.2px", textTransform: "uppercase",
+                      opacity: hasOutOfStockItems ? 0.5 : 1
                     }}
                     className="add-all-cart-btn"
                   >
@@ -367,6 +378,76 @@ export default function WishlistPage() {
         )}
       </div>
 
+      {showConfirmModal && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          background: "rgba(0, 0, 0, 0.4)", backdropFilter: "blur(8px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 9999,
+        }}>
+          <div style={{
+            ...glass.card,
+            background: "rgba(255, 255, 255, 0.95)",
+            border: "1px solid rgba(170, 132, 28, 0.2)",
+            maxWidth: 420, width: "90%", padding: "30px 24px",
+            textAlign: "center", display: "flex", flexDirection: "column",
+            alignItems: "center", gap: 20,
+            boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
+            borderRadius: 20,
+          }}>
+            {/* Warning icon */}
+            <div style={{
+              width: 56, height: 56, borderRadius: "50%",
+              background: "rgba(255, 59, 48, 0.08)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "#FF3B30", fontSize: 24, fontWeight: 600,
+            }}>
+              ⚠️
+            </div>
+            
+            {/* Modal Heading & Description */}
+            <div>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "#1C1C1E" }}>Clear Wishlist</h3>
+              <p style={{ margin: "8px 0 0", fontSize: 13.5, color: "#8E8E93", lineHeight: 1.5 }}>
+                Are you sure you want to remove all pieces from your wishlist? This action cannot be undone.
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: "flex", gap: 12, width: "100%", marginTop: 8 }}>
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                style={{
+                  flex: 1, padding: "12px", borderRadius: 12,
+                  background: "#F4F4F6", border: "1px solid rgba(0,0,0,0.05)",
+                  color: "#1C1C1E", fontSize: 12.5, fontWeight: 700,
+                  cursor: "pointer", transition: "background 0.2s"
+                }}
+                className="modal-cancel-btn"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  clearWishlist();
+                  setShowConfirmModal(false);
+                }}
+                style={{
+                  flex: 1, padding: "12px", borderRadius: 12,
+                  background: "linear-gradient(135deg, #FF453A 0%, #FF3B30 100%)",
+                  color: "#fff", border: "none", fontSize: 12.5, fontWeight: 700,
+                  cursor: "pointer", boxShadow: "0 4px 12px rgba(255, 59, 48, 0.2)",
+                  transition: "all 0.2s"
+                }}
+                className="modal-confirm-btn"
+              >
+                Yes, Clear All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style jsx>{`
         .wishlist-grid-container {
           display: grid;
@@ -407,9 +488,18 @@ export default function WishlistPage() {
           box-shadow: 0 4px 10px rgba(170,132,28,0.25) !important;
         }
 
-        .add-all-cart-btn:hover {
+        .add-all-cart-btn:hover:not(:disabled) {
           transform: translateY(-1px);
-          box-shadow: 0 4px 14px rgba(170,132,28,0.25) !important;
+          box-shadow: 0 4px 14px rgba(170, 132, 28, 0.25) !important;
+        }
+
+        .modal-cancel-btn:hover {
+          background: #E5E5EA !important;
+        }
+
+        .modal-confirm-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 16px rgba(255, 59, 48, 0.3) !important;
         }
 
         .continue-shopping-btn:hover {
