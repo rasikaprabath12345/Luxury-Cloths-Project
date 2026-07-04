@@ -311,7 +311,7 @@ export default function ProductCard({ product }: { product: Product }) {
               }}
               onMouseEnter={e => { if (!isOutOfStock) { (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, #007AFF, #5856D6)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 12px rgba(0,122,255,0.3)"; } }}
               onMouseLeave={e => { if (!isOutOfStock) { (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, #1C1C1E, #3C3C43)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 8px rgba(0,0,0,0.12)"; } }}>
-              {isOutOfStock ? "Sold Out" : "Add to Bag"}
+              {isOutOfStock ? "Out of Stock" : "Add to Bag"}
             </button>
           </div>
         </div>

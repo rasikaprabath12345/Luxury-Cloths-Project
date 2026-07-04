@@ -210,7 +210,7 @@ export default function CartDrawer({ onClose }: { onClose: () => void }) {
                                                             <div className="ali-item-img-overlay">Only {liveStock} left</div>
                                                         )}
                                                         {isOutOfStock && (
-                                                            <div className="ali-item-img-overlay" style={{ background: "rgba(255, 59, 48, 0.85)" }}>Sold Out</div>
+                                                            <div className="ali-item-img-overlay" style={{ background: "rgba(255, 59, 48, 0.85)" }}>Out of Stock</div>
                                                         )}
                                                     </div>
 
