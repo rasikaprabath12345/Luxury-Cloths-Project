@@ -39,10 +39,32 @@ export default function CartPage() {
     onClose?: () => void;
   } | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [liveStockMap, setLiveStockMap] = useState<Record<number, number>>({});
 
   const triggerAlert = (message: string, isError: boolean = false, onClose?: () => void) => {
     setAlertState({ show: true, message, isError, onClose });
   };
+
+  // Fetch live stock for all cart items on mount/cart change
+  useEffect(() => {
+    if (cartItems.length === 0) return;
+    const uniqueProductIds = [...new Set(cartItems.map((item) => item.id))];
+    
+    uniqueProductIds.forEach((productId) => {
+      axios.get(`http://localhost:5226/api/Stock/${productId}`)
+        .then((res) => {
+          const variants = res.data?.variants || [];
+          const stockUpdates: Record<number, number> = {};
+          variants.forEach((v: { variantId: number; availableStock: number }) => {
+            stockUpdates[v.variantId] = v.availableStock;
+          });
+          setLiveStockMap(prev => ({ ...prev, ...stockUpdates }));
+        })
+        .catch((err) => {
+          console.error("Failed to load live stock on mount:", err);
+        });
+    });
+  }, [cartItems]);
 
   useEffect(() => {
     const savedUserStr = localStorage.getItem("luxury_user");
@@ -489,7 +511,15 @@ export default function CartPage() {
                   const img = item.imageUrl || item.image || PLACEHOLDER_IMG;
                   const itemKey = `${item.id}-${item.size || ''}-${item.color || ''}`;
                   const isRemoving = removingId === itemKey;
-                  const isOverStock = item.availableStock !== undefined && item.availableStock > 0 && (item.quantity || 1) > item.availableStock;
+                  
+                  // Use live stock map if loaded, fallback to stored item.availableStock
+                  const liveStock = item.variantId !== undefined && liveStockMap[item.variantId] !== undefined
+                    ? liveStockMap[item.variantId]
+                    : item.availableStock;
+
+                  const isOverStock = liveStock !== undefined && liveStock > 0 && (item.quantity || 1) > liveStock;
+                  const isOutOfStock = liveStock !== undefined && liveStock <= 0;
+
                   return (
                     <div
                       key={itemKey}
@@ -502,8 +532,12 @@ export default function CartPage() {
                         opacity: isRemoving ? 0 : 1,
                         transform: isRemoving ? "scale(0.96) translateY(-12px)" : "scale(1)",
                         transition: "all 0.38s cubic-bezier(0.16, 1, 0.3, 1)",
-                        border: isOverStock ? "1.5px solid rgba(255,59,48,0.35)" : "1px solid rgba(255,255,255,0.9)",
-                        background: isOverStock ? "rgba(255,59,48,0.02)" : "rgba(255,255,255,0.65)"
+                        border: isOutOfStock 
+                          ? "1.5px solid rgba(255,59,48,0.4)" 
+                          : isOverStock 
+                            ? "1.5px solid rgba(255,59,48,0.35)" 
+                            : "1px solid rgba(255,255,255,0.9)",
+                        background: (isOutOfStock || isOverStock) ? "rgba(255,59,48,0.02)" : "rgba(255,255,255,0.65)"
                       }}
                     >
                       {/* Image container with zoom hover */}
@@ -566,28 +600,27 @@ export default function CartPage() {
                                   padding: "2px 8px", borderRadius: 6
                                 }}>Color: {item.color}</span>
                               )}
-                              {item.availableStock !== undefined && item.availableStock <= 5 && item.availableStock > 0 && !isOverStock && (
+                              {liveStock !== undefined && liveStock <= 5 && liveStock > 0 && !isOverStock && (
                                 <span style={{
                                   fontSize: 10, fontWeight: 600, color: "#FF9500",
                                   background: "rgba(255,149,0,0.1)", border: "0.5px solid rgba(255,149,0,0.2)",
                                   padding: "2px 8px", borderRadius: 6
-                                }}>Only {item.availableStock} left</span>
+                                }}>Only {liveStock} left</span>
                               )}
                               {isOverStock && (
                                 <span style={{
                                   fontSize: 10, fontWeight: 600, color: "#FF3B30",
                                   background: "rgba(255,59,48,0.1)", border: "0.5px solid rgba(255,59,48,0.25)",
                                   padding: "2px 8px", borderRadius: 6
-                                }}>⚠ Only {item.availableStock} available</span>
+                                }}>⚠ Only {liveStock} available</span>
                               )}
-                              {item.availableStock !== undefined && item.availableStock <= 0 && (
+                              {isOutOfStock && (
                                 <span style={{
                                   fontSize: 10, fontWeight: 600, color: "#FF3B30",
-                                  background: "rgba(255,59,48,0.1)", border: "0.5px solid rgba(255,59,48,0.2)",
+                                  background: "rgba(255,59,48,0.1)", border: "0.5px solid rgba(255,59,48,0.25)",
                                   padding: "2px 8px", borderRadius: 6
                                 }}>Out of stock</span>
                               )}
-
                             </div>
                           </div>
 
