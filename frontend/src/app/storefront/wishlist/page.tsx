@@ -70,7 +70,7 @@ export default function WishlistPage() {
   return (
     <div style={{
       position: "relative", minHeight: "100vh", background: "#F4F4F6",
-      paddingTop: 4, paddingBottom: 80, fontFamily: "var(--font-body)"
+      paddingTop: 48, paddingBottom: 80, fontFamily: "var(--font-body)"
     }}>
       {/* Dynamic blurred gold background blobs */}
       <div style={{
@@ -247,7 +247,7 @@ export default function WishlistPage() {
                             className="remove-item-btn"
                           >
                             <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="#FF3B30" strokeWidth={2.5}>
-                              <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                           </button>
                         </div>
