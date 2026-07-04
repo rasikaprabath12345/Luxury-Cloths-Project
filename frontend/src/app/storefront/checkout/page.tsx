@@ -1408,8 +1408,8 @@ export default function CartPage() {
         .custom-alert-overlay {
           position: fixed;
           inset: 0;
-          z-index: 9999;
-          background: rgba(0, 0, 0, 0.35);
+          z-index: 10001;
+          background: rgba(0, 0, 0, 0.55);
           display: flex;
           align-items: center;
           justify-content: center;
