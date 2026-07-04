@@ -1409,8 +1409,7 @@ export default function CartPage() {
           position: fixed;
           inset: 0;
           z-index: 9999;
-          background: rgba(0, 0, 0, 0.4);
-          backdrop-filter: blur(6px);
+          background: rgba(0, 0, 0, 0.35);
           display: flex;
           align-items: center;
           justify-content: center;
