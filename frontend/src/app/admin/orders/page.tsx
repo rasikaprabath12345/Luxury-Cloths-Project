@@ -15,6 +15,24 @@ interface Order {
 
 const STATUS_OPTIONS = ["Pending", "Approved", "Shipped", "Delivered", "Cancelled"];
 
+const getAllowedStatusOptions = (currentStatus: string) => {
+  const status = currentStatus?.toLowerCase();
+  switch (status) {
+    case "pending":
+      return ["Pending", "Approved", "Cancelled"];
+    case "approved":
+      return ["Approved", "Shipped", "Cancelled"];
+    case "shipped":
+      return ["Shipped", "Delivered", "Cancelled"];
+    case "delivered":
+      return ["Delivered"];
+    case "cancelled":
+      return ["Cancelled"];
+    default:
+      return STATUS_OPTIONS;
+  }
+};
+
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -147,9 +165,12 @@ export default function AdminOrdersPage() {
                         value={order.status}
                         onChange={(e) => { e.stopPropagation(); handleStatusChange(order.id, e.target.value); }}
                         onClick={(e) => e.stopPropagation()}
+                        disabled={order.status?.toLowerCase() === "delivered" || order.status?.toLowerCase() === "cancelled"}
                         className="status-select"
                       >
-                        {STATUS_OPTIONS.map((s) => (<option key={s} value={s}>{s}</option>))}
+                        {getAllowedStatusOptions(order.status).map((s) => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
                       </select>
                       <svg className={`chevron ${isExpanded ? "rotated" : ""}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6"/></svg>
                     </div>

@@ -17,6 +17,24 @@ interface Order {
 
 const STATUS_OPTIONS = ["Pending", "Approved", "Shipped", "Delivered", "Cancelled"];
 
+const getAllowedStatusOptions = (currentStatus: string) => {
+  const status = currentStatus?.toLowerCase();
+  switch (status) {
+    case "pending":
+      return ["Pending", "Approved", "Cancelled"];
+    case "approved":
+      return ["Approved", "Shipped", "Cancelled"];
+    case "shipped":
+      return ["Shipped", "Delivered", "Cancelled"];
+    case "delivered":
+      return ["Delivered"];
+    case "cancelled":
+      return ["Cancelled"];
+    default:
+      return STATUS_OPTIONS;
+  }
+};
+
 export default function AdminOrderDetailPage() {
   const params = useParams();
   const orderId = params.id as string;
@@ -162,10 +180,14 @@ export default function AdminOrderDetailPage() {
                   <div className="info-item no-print">
                     <span className="info-label">Update Status</span>
                     <select
-                      value={order.status} onChange={(e) => handleStatusChange(e.target.value)}
-                      disabled={updating} className="status-select"
+                      value={order.status} 
+                      onChange={(e) => handleStatusChange(e.target.value)}
+                      disabled={updating || order.status?.toLowerCase() === "delivered" || order.status?.toLowerCase() === "cancelled"} 
+                      className="status-select"
                     >
-                      {STATUS_OPTIONS.map((s) => (<option key={s} value={s}>{s}</option>))}
+                      {getAllowedStatusOptions(order.status).map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
                     </select>
                   </div>
                   <div className="info-item">

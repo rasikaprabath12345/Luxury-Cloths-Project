@@ -352,10 +352,49 @@ namespace backend.Controllers
                 }
 
                 string previousStatus = order.Status;
-                order.Status = dto.Status;
+                string newStatus = dto.Status;
+
+                // Validation for step-by-step status transitions
+                if (previousStatus.Equals("Cancelled", StringComparison.OrdinalIgnoreCase))
+                {
+                    return BadRequest("Cancelled orders cannot be changed.");
+                }
+                if (previousStatus.Equals("Delivered", StringComparison.OrdinalIgnoreCase))
+                {
+                    return BadRequest("Delivered orders cannot be changed.");
+                }
+                if (previousStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!newStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase) && 
+                        !newStatus.Equals("Approved", StringComparison.OrdinalIgnoreCase) && 
+                        !newStatus.Equals("Cancelled", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return BadRequest("Pending orders can only be transitioned to Approved or Cancelled.");
+                    }
+                }
+                else if (previousStatus.Equals("Approved", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!newStatus.Equals("Approved", StringComparison.OrdinalIgnoreCase) && 
+                        !newStatus.Equals("Shipped", StringComparison.OrdinalIgnoreCase) && 
+                        !newStatus.Equals("Cancelled", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return BadRequest("Approved orders can only be transitioned to Shipped or Cancelled.");
+                    }
+                }
+                else if (previousStatus.Equals("Shipped", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!newStatus.Equals("Shipped", StringComparison.OrdinalIgnoreCase) && 
+                        !newStatus.Equals("Delivered", StringComparison.OrdinalIgnoreCase) && 
+                        !newStatus.Equals("Cancelled", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return BadRequest("Shipped orders can only be transitioned to Delivered or Cancelled.");
+                    }
+                }
+
+                order.Status = newStatus;
 
                 // ✅ Cancelled → ReservedQuantity release කරනවා (StockQuantity touch නොකරනවා)
-                if (dto.Status.Equals("Cancelled", StringComparison.OrdinalIgnoreCase) &&
+                if (newStatus.Equals("Cancelled", StringComparison.OrdinalIgnoreCase) &&
                     !previousStatus.Equals("Cancelled", StringComparison.OrdinalIgnoreCase))
                 {
                     foreach (var item in order.OrderItems)
