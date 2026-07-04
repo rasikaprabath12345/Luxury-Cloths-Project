@@ -205,6 +205,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setToken(null);
             localStorage.removeItem("luxury_user");
             localStorage.removeItem("luxury_token");
+            if (typeof window !== "undefined") {
+                window.dispatchEvent(new Event("luxury-logout"));
+            }
             await nextAuthSignOut({ redirect: false });
         }
     };

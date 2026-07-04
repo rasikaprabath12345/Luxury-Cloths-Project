@@ -35,6 +35,16 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     }
   }, [wishlistItems, isLoaded]);
 
+  useEffect(() => {
+    const handleLogout = () => {
+      setWishlistItems([]);
+    };
+    window.addEventListener("luxury-logout", handleLogout);
+    return () => {
+      window.removeEventListener("luxury-logout", handleLogout);
+    };
+  }, []);
+
   const addToWishlist = (product: Product) => {
     setWishlistItems((prev) => {
       if (prev.find((item) => item.id === product.id)) return prev;

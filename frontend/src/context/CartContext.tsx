@@ -66,6 +66,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [cartItems, isLoaded]);
 
+  useEffect(() => {
+    const handleLogout = () => {
+      setCartItems([]);
+    };
+    window.addEventListener("luxury-logout", handleLogout);
+    return () => {
+      window.removeEventListener("luxury-logout", handleLogout);
+    };
+  }, []);
+
   const addToCart = (
     product: Product,
     qty: number = 1,
