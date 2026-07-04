@@ -532,12 +532,8 @@ export default function CartPage() {
                         opacity: isRemoving ? 0 : 1,
                         transform: isRemoving ? "scale(0.96) translateY(-12px)" : "scale(1)",
                         transition: "all 0.38s cubic-bezier(0.16, 1, 0.3, 1)",
-                        border: isOutOfStock 
-                          ? "1.5px solid rgba(255,59,48,0.4)" 
-                          : isOverStock 
-                            ? "1.5px solid rgba(255,59,48,0.35)" 
-                            : "1px solid rgba(255,255,255,0.9)",
-                        background: (isOutOfStock || isOverStock) ? "rgba(255,59,48,0.02)" : "rgba(255,255,255,0.65)"
+                        border: "1px solid rgba(255,255,255,0.9)",
+                        background: "rgba(255,255,255,0.65)"
                       }}
                     >
                       {/* Image container with zoom hover */}
