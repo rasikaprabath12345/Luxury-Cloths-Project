@@ -1259,7 +1259,7 @@ export default function Navbar() {
                       window.location.href = "/auth/login";
                     }, 1500);
                   } else {
-                    setIsWishlistDrawerOpen(!isWishlistDrawerOpen);
+                    window.location.href = "/storefront/wishlist";
                   }
                 }}
                 icon={<WishlistIcon />}
