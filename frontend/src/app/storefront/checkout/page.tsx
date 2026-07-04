@@ -185,6 +185,21 @@ export default function CartPage() {
       return;
     }
 
+    // ✅ Pre-flight stock check — catches out-of-stock items before hitting the API
+    const outOfStockItems = cartItems.filter(
+      (item) => item.availableStock !== undefined && (item.quantity || 1) > item.availableStock
+    );
+    if (outOfStockItems.length > 0) {
+      const names = outOfStockItems
+        .map((item) => `"${item.name}${item.size ? ` (${item.size})` : ``}"`)
+        .join(", ");
+      triggerAlert(
+        `Some items in your cart are out of stock or exceed available quantity: ${names}. Please update your cart before placing the order.`,
+        true
+      );
+      return;
+    }
+
     const user = JSON.parse(savedUserStr);
     setIsOrdering(true);
     try {
@@ -221,14 +236,23 @@ export default function CartPage() {
       }
     } catch (error: any) {
       console.error("Order failed:", error);
-      const errorMsg = typeof error.response?.data === "string"
-        ? error.response.data
-        : (error.response?.data?.message || "Order failed. Please try again.");
+      // Backend returns plain string or object with .message
+      let errorMsg = "Order failed. Please try again.";
+      if (error.response?.data) {
+        if (typeof error.response.data === "string") {
+          errorMsg = error.response.data;
+        } else if (error.response.data.message) {
+          errorMsg = error.response.data.message;
+        } else if (error.response.data.title) {
+          errorMsg = error.response.data.title;
+        }
+      }
       triggerAlert(errorMsg, true);
     } finally {
       setIsOrdering(false);
     }
   };
+
 
   if (loading) {
     return (
