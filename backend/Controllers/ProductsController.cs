@@ -26,6 +26,11 @@ namespace backend.Controllers
                 .Include(p => p.Variants)
                 .ToListAsync();
 
+            foreach (var p in products)
+            {
+                FilterVariants(p);
+            }
+
             return Ok(products);
         }
 
@@ -44,6 +49,7 @@ namespace backend.Controllers
                 return NotFound("සමාවන්න, එවැනි භාණ්ඩයක් සොයාගත නොහැක.");
             }
 
+            FilterVariants(product);
             return Ok(product);
         }
 
@@ -62,6 +68,7 @@ namespace backend.Controllers
                 return NotFound("සමාවන්න, එවැනි භාණ්ඩයක් සොයාගත නොහැක.");
             }
 
+            FilterVariants(product);
             return Ok(product);
         }
 
@@ -223,6 +230,29 @@ namespace backend.Controllers
                 }
             }
 
+            // Remove/cleanup obsolete variants that are no longer in sizesList
+            var obsoleteVariants = existingProduct.Variants
+                .Where(v => !sizesList.Contains(v.Size, StringComparer.OrdinalIgnoreCase))
+                .ToList();
+
+            foreach (var oldV in obsoleteVariants)
+            {
+                bool isReferenced = _context.OrderItems.Any(oi => oi.ProductVariantId == oldV.Id);
+                if (!isReferenced)
+                {
+                    // Remove stock movements first to avoid FK constraints
+                    var movements = _context.StockMovements.Where(sm => sm.ProductVariantId == oldV.Id);
+                    _context.StockMovements.RemoveRange(movements);
+                    existingProduct.Variants.Remove(oldV);
+                    _context.ProductVariants.Remove(oldV);
+                }
+                else
+                {
+                    // Otherwise just deactivate it (set stock to 0)
+                    oldV.StockQuantity = 0;
+                }
+            }
+
             try
             {
                 await _context.SaveChangesAsync();
@@ -258,6 +288,7 @@ namespace backend.Controllers
                 }
             }
 
+            FilterVariants(existingProduct);
             return Ok(new { message = "Product එක සාර්ථකව යාවත්කාලීන කලා!", product = existingProduct });
         }
 
@@ -275,6 +306,23 @@ namespace backend.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Product එක සාර්ථකව ඉවත් කලා!" });
+        }
+
+        private void FilterVariants(Product p)
+        {
+            if (p == null || p.Variants == null) return;
+
+            var sizesList = !string.IsNullOrEmpty(p.Sizes)
+                ? p.Sizes.Split(',').Select(s => s.Trim()).Where(s => !string.IsNullOrEmpty(s)).ToList()
+                : new List<string> { "Free Size" };
+
+            // If sizes list contains specific sizes, exclude Free Size and any other sizes not in the sizesList
+            if (sizesList.Any() && !sizesList.Any(s => s.Equals("Free Size", StringComparison.OrdinalIgnoreCase)))
+            {
+                p.Variants = p.Variants
+                    .Where(v => sizesList.Contains(v.Size, StringComparer.OrdinalIgnoreCase) && !v.Size.Equals("Free Size", StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
         }
     }
 }
