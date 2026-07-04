@@ -6,7 +6,7 @@ import { ordersAPI } from "@/lib/api";
 import { showToast } from "@/lib/adminUtils";
 import Link from "next/link";
 
-interface OrderItem { id: number; productName: string; quantity: number; price: number; }
+interface OrderItem { id: number; productName: string; quantity: number; price: number; productImageUrl?: string; }
 interface Order {
   id: number; orderDate: string; totalAmount: number; status: string;
   paymentMethod: string; paymentSlipUrl?: string; userId: number; items: OrderItem[];
@@ -157,6 +157,13 @@ export default function AdminOrderDetailPage() {
               <div className="items-list">
                 {order.items?.map((item) => (
                   <div key={item.id} className="item-row">
+                    <div className="item-thumb-wrap">
+                      {item.productImageUrl ? (
+                        <img src={item.productImageUrl} alt={item.productName} className="item-thumb" />
+                      ) : (
+                        <div className="item-thumb-placeholder">🖼</div>
+                      )}
+                    </div>
                     <div className="item-left">
                       <span className="item-name">{item.productName}</span>
                       <span className="item-unit">{formatCurrency(item.price)} × {item.quantity}</span>
@@ -320,9 +327,12 @@ export default function AdminOrderDetailPage() {
         .card-heading { font-size: 17px; font-weight: 800; color: var(--admin-text-main); margin: 0 0 20px; padding-bottom: 12px; border-bottom: 1.5px solid var(--admin-border); }
 
         .items-list { display: flex; flex-direction: column; gap: 0; }
-        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--admin-border); }
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--admin-border); gap: 14px; }
         .item-row:last-child { border-bottom: none; }
-        .item-left { display: flex; flex-direction: column; gap: 4px; }
+        .item-thumb-wrap { flex-shrink: 0; width: 90px; height: 90px; border-radius: 10px; overflow: hidden; border: 1px solid var(--admin-border); background: #f8fafc; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+        .item-thumb { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .item-thumb-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 30px; color: #cbd5e1; }
+        .item-left { display: flex; flex-direction: column; gap: 4px; flex: 1; }
         .item-name { font-weight: 700; color: var(--admin-text-main); font-size: 14.5px; }
         .item-unit { font-size: 12.5px; color: var(--admin-text-muted); font-weight: 500; }
         .item-total { font-family: var(--font-display); font-weight: 700; color: var(--admin-text-main); font-size: 14.5px; }
