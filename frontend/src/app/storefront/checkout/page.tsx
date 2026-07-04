@@ -639,7 +639,6 @@ export default function CartPage() {
                         </div>
 
                         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, marginTop: 14 }}>
-
                           {/* Premium quantity adjustment buttons */}
                           <div style={{
                             display: "flex", alignItems: "center",
@@ -648,12 +647,12 @@ export default function CartPage() {
                           }}>
                             <button
                               onClick={() => handleUpdateQuantity(item.id, item.quantity - 1, item.size, item.color)}
-                              disabled={item.quantity <= 1}
+                              disabled={item.quantity <= 1 || isOutOfStock}
                               style={{
                                 width: 28, height: 26, display: "flex", alignItems: "center",
                                 justifyItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700,
-                                color: item.quantity <= 1 ? "#C7C7CC" : "#555", background: "transparent", border: "none",
-                                cursor: item.quantity <= 1 ? "default" : "pointer", transition: "background 0.15s",
+                                color: (item.quantity <= 1 || isOutOfStock) ? "#C7C7CC" : "#555", background: "transparent", border: "none",
+                                cursor: (item.quantity <= 1 || isOutOfStock) ? "default" : "pointer", transition: "background 0.15s",
                                 borderRadius: 10
                               }}
                               className="qty-action-btn"
@@ -664,13 +663,13 @@ export default function CartPage() {
                             }}>{item.quantity}</span>
                             <button
                               onClick={() => handleUpdateQuantity(item.id, item.quantity + 1, item.size, item.color)}
-                              disabled={item.availableStock !== undefined && item.quantity >= item.availableStock}
+                              disabled={isOutOfStock || (liveStock !== undefined && item.quantity >= liveStock)}
                               style={{
                                 width: 28, height: 26, display: "flex", alignItems: "center",
                                 justifyItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700,
-                                color: (item.availableStock !== undefined && item.quantity >= item.availableStock) ? "#C7C7CC" : "#555",
+                                color: (isOutOfStock || (liveStock !== undefined && item.quantity >= liveStock)) ? "#C7C7CC" : "#555",
                                 background: "transparent", border: "none",
-                                cursor: (item.availableStock !== undefined && item.quantity >= item.availableStock) ? "not-allowed" : "pointer",
+                                cursor: (isOutOfStock || (liveStock !== undefined && item.quantity >= liveStock)) ? "not-allowed" : "pointer",
                                 transition: "background 0.15s",
                                 borderRadius: 10
                               }}
