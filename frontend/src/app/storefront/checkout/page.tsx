@@ -49,7 +49,7 @@ export default function CartPage() {
   useEffect(() => {
     if (cartItems.length === 0) return;
     const uniqueProductIds = [...new Set(cartItems.map((item) => item.id))];
-    
+
     uniqueProductIds.forEach((productId) => {
       axios.get(`http://localhost:5226/api/Stock/${productId}`)
         .then((res) => {
@@ -511,7 +511,7 @@ export default function CartPage() {
                   const img = item.imageUrl || item.image || PLACEHOLDER_IMG;
                   const itemKey = `${item.id}-${item.size || ''}-${item.color || ''}`;
                   const isRemoving = removingId === itemKey;
-                  
+
                   // Use live stock map if loaded, fallback to stored item.availableStock
                   const liveStock = item.variantId !== undefined && liveStockMap[item.variantId] !== undefined
                     ? liveStockMap[item.variantId]
