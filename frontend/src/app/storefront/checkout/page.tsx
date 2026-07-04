@@ -1265,22 +1265,22 @@ export default function CartPage() {
             <div
               className="custom-alert-modal"
               onClick={(e) => e.stopPropagation()}
-              style={{ maxWidth: 340 }}
+              style={{ maxWidth: 360, padding: "36px 28px 28px" }}
             >
               <div className="custom-alert-header">
-                <div className="custom-alert-icon-container" style={{ background: "#FDF2F2", color: "#FF4B4B" }}>
+                <div className="custom-alert-icon-container" style={{ background: "#FDF2F2", color: "#FF4B4B", width: 60, height: 60, fontSize: 26 }}>
                   🗑️
                 </div>
-                <h3 className="custom-alert-title">Clear Cart?</h3>
+                <h3 className="custom-alert-title" style={{ marginTop: 14 }}>Clear Cart?</h3>
               </div>
-              <p className="custom-alert-message" style={{ color: "#555", lineHeight: 1.6 }}>
+              <p className="custom-alert-message" style={{ color: "#666", lineHeight: 1.65, fontSize: 14 }}>
                 Are you sure you want to remove all items from your cart? This action cannot be undone.
               </p>
-              <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+              <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
                 <button
                   onClick={() => setShowClearConfirm(false)}
                   style={{
-                    flex: 1, padding: "12px 0", borderRadius: 14,
+                    flex: 1, padding: "13px 16px", borderRadius: 12, whiteSpace: "nowrap",
                     border: "1.5px solid #E5E5EA", background: "#fff",
                     fontSize: 14, fontWeight: 700, color: "#444", cursor: "pointer",
                     transition: "all 0.2s"
@@ -1294,19 +1294,20 @@ export default function CartPage() {
                     setShowClearConfirm(false);
                   }}
                   style={{
-                    flex: 1, padding: "12px 0", borderRadius: 14,
+                    flex: 1, padding: "13px 16px", borderRadius: 12, whiteSpace: "nowrap",
                     border: "none", background: "#FF4B4B",
                     fontSize: 14, fontWeight: 700, color: "#fff", cursor: "pointer",
                     boxShadow: "0 4px 14px rgba(255,75,75,0.3)",
                     transition: "all 0.2s"
                   }}
                 >
-                  Yes, Clear
+                  Yes, Clear All
                 </button>
               </div>
             </div>
           </div>
         )}
+
       </div>
 
       {/* Styled classes and keyframe animations */}
