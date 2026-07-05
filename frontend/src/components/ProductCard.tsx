@@ -1,7 +1,6 @@
 import React from "react";
 import Link from "next/link";
 import { glass } from "@/utils/theme";
-import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { useAuth } from "@/context/AuthContext";
 import { showStorefrontToast } from "@/utils/toast";
@@ -54,7 +53,6 @@ export function ProductSkeleton() {
 }
 
 export default function ProductCard({ product }: { product: Product }) {
-  const { addToCart } = useCart();
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
   const { isAuthenticated } = useAuth();
 
@@ -267,52 +265,45 @@ export default function ProductCard({ product }: { product: Product }) {
           <div style={{
             paddingTop: 10, borderTop: "0.5px solid rgba(0,0,0,0.06)", marginTop: "6px"
           }}>
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (isOutOfStock) return;
-                if (!isAuthenticated) {
-                  showStorefrontToast("Please login or signup to add items to your cart.", "info");
-                  setTimeout(() => {
-                    window.location.href = "/auth/login";
-                  }, 1500);
-                  return;
-                }
-
-                // Find first variant with stock > 0
-                const firstAvailableVariant = product.variants?.find((v: any) => v.stockQuantity > 0) || product.variants?.[0];
-                const size = firstAvailableVariant?.size;
-                const color = firstAvailableVariant?.color;
-                const variantId = firstAvailableVariant?.variantId || firstAvailableVariant?.id;
-                const availStock = firstAvailableVariant ? (firstAvailableVariant.stockQuantity - (firstAvailableVariant.reservedQuantity || 0)) : undefined;
-
-                addToCart({
-                  id: product.id,
-                  name: product.name,
-                  price: finalPrice,
-                  imageUrl: product.imageUrl || product.image || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop",
-                  description: product.description,
-                  variants: product.variants,
-                } as any, 1, size, color, variantId, availStock);
-
-                showStorefrontToast(`${product.name} added to cart! 🛒`, "success");
-              }}
-              disabled={isOutOfStock}
+            <div
               style={{
                 width: "100%",
-                background: isOutOfStock ? "#e2e8f0" : "linear-gradient(135deg, #1C1C1E, #3C3C43)",
-                border: "none", borderRadius: 10, padding: "8px 14px",
-                fontSize: 11, fontWeight: 600,
-                color: isOutOfStock ? "#94a3b8" : "#fff",
+                background: isOutOfStock ? "#f3f4f6" : "#fff",
+                border: isOutOfStock ? "1px solid #e5e7eb" : "1px solid #d1d5db",
+                borderRadius: 10,
+                padding: "8px 14px",
+                fontSize: 11,
+                fontWeight: 600,
+                color: isOutOfStock ? "#9ca3af" : "#1C1C1E",
                 cursor: isOutOfStock ? "not-allowed" : "pointer",
-                transition: "background 0.2s, transform 0.1s",
-                boxShadow: isOutOfStock ? "none" : "0 2px 8px rgba(0,0,0,0.12)",
+                transition: "all 0.2s ease",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
               }}
-              onMouseEnter={e => { if (!isOutOfStock) { (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, #007AFF, #5856D6)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 12px rgba(0,122,255,0.3)"; } }}
-              onMouseLeave={e => { if (!isOutOfStock) { (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, #1C1C1E, #3C3C43)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 8px rgba(0,0,0,0.12)"; } }}>
-              {isOutOfStock ? "Out of Stock" : "Add to Bag"}
-            </button>
+              onMouseEnter={e => {
+                if (!isOutOfStock) {
+                  (e.currentTarget as HTMLElement).style.background = "#f9fafb";
+                  (e.currentTarget as HTMLElement).style.borderColor = "#9ca3af";
+                }
+              }}
+              onMouseLeave={e => {
+                if (!isOutOfStock) {
+                  (e.currentTarget as HTMLElement).style.background = "#fff";
+                  (e.currentTarget as HTMLElement).style.borderColor = "#d1d5db";
+                }
+              }}
+            >
+              {!isOutOfStock && (
+                <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#1C1C1E" strokeWidth={2}>
+                  <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <path d="M16 10a4 4 0 01-8 0" />
+                </svg>
+              )}
+              {isOutOfStock ? "Out of Stock" : "Select Options"}
+            </div>
           </div>
         </div>
       </div>
