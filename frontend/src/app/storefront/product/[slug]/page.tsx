@@ -47,10 +47,10 @@ export default function ProductDetailPage() {
 
   const activeVariant = product
     ? product.variants?.find((v: any) => {
-        const sizeMatch = !selectedSize || v.size.toLowerCase() === selectedSize.toLowerCase();
-        const colorMatch = !selectedColor || !v.color || v.color.toLowerCase() === selectedColor.toLowerCase();
-        return sizeMatch && colorMatch;
-      }) || product.variants?.[0]
+      const sizeMatch = !selectedSize || v.size.toLowerCase() === selectedSize.toLowerCase();
+      const colorMatch = !selectedColor || !v.color || v.color.toLowerCase() === selectedColor.toLowerCase();
+      return sizeMatch && colorMatch;
+    }) || product.variants?.[0]
     : null;
 
   const activeStock = activeVariant ? (activeVariant.stockQuantity - (activeVariant.reservedQuantity || 0)) : (product?.stock ?? 0);
@@ -226,7 +226,7 @@ export default function ProductDetailPage() {
               {discount > 0 && (
                 <span style={{
                   position: "absolute", top: 14, left: 14,
-                  background: "rgba(220,38,38,0.85)",
+                  background: "rgba(0,0,0,0.55)",
                   backdropFilter: "blur(12px)",
                   color: "#fff",
                   fontSize: 10, fontWeight: 600,
