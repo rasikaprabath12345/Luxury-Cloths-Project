@@ -225,16 +225,15 @@ export default function ProductDetailPage() {
               />
               {discount > 0 && (
                 <span style={{
-                  position: "absolute", top: 16, left: 16,
-                  background: "linear-gradient(135deg, #FF3B30, #FF2D55)",
+                  position: "absolute", top: 14, left: 14,
+                  background: "rgba(0,0,0,0.55)",
+                  backdropFilter: "blur(12px)",
                   color: "#fff",
-                  fontSize: 11, fontWeight: 800,
-                  padding: "5px 12px",
+                  fontSize: 10, fontWeight: 600,
+                  padding: "4px 10px",
                   borderRadius: 100,
-                  fontFamily: "var(--font-montserrat), 'Montserrat', sans-serif",
-                  letterSpacing: "0.05em",
-                  boxShadow: "0 4px 12px rgba(255,59,48,0.35)",
-                }}>-{discount}% OFF</span>
+                  letterSpacing: "0.3px",
+                }}>-{discount}%</span>
               )}
             </div>
 
