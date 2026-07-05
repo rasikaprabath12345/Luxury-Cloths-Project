@@ -80,7 +80,7 @@ function CategoryContent() {
                           className="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                         />
                         {hasDiscount && (
-                          <div className="absolute top-2.5 left-2.5 backdrop-blur-xl rounded-full px-2 py-0.5" style={{ background: "rgba(0,0,0,0.55)" }}>
+                          <div className="absolute top-2.5 left-2.5 backdrop-blur-xl rounded-full px-2 py-0.5" style={{ background: "rgba(220,38,38,0.85)" }}>
                             <span className="text-white font-medium" style={{ fontSize: 9, letterSpacing: "0.3px" }}>
                               -{product.discount}%
                             </span>

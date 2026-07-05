@@ -137,7 +137,7 @@ export default function ProductCard({ product }: { product: Product }) {
           {hasDiscount && !isOutOfStock && (
             <div style={{
               position: "absolute", top: 10, left: 10,
-              background: "rgba(0,0,0,0.55)", backdropFilter: "blur(12px)",
+              background: "rgba(220,38,38,0.85)", backdropFilter: "blur(12px)",
               borderRadius: 20, padding: "3px 8px",
               zIndex: 5,
             }}>
@@ -151,11 +151,11 @@ export default function ProductCard({ product }: { product: Product }) {
           {isOutOfStock && (
             <div style={{
               position: "absolute", top: 10, left: 10,
-              background: "rgba(0,0,0,0.55)", backdropFilter: "blur(12px)",
+              background: "rgba(220,38,38,0.85)", backdropFilter: "blur(12px)",
               borderRadius: 20, padding: "3px 8px",
               zIndex: 5,
             }}>
-              <span style={{ fontSize: 9, fontWeight: 600, color: "rgba(255,255,255,0.9)", letterSpacing: "0.3px" }}>
+              <span style={{ fontSize: 9, fontWeight: 600, color: "#fff", letterSpacing: "0.3px" }}>
                 Sold Out
               </span>
             </div>

@@ -226,7 +226,7 @@ export default function ProductDetailPage() {
               {discount > 0 && (
                 <span style={{
                   position: "absolute", top: 14, left: 14,
-                  background: "rgba(0,0,0,0.55)",
+                  background: "rgba(220,38,38,0.85)",
                   backdropFilter: "blur(12px)",
                   color: "#fff",
                   fontSize: 10, fontWeight: 600,
