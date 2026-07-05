@@ -60,21 +60,14 @@ export default function ProductPage() {
                   <div className="px-5 pb-5 pt-0">
                     <Link href={`/storefront/product/${product.slug}`} className="w-full block">
                       <button 
-                        disabled={isOutOfStock}
-                        className={`w-full border rounded-xl py-3 text-xs uppercase tracking-wider font-bold transition-all flex items-center justify-center gap-2 ${
-                          isOutOfStock
-                            ? "bg-zinc-900 border-zinc-800 text-zinc-600 cursor-not-allowed"
-                            : "bg-transparent border-zinc-800 hover:bg-zinc-900 text-white cursor-pointer"
-                        }`}
+                        className="w-full border rounded-xl py-3 text-xs uppercase tracking-wider font-bold transition-all flex items-center justify-center gap-2 bg-transparent border-zinc-800 hover:bg-zinc-900 text-white cursor-pointer"
                       >
-                        {!isOutOfStock && (
-                          <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
-                            <line x1="3" y1="6" x2="21" y2="6" />
-                            <path d="M16 10a4 4 0 01-8 0" />
-                          </svg>
-                        )}
-                        {isOutOfStock ? "Out of Stock" : "Select Options"}
+                        <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                          <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+                          <line x1="3" y1="6" x2="21" y2="6" />
+                          <path d="M16 10a4 4 0 01-8 0" />
+                        </svg>
+                        Select Options
                       </button>
                     </Link>
                   </div>

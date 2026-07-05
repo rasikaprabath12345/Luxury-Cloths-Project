@@ -268,14 +268,14 @@ export default function ProductCard({ product }: { product: Product }) {
             <div
               style={{
                 width: "100%",
-                background: isOutOfStock ? "#f3f4f6" : "#fff",
-                border: isOutOfStock ? "1px solid #e5e7eb" : "1px solid #d1d5db",
+                background: "#fff",
+                border: "1px solid #d1d5db",
                 borderRadius: 10,
                 padding: "8px 14px",
                 fontSize: 11,
                 fontWeight: 600,
-                color: isOutOfStock ? "#9ca3af" : "#1C1C1E",
-                cursor: isOutOfStock ? "not-allowed" : "pointer",
+                color: "#1C1C1E",
+                cursor: "pointer",
                 transition: "all 0.2s ease",
                 display: "flex",
                 alignItems: "center",
@@ -283,26 +283,20 @@ export default function ProductCard({ product }: { product: Product }) {
                 gap: "8px",
               }}
               onMouseEnter={e => {
-                if (!isOutOfStock) {
-                  (e.currentTarget as HTMLElement).style.background = "#f9fafb";
-                  (e.currentTarget as HTMLElement).style.borderColor = "#9ca3af";
-                }
+                (e.currentTarget as HTMLElement).style.background = "#f9fafb";
+                (e.currentTarget as HTMLElement).style.borderColor = "#9ca3af";
               }}
               onMouseLeave={e => {
-                if (!isOutOfStock) {
-                  (e.currentTarget as HTMLElement).style.background = "#fff";
-                  (e.currentTarget as HTMLElement).style.borderColor = "#d1d5db";
-                }
+                (e.currentTarget as HTMLElement).style.background = "#fff";
+                (e.currentTarget as HTMLElement).style.borderColor = "#d1d5db";
               }}
             >
-              {!isOutOfStock && (
-                <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#1C1C1E" strokeWidth={2}>
-                  <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
-                  <line x1="3" y1="6" x2="21" y2="6" />
-                  <path d="M16 10a4 4 0 01-8 0" />
-                </svg>
-              )}
-              {isOutOfStock ? "Out of Stock" : "Select Options"}
+              <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#1C1C1E" strokeWidth={2}>
+                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <path d="M16 10a4 4 0 01-8 0" />
+              </svg>
+              Select Options
             </div>
           </div>
         </div>
