@@ -65,6 +65,18 @@ namespace backend.Controllers
 
             if (product == null)
             {
+                if (int.TryParse(slug, out int id))
+                {
+                    product = await _context.Products
+                        .Include(p => p.Category)
+                        .Include(p => p.Images)
+                        .Include(p => p.Variants)
+                        .FirstOrDefaultAsync(p => p.Id == id);
+                }
+            }
+
+            if (product == null)
+            {
                 return NotFound("සමාවන්න, එවැනි භාණ්ඩයක් සොයාගත නොහැක.");
             }
 

@@ -131,8 +131,10 @@ export default function ProductDetailPage() {
       }
     };
 
-    if (slug) {
+    if (slug && slug !== "undefined") {
       fetchProduct();
+    } else {
+      setLoading(false);
     }
   }, [slug]);
 
