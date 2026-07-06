@@ -137,11 +137,13 @@ export default function ProductCard({ product }: { product: Product }) {
           {hasDiscount && !isOutOfStock && (
             <div style={{
               position: "absolute", top: 10, left: 10,
-              background: "rgba(0,0,0,0.55)", backdropFilter: "blur(12px)",
-              borderRadius: 20, padding: "3px 8px",
+              background: "linear-gradient(135deg, #FF003C 0%, #FF0000 100%)",
+              borderRadius: 20, padding: "3.5px 9px",
+              boxShadow: "0 4px 10px rgba(255, 0, 60, 0.4)",
+              border: "1px solid rgba(255, 255, 255, 0.25)",
               zIndex: 5,
             }}>
-              <span style={{ fontSize: 9, fontWeight: 600, color: "#fff", letterSpacing: "0.3px" }}>
+              <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", letterSpacing: "0.4px" }}>
                 -{product.discount}%
               </span>
             </div>
@@ -151,12 +153,14 @@ export default function ProductCard({ product }: { product: Product }) {
           {isOutOfStock && (
             <div style={{
               position: "absolute", top: 10, left: 10,
-              background: "rgba(0,0,0,0.55)", backdropFilter: "blur(12px)",
-              borderRadius: 20, padding: "3px 8px",
+              background: "linear-gradient(135deg, #FF003C 0%, #FF0000 100%)",
+              borderRadius: 20, padding: "3.5px 9px",
+              boxShadow: "0 4px 10px rgba(255, 0, 60, 0.4)",
+              border: "1px solid rgba(255, 255, 255, 0.25)",
               zIndex: 5,
             }}>
-              <span style={{ fontSize: 9, fontWeight: 600, color: "rgba(255,255,255,0.9)", letterSpacing: "0.3px" }}>
-                Sold Out
+              <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", letterSpacing: "0.4px" }}>
+                Out of Stock
               </span>
             </div>
           )}
