@@ -20,17 +20,32 @@ namespace backend.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllStock()
         {
-            var products = await _context.Products
+            var rawProducts = await _context.Products
                 .Include(p => p.Category)
                 .Include(p => p.Images)
                 .Include(p => p.Variants)
-                .Select(p => new
+                .ToListAsync();
+
+            var products = rawProducts.Select(p => {
+                var sizesList = !string.IsNullOrEmpty(p.Sizes)
+                    ? p.Sizes.Split(',').Select(s => s.Trim()).Where(s => !string.IsNullOrEmpty(s)).ToList()
+                    : new List<string> { "Free Size" };
+
+                var activeVariants = p.Variants;
+                if (sizesList.Any() && !sizesList.Any(s => s.Equals("Free Size", StringComparison.OrdinalIgnoreCase)))
+                {
+                    activeVariants = activeVariants
+                        .Where(v => sizesList.Contains(v.Size, StringComparer.OrdinalIgnoreCase) && !v.Size.Equals("Free Size", StringComparison.OrdinalIgnoreCase))
+                        .ToList();
+                }
+
+                return new
                 {
                     productId = p.Id,
                     productName = p.Name,
                     imageUrl = p.ImageUrl,
                     categoryName = p.Category != null ? p.Category.Name : "Uncategorized",
-                    variants = p.Variants.Select(v => new
+                    variants = activeVariants.Select(v => new
                     {
                         variantId = v.Id,
                         size = v.Size,
@@ -43,14 +58,15 @@ namespace backend.Controllers
                                : (v.StockQuantity - v.ReservedQuantity) <= v.LowStockThreshold ? "LowStock"
                                : "InStock"
                     }).ToList(),
-                    totalStock = p.Variants.Sum(v => v.StockQuantity),
-                    totalAvailable = p.Variants.Sum(v => v.StockQuantity - v.ReservedQuantity),
-                    overallStatus = p.Variants.Sum(v => v.StockQuantity) <= 0 ? "OutOfStock"
-                                  : p.Variants.Any(v => (v.StockQuantity - v.ReservedQuantity) <= v.LowStockThreshold) ? "LowStock"
+                    totalStock = activeVariants.Sum(v => v.StockQuantity),
+                    totalAvailable = activeVariants.Sum(v => v.StockQuantity - v.ReservedQuantity),
+                    overallStatus = activeVariants.Sum(v => v.StockQuantity) <= 0 ? "OutOfStock"
+                                  : activeVariants.Any(v => (v.StockQuantity - v.ReservedQuantity) <= v.LowStockThreshold) ? "LowStock"
                                   : "InStock"
-                })
-                .OrderBy(p => p.productName)
-                .ToListAsync();
+                };
+            })
+            .OrderBy(p => p.productName)
+            .ToList();
 
             return Ok(products);
         }
@@ -68,27 +84,39 @@ namespace backend.Controllers
             if (product == null)
                 return NotFound("Product not found.");
 
+            var sizesList = !string.IsNullOrEmpty(product.Sizes)
+                ? product.Sizes.Split(',').Select(s => s.Trim()).Where(s => !string.IsNullOrEmpty(s)).ToList()
+                : new List<string> { "Free Size" };
+
+            var activeVariants = product.Variants;
+            if (sizesList.Any() && !sizesList.Any(s => s.Equals("Free Size", StringComparison.OrdinalIgnoreCase)))
+            {
+                activeVariants = activeVariants
+                    .Where(v => sizesList.Contains(v.Size, StringComparer.OrdinalIgnoreCase) && !v.Size.Equals("Free Size", StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
+
             var result = new
             {
                 productId = product.Id,
                 productName = product.Name,
                 imageUrl = product.ImageUrl,
                 categoryName = product.Category?.Name ?? "Uncategorized",
-                variants = product.Variants.Select(v => new
+                variants = activeVariants.Select(v => new
                 {
                     variantId = v.Id,
                     size = v.Size,
                     color = v.Color,
                     stockQuantity = v.StockQuantity,
                     reservedQuantity = v.ReservedQuantity,
-                    availableStock = v.AvailableStock,
+                    availableStock = v.StockQuantity - v.ReservedQuantity,
                     lowStockThreshold = v.LowStockThreshold,
                     status = v.StockQuantity <= 0 ? "OutOfStock"
-                           : v.AvailableStock <= v.LowStockThreshold ? "LowStock"
+                           : (v.StockQuantity - v.ReservedQuantity) <= v.LowStockThreshold ? "LowStock"
                            : "InStock"
                 }).ToList(),
-                totalStock = product.Variants.Sum(v => v.StockQuantity),
-                totalAvailable = product.Variants.Sum(v => v.AvailableStock),
+                totalStock = activeVariants.Sum(v => v.StockQuantity),
+                totalAvailable = activeVariants.Sum(v => v.StockQuantity - v.ReservedQuantity),
             };
 
             return Ok(result);
@@ -98,28 +126,54 @@ namespace backend.Controllers
         [HttpGet("low-stock")]
         public async Task<IActionResult> GetLowStock()
         {
-            var lowStockVariants = await _context.ProductVariants
+            var allLowStock = await _context.ProductVariants
                 .Include(v => v.Product)
                     .ThenInclude(p => p!.Images)
                 .Include(v => v.Product)
                     .ThenInclude(p => p!.Category)
+                .Include(v => v.Product)
+                    .ThenInclude(p => p!.Variants)
                 .Where(v => v.StockQuantity > 0 && (v.StockQuantity - v.ReservedQuantity) <= v.LowStockThreshold)
-                .Select(v => new
-                {
-                    variantId = v.Id,
-                    productId = v.ProductId,
-                    productName = v.Product != null ? v.Product.Name : "Unknown",
-                    imageUrl = v.Product != null ? v.Product.ImageUrl : null,
-                    categoryName = v.Product != null && v.Product.Category != null ? v.Product.Category.Name : "Uncategorized",
-                    size = v.Size,
-                    color = v.Color,
-                    stockQuantity = v.StockQuantity,
-                    availableStock = v.StockQuantity - v.ReservedQuantity,
-                    lowStockThreshold = v.LowStockThreshold,
-                })
                 .ToListAsync();
 
-            return Ok(lowStockVariants);
+            var filtered = allLowStock.Where(v => {
+                if (v.Product == null) return true;
+                
+                var sizesList = !string.IsNullOrEmpty(v.Product.Sizes)
+                    ? v.Product.Sizes.Split(',').Select(s => s.Trim()).Where(s => !string.IsNullOrEmpty(s)).ToList()
+                    : new List<string> { "Free Size" };
+
+                // If product has other specific variants, filter out Free Size
+                if (v.Size.Equals("Free Size", StringComparison.OrdinalIgnoreCase) && 
+                    sizesList.Any() && !sizesList.Any(s => s.Equals("Free Size", StringComparison.OrdinalIgnoreCase)))
+                {
+                    return false;
+                }
+
+                // If variant size is no longer in product sizes list, filter it out
+                if (sizesList.Any() && !sizesList.Contains(v.Size, StringComparer.OrdinalIgnoreCase))
+                {
+                    return false;
+                }
+
+                return true;
+            }).ToList();
+
+            var result = filtered.Select(v => new
+            {
+                variantId = v.Id,
+                productId = v.ProductId,
+                productName = v.Product != null ? v.Product.Name : "Unknown",
+                imageUrl = v.Product != null ? v.Product.ImageUrl : null,
+                categoryName = v.Product != null && v.Product.Category != null ? v.Product.Category.Name : "Uncategorized",
+                size = v.Size,
+                color = v.Color,
+                stockQuantity = v.StockQuantity,
+                availableStock = v.StockQuantity - v.ReservedQuantity,
+                lowStockThreshold = v.LowStockThreshold,
+            }).ToList();
+
+            return Ok(result);
         }
 
         // 4. PUT /api/Stock/{variantId}/adjust — Admin adjusts stock
@@ -196,14 +250,35 @@ namespace backend.Controllers
         [HttpGet("summary")]
         public async Task<IActionResult> GetStockSummary()
         {
-            var variants = await _context.ProductVariants.ToListAsync();
+            var products = await _context.Products
+                .Include(p => p.Variants)
+                .ToListAsync();
 
-            var totalProducts = await _context.Products.CountAsync();
-            var totalVariants = variants.Count;
-            var totalItemsInStock = variants.Sum(v => v.StockQuantity);
-            var outOfStockCount = variants.Count(v => v.StockQuantity <= 0);
-            var lowStockCount = variants.Count(v => v.StockQuantity > 0 && (v.StockQuantity - v.ReservedQuantity) <= v.LowStockThreshold);
-            var inStockCount = variants.Count(v => v.StockQuantity > 0 && (v.StockQuantity - v.ReservedQuantity) > v.LowStockThreshold);
+            var activeVariants = new List<ProductVariant>();
+
+            foreach (var p in products)
+            {
+                var sizesList = !string.IsNullOrEmpty(p.Sizes)
+                    ? p.Sizes.Split(',').Select(s => s.Trim()).Where(s => !string.IsNullOrEmpty(s)).ToList()
+                    : new List<string> { "Free Size" };
+
+                var pVariants = p.Variants;
+                if (sizesList.Any() && !sizesList.Any(s => s.Equals("Free Size", StringComparison.OrdinalIgnoreCase)))
+                {
+                    pVariants = pVariants
+                        .Where(v => sizesList.Contains(v.Size, StringComparer.OrdinalIgnoreCase) && !v.Size.Equals("Free Size", StringComparison.OrdinalIgnoreCase))
+                        .ToList();
+                }
+
+                activeVariants.AddRange(pVariants);
+            }
+
+            var totalProducts = products.Count;
+            var totalVariants = activeVariants.Count;
+            var totalItemsInStock = activeVariants.Sum(v => v.StockQuantity);
+            var outOfStockCount = activeVariants.Count(v => v.StockQuantity <= 0);
+            var lowStockCount = activeVariants.Count(v => v.StockQuantity > 0 && (v.StockQuantity - v.ReservedQuantity) <= v.LowStockThreshold);
+            var inStockCount = activeVariants.Count(v => v.StockQuantity > 0 && (v.StockQuantity - v.ReservedQuantity) > v.LowStockThreshold);
 
             return Ok(new
             {

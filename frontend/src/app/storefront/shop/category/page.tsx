@@ -4,7 +4,6 @@ import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { productsAPI } from "@/lib/api";
-import { useCart } from "@/context/CartContext";
 
 const PLACEHOLDER_IMG = "https://images.unsplash.com/photo-1540221652346-e5dd6b50f3e7?q=80&w=600";
 
@@ -14,7 +13,6 @@ function CategoryContent() {
 
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const { addToCart } = useCart();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -68,6 +66,10 @@ function CategoryContent() {
                   ? product.price - (product.price * product.discount / 100)
                   : product.price;
 
+                const isOutOfStock = product.variants && product.variants.length > 0
+                  ? product.variants.every((v: any) => v.stockQuantity <= 0)
+                  : false;
+
                 return (
                   <div key={product.id} className="group relative flex flex-col justify-between bg-white border border-gray-100 rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300">
                     <Link href={`/storefront/product/${product.slug}`} className="cursor-pointer">
@@ -78,8 +80,10 @@ function CategoryContent() {
                           className="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                         />
                         {hasDiscount && (
-                          <div className="absolute top-3 left-3 bg-red-500 text-white font-bold text-xs px-2.5 py-1 rounded-full shadow">
-                            {product.discount}% OFF
+                          <div className="absolute top-2.5 left-2.5 backdrop-blur-xl rounded-full px-2 py-0.5" style={{ background: "rgba(0,0,0,0.55)" }}>
+                            <span className="text-white font-medium" style={{ fontSize: 9, letterSpacing: "0.3px" }}>
+                              -{product.discount}%
+                            </span>
                           </div>
                         )}
                       </div>
@@ -103,28 +107,18 @@ function CategoryContent() {
                       </div>
                     </Link>
                     <div className="px-5 pb-5 pt-0">
-                      <button
-                        onClick={() => {
-                          const firstAvailableVariant = product.variants?.find((v: any) => v.stockQuantity > 0) || product.variants?.[0];
-                          const size = firstAvailableVariant?.size;
-                          const color = firstAvailableVariant?.color;
-                          const variantId = firstAvailableVariant?.variantId || firstAvailableVariant?.id;
-                          const availStock = firstAvailableVariant ? (firstAvailableVariant.stockQuantity - (firstAvailableVariant.reservedQuantity || 0)) : undefined;
-
-                          addToCart({
-                            id: product.id,
-                            name: product.name,
-                            price: finalPrice,
-                            imageUrl: imgUrl,
-                            description: product.description,
-                            variants: product.variants,
-                          } as any, 1, size, color, variantId, availStock);
-                          alert(`${product.name} added to cart! 🛒`);
-                        }}
-                        className="w-full bg-gray-900 hover:bg-blue-600 text-white font-bold py-2.5 px-4 rounded-lg transition-colors text-sm"
-                      >
-                        Add to Bag 🛍️
-                      </button>
+                      <Link href={`/storefront/product/${product.slug}`} className="w-full block">
+                        <button
+                          className="w-full border rounded-lg py-2.5 px-4 text-sm font-semibold transition-all flex items-center justify-center gap-2 bg-white border-gray-300 hover:bg-gray-50 text-gray-900 hover:border-gray-400 cursor-pointer"
+                        >
+                          <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+                            <line x1="3" y1="6" x2="21" y2="6" />
+                            <path d="M16 10a4 4 0 01-8 0" />
+                          </svg>
+                          Select Options
+                        </button>
+                      </Link>
                     </div>
                   </div>
                 );

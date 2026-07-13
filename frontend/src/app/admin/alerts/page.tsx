@@ -69,7 +69,7 @@ export default function AdminAlertsPage() {
               id: `stock-critical-${p.productId}-${v.variantId}`,
               type: "critical",
               title: "Critical Out of Stock",
-              description: `"${p.productName}" (Size: ${v.size}${v.color && v.color !== 'Default' ? `, Color: ${v.color}` : ''}) is sold out.`,
+              description: `"${p.productName}" (Size: ${v.size}${v.color && v.color !== 'Default' ? `, Color: ${v.color}` : ''}) is out of stock.`,
               actionUrl: "/admin/stock",
               actionText: "Refill Stock",
             });

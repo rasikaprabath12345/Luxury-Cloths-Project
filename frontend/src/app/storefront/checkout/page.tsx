@@ -32,6 +32,39 @@ export default function CartPage() {
   const [orderNote, setOrderNote] = useState<string>("");
   const [paymentSlipUrl, setPaymentSlipUrl] = useState<string>("");
   const [uploadingSlip, setUploadingSlip] = useState<boolean>(false);
+  const [alertState, setAlertState] = useState<{
+    show: boolean;
+    message: string;
+    isError?: boolean;
+    onClose?: () => void;
+  } | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [liveStockMap, setLiveStockMap] = useState<Record<number, number>>({});
+
+  const triggerAlert = (message: string, isError: boolean = false, onClose?: () => void) => {
+    setAlertState({ show: true, message, isError, onClose });
+  };
+
+  // Fetch live stock for all cart items on mount/cart change
+  useEffect(() => {
+    if (cartItems.length === 0) return;
+    const uniqueProductIds = [...new Set(cartItems.map((item) => item.id))];
+
+    uniqueProductIds.forEach((productId) => {
+      axios.get(`http://localhost:5226/api/Stock/${productId}`)
+        .then((res) => {
+          const variants = res.data?.variants || [];
+          const stockUpdates: Record<number, number> = {};
+          variants.forEach((v: { variantId: number; availableStock: number }) => {
+            stockUpdates[v.variantId] = v.availableStock;
+          });
+          setLiveStockMap(prev => ({ ...prev, ...stockUpdates }));
+        })
+        .catch((err) => {
+          console.error("Failed to load live stock on mount:", err);
+        });
+    });
+  }, [cartItems]);
 
   useEffect(() => {
     const savedUserStr = localStorage.getItem("luxury_user");
@@ -88,7 +121,7 @@ export default function CartPage() {
     if (coupon.trim().toUpperCase() === "LUXURY10") {
       setCouponApplied(true);
     } else {
-      alert("Invalid coupon code. Try LUXURY10 for 10% off.");
+      triggerAlert("Invalid coupon code. Try LUXURY10 for 10% off.", true);
     }
   };
 
@@ -100,10 +133,10 @@ export default function CartPage() {
     try {
       const uploadRes = await uploadAPI.uploadImage(file);
       setPaymentSlipUrl(uploadRes.data.url);
-      alert("🎉 Receipt uploaded successfully!");
+      triggerAlert("🎉 Receipt uploaded successfully!");
     } catch (error: any) {
       console.error("Receipt upload failed:", error);
-      alert(error.response?.data?.message || "Failed to upload receipt. Please try again.");
+      triggerAlert(error.response?.data?.message || "Failed to upload receipt. Please try again.", true);
     } finally {
       setUploadingSlip(false);
       e.target.value = "";
@@ -120,9 +153,10 @@ export default function CartPage() {
     // Legacy cart safeguard
     const hasLegacy = cartItems.some(item => !item.variantId || item.variantId === item.id);
     if (hasLegacy) {
-      alert("Your cart contains outdated items. The cart will be cleared. Please add the items to the cart again.");
-      clearCart();
-      router.push("/storefront/shop");
+      triggerAlert("Your cart contains outdated items. The cart will be cleared. Please add the items to the cart again.", true, () => {
+        clearCart();
+        router.push("/storefront/shop");
+      });
       return;
     }
 
@@ -130,52 +164,121 @@ export default function CartPage() {
     const savedUserStr = localStorage.getItem("luxury_user");
     const token = localStorage.getItem("luxury_token");
     if (!savedUserStr || !token) {
-      alert("Please log in to place an order.");
-      router.push("/auth/login");
+      triggerAlert("Please log in to place an order.", true, () => {
+        router.push("/auth/login");
+      });
       return;
     }
 
     if (!firstName.trim()) {
-      alert("Please enter your first name.");
+      triggerAlert("Please enter your first name.", true);
       return;
     }
     if (!lastName.trim()) {
-      alert("Please enter your last name.");
+      triggerAlert("Please enter your last name.", true);
       return;
     }
     if (!email.trim()) {
-      alert("Please enter your email address.");
+      triggerAlert("Please enter your email address.", true);
       return;
     }
     if (!phone.trim()) {
-      alert("Please enter your phone number.");
+      triggerAlert("Please enter your phone number.", true);
       return;
     }
     if (!country.trim()) {
-      alert("Please enter your country.");
+      triggerAlert("Please enter your country.", true);
       return;
     }
     if (!state.trim()) {
-      alert("Please enter your state or province.");
+      triggerAlert("Please enter your state or province.", true);
       return;
     }
     if (!city.trim()) {
-      alert("Please enter your city.");
+      triggerAlert("Please enter your city.", true);
       return;
     }
     if (!address.trim()) {
-      alert("Please enter your street address.");
+      triggerAlert("Please enter your street address.", true);
       return;
     }
 
     if (paymentMethod === "BankTransfer" && !paymentSlipUrl) {
-      alert("Please upload your bank deposit receipt/slip.");
+      triggerAlert("Please upload your bank deposit receipt/slip.", true);
+      return;
+    }
+
+
+    // ✅ Pre-flight: block items with quantity = 0
+    const zeroQtyItems = cartItems.filter((item) => (item.quantity || 0) <= 0);
+    if (zeroQtyItems.length > 0) {
+      const names = zeroQtyItems.map((item) => `"${item.name}${item.size ? ` (${item.size})` : ""}"`).join(", ");
+      triggerAlert(
+        `The following items are out of stock (quantity 0): ${names}. Please remove them before placing the order.`,
+        true
+      );
       return;
     }
 
     const user = JSON.parse(savedUserStr);
     setIsOrdering(true);
+
     try {
+      // ✅ Live stock validation — fetch fresh stock data from server for each product
+      const uniqueProductIds = [...new Set(cartItems.map((item) => item.id))];
+      const stockResults: Record<number, number> = {}; // variantId -> availableStock
+
+      await Promise.all(
+        uniqueProductIds.map(async (productId) => {
+          try {
+            const res = await axios.get(`http://localhost:5226/api/Stock/${productId}`);
+            const variants = res.data?.variants || [];
+            variants.forEach((v: { variantId: number; availableStock: number }) => {
+              stockResults[v.variantId] = v.availableStock;
+            });
+          } catch {
+            // If stock fetch fails for a product, skip — let the server decide
+          }
+        })
+      );
+
+      // Check each cart item against live stock
+      const stockFailures: string[] = [];
+      for (const item of cartItems) {
+        const variantId = item.variantId;
+        if (variantId !== undefined && stockResults[variantId] !== undefined) {
+          const liveStock = stockResults[variantId];
+          if ((item.quantity || 1) > liveStock) {
+            stockFailures.push(
+              `"${item.name}${item.size ? ` (${item.size})` : ""}" — requested: ${item.quantity}, available: ${liveStock}`
+            );
+          }
+        }
+      }
+
+      if (stockFailures.length > 0) {
+        triggerAlert(
+          `The following items exceed available stock:\n${stockFailures.join("\n")}\n\nPlease reduce quantity or remove these items.`,
+          true
+        );
+        setIsOrdering(false);
+        return;
+      }
+
+      // Build payload — skip any items with quantity <= 0 as a final safety net
+      const validItems = cartItems
+        .filter((item) => (item.quantity || 0) > 0)
+        .map((item) => ({
+          productVariantId: item.variantId,
+          quantity: item.quantity || 1,
+        }));
+
+      if (validItems.length === 0) {
+        triggerAlert("Your cart has no valid items to order.", true);
+        setIsOrdering(false);
+        return;
+      }
+
       const orderData = {
         userId: user.id,
         paymentMethod,
@@ -191,31 +294,39 @@ export default function CartPage() {
         orderNote,
         shippingAddress: `${address}, ${city}, ${state}, ${country}. Postal Code: ${postalCode}`,
         paymentSlipUrl,
-        items: cartItems.map(item => ({
-          productVariantId: item.variantId,
-          quantity: item.quantity || 1,
-        })),
+        items: validItems,
       };
+
       const response = await axios.post("http://localhost:5226/api/Orders", orderData, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
       if (response.status === 200 || response.status === 201) {
-        alert("🎉 " + (response.data.message || "Order placed successfully!"));
-        clearCart();
-        router.push("/orders");
+        triggerAlert("🎉 " + (response.data.message || "Order placed successfully!"), false, () => {
+          clearCart();
+          router.push("/orders");
+        });
       }
     } catch (error: any) {
       console.error("Order failed:", error);
-      const errorMsg = typeof error.response?.data === "string"
-        ? error.response.data
-        : (error.response?.data?.message || "Order failed. Please try again.");
-      alert(errorMsg);
+      // Backend returns plain string or object with .message
+      let errorMsg = "Order failed. Please try again.";
+      if (error.response?.data) {
+        if (typeof error.response.data === "string") {
+          errorMsg = error.response.data;
+        } else if (error.response.data.message) {
+          errorMsg = error.response.data.message;
+        } else if (error.response.data.title) {
+          errorMsg = error.response.data.title;
+        }
+      }
+      triggerAlert(errorMsg, true);
     } finally {
       setIsOrdering(false);
     }
   };
+
 
   if (loading) {
     return (
@@ -333,7 +444,7 @@ export default function CartPage() {
             </div>
             {cartItems.length > 0 && (
               <button
-                onClick={clearCart}
+                onClick={() => setShowClearConfirm(true)}
                 style={{
                   background: "transparent", border: "none", color: "#FF3B30",
                   fontSize: 13, fontWeight: 600, cursor: "pointer",
@@ -400,9 +511,19 @@ export default function CartPage() {
                   const img = item.imageUrl || item.image || PLACEHOLDER_IMG;
                   const itemKey = `${item.id}-${item.size || ''}-${item.color || ''}`;
                   const isRemoving = removingId === itemKey;
+
+                  // Use live stock map if loaded, fallback to stored item.availableStock
+                  const liveStock = item.variantId !== undefined && liveStockMap[item.variantId] !== undefined
+                    ? liveStockMap[item.variantId]
+                    : item.availableStock;
+
+                  const isOverStock = liveStock !== undefined && liveStock > 0 && (item.quantity || 1) > liveStock;
+                  const isOutOfStock = liveStock !== undefined && liveStock <= 0;
+
                   return (
                     <div
                       key={itemKey}
+                      className="cart-item-card"
                       style={{
                         ...glass.card,
                         display: "flex",
@@ -414,9 +535,9 @@ export default function CartPage() {
                         border: "1px solid rgba(255,255,255,0.9)",
                         background: "rgba(255,255,255,0.65)"
                       }}
-                      className="cart-item-card"
                     >
                       {/* Image container with zoom hover */}
+
                       <div style={{
                         position: "relative",
                         flexShrink: 0,
@@ -475,17 +596,24 @@ export default function CartPage() {
                                   padding: "2px 8px", borderRadius: 6
                                 }}>Color: {item.color}</span>
                               )}
-                              {item.availableStock !== undefined && item.availableStock <= 5 && item.availableStock > 0 && (
+                              {liveStock !== undefined && liveStock <= 5 && liveStock > 0 && !isOverStock && (
                                 <span style={{
                                   fontSize: 10, fontWeight: 600, color: "#FF9500",
                                   background: "rgba(255,149,0,0.1)", border: "0.5px solid rgba(255,149,0,0.2)",
                                   padding: "2px 8px", borderRadius: 6
-                                }}>Only {item.availableStock} left</span>
+                                }}>Only {liveStock} left</span>
                               )}
-                              {item.availableStock !== undefined && item.availableStock <= 0 && (
+                              {isOverStock && (
                                 <span style={{
                                   fontSize: 10, fontWeight: 600, color: "#FF3B30",
-                                  background: "rgba(255,59,48,0.1)", border: "0.5px solid rgba(255,59,48,0.2)",
+                                  background: "rgba(255,59,48,0.1)", border: "0.5px solid rgba(255,59,48,0.25)",
+                                  padding: "2px 8px", borderRadius: 6
+                                }}>⚠ Only {liveStock} available</span>
+                              )}
+                              {isOutOfStock && (
+                                <span style={{
+                                  fontSize: 10, fontWeight: 600, color: "#FF3B30",
+                                  background: "rgba(255,59,48,0.1)", border: "0.5px solid rgba(255,59,48,0.25)",
                                   padding: "2px 8px", borderRadius: 6
                                 }}>Out of stock</span>
                               )}
@@ -511,7 +639,6 @@ export default function CartPage() {
                         </div>
 
                         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, marginTop: 14 }}>
-
                           {/* Premium quantity adjustment buttons */}
                           <div style={{
                             display: "flex", alignItems: "center",
@@ -520,12 +647,12 @@ export default function CartPage() {
                           }}>
                             <button
                               onClick={() => handleUpdateQuantity(item.id, item.quantity - 1, item.size, item.color)}
-                              disabled={item.quantity <= 1}
+                              disabled={item.quantity <= 1 || isOutOfStock}
                               style={{
                                 width: 28, height: 26, display: "flex", alignItems: "center",
                                 justifyItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700,
-                                color: item.quantity <= 1 ? "#C7C7CC" : "#555", background: "transparent", border: "none",
-                                cursor: item.quantity <= 1 ? "default" : "pointer", transition: "background 0.15s",
+                                color: (item.quantity <= 1 || isOutOfStock) ? "#C7C7CC" : "#555", background: "transparent", border: "none",
+                                cursor: (item.quantity <= 1 || isOutOfStock) ? "default" : "pointer", transition: "background 0.15s",
                                 borderRadius: 10
                               }}
                               className="qty-action-btn"
@@ -536,13 +663,13 @@ export default function CartPage() {
                             }}>{item.quantity}</span>
                             <button
                               onClick={() => handleUpdateQuantity(item.id, item.quantity + 1, item.size, item.color)}
-                              disabled={item.availableStock !== undefined && item.quantity >= item.availableStock}
+                              disabled={isOutOfStock || (liveStock !== undefined && item.quantity >= liveStock)}
                               style={{
                                 width: 28, height: 26, display: "flex", alignItems: "center",
                                 justifyItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700,
-                                color: (item.availableStock !== undefined && item.quantity >= item.availableStock) ? "#C7C7CC" : "#555",
+                                color: (isOutOfStock || (liveStock !== undefined && item.quantity >= liveStock)) ? "#C7C7CC" : "#555",
                                 background: "transparent", border: "none",
-                                cursor: (item.availableStock !== undefined && item.quantity >= item.availableStock) ? "not-allowed" : "pointer",
+                                cursor: (isOutOfStock || (liveStock !== undefined && item.quantity >= liveStock)) ? "not-allowed" : "pointer",
                                 transition: "background 0.15s",
                                 borderRadius: 10
                               }}
@@ -1191,12 +1318,176 @@ export default function CartPage() {
 
           </div>
         )}
+
+        {/* Custom Premium Alert Modal */}
+        {alertState?.show && (
+          <div className="custom-alert-overlay">
+            <div className="custom-alert-modal">
+              <div className="custom-alert-header">
+                <div className="custom-alert-icon-container" style={{
+                  background: alertState.isError ? "#FDF2F2" : "#FEF9E7",
+                  color: alertState.isError ? "#FF4B4B" : "#aa841c"
+                }}>
+                  {alertState.isError ? "⚠️" : "✨"}
+                </div>
+                <h3 className="custom-alert-title">
+                  {alertState.isError ? "Notification" : "Success"}
+                </h3>
+              </div>
+              <p className="custom-alert-message">{alertState.message}</p>
+              <button
+                className="custom-alert-btn"
+                onClick={() => {
+                  setAlertState(null);
+                  if (alertState.onClose) alertState.onClose();
+                }}
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Clear Cart Confirmation Modal */}
+        {showClearConfirm && (
+          <div className="custom-alert-overlay" onClick={() => setShowClearConfirm(false)}>
+            <div
+              className="custom-alert-modal"
+              onClick={(e) => e.stopPropagation()}
+              style={{ maxWidth: 360, padding: "36px 28px 28px" }}
+            >
+              <div className="custom-alert-header">
+                <div className="custom-alert-icon-container" style={{ background: "#FDF2F2", color: "#FF4B4B", width: 60, height: 60, fontSize: 26 }}>
+                  🗑️
+                </div>
+                <h3 className="custom-alert-title" style={{ marginTop: 14 }}>Clear Cart?</h3>
+              </div>
+              <p className="custom-alert-message" style={{ color: "#666", lineHeight: 1.65, fontSize: 14 }}>
+                Are you sure you want to remove all items from your cart? This action cannot be undone.
+              </p>
+              <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
+                <button
+                  onClick={() => setShowClearConfirm(false)}
+                  style={{
+                    flex: 1, padding: "13px 16px", borderRadius: 12, whiteSpace: "nowrap",
+                    border: "1.5px solid #E5E5EA", background: "#fff",
+                    fontSize: 14, fontWeight: 700, color: "#444", cursor: "pointer",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    clearCart();
+                    setShowClearConfirm(false);
+                  }}
+                  style={{
+                    flex: 1, padding: "13px 16px", borderRadius: 12, whiteSpace: "nowrap",
+                    border: "none", background: "#FF4B4B",
+                    fontSize: 14, fontWeight: 700, color: "#fff", cursor: "pointer",
+                    boxShadow: "0 4px 14px rgba(255,75,75,0.3)",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  Yes, Clear All
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
 
       {/* Styled classes and keyframe animations */}
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes modalScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        .custom-alert-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 10001;
+          background: rgba(0, 0, 0, 0.55);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          animation: fadeIn 0.3s ease-out;
+        }
+
+        .custom-alert-modal {
+          background: #FFFFFF;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+          border-radius: 32px;
+          padding: 32px 24px;
+          width: 90%;
+          max-width: 350px;
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          animation: modalScale 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .custom-alert-header {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          margin-bottom: 16px;
+        }
+
+        .custom-alert-icon-container {
+          width: 72px;
+          height: 72px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 28px;
+          margin-bottom: 16px;
+        }
+
+        .custom-alert-title {
+          font-size: 22px;
+          font-weight: 700;
+          color: #111827;
+          margin: 0;
+          font-family: var(--font-body), -apple-system, BlinkMacSystemFont, sans-serif;
+          letter-spacing: -0.2px;
+        }
+
+        .custom-alert-message {
+          font-size: 14px;
+          line-height: 1.5;
+          color: #6B7280;
+          margin: 0 0 24px;
+          max-width: 300px;
+          font-family: var(--font-body), -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .custom-alert-btn {
+          width: 100%;
+          height: 48px;
+          background: #A83232;
+          color: white;
+          border: none;
+          border-radius: 14px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .custom-alert-btn:hover {
+          background: #902B2B;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(168, 50, 50, 0.2);
+        }
+
+        .custom-alert-btn:active {
+          transform: translateY(0);
+        }
 
         .slip-upload-zone:hover {
           border-color: rgba(170,132,28,0.6) !important;

@@ -144,7 +144,7 @@ export default function WishlistDrawer({ onClose }: { onClose: () => void }) {
                     padding: 12, borderRadius: 20, border: "0.5px solid rgba(255,255,255,0.8)",
                     boxShadow: "0 2px 12px rgba(0,0,0,0.04)"
                   }}>
-                    <Link href={`/storefront/product/${item.id}`} onClick={handleClose}>
+                    <Link href={`/storefront/product/${item.slug || item.id}`} onClick={handleClose}>
                       <img
                         src={imgUrl}
                         alt={item.name}

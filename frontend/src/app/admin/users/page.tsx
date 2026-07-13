@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { authAPI } from "@/lib/api";
 import { showToast, showConfirm } from "@/lib/adminUtils";
+import { md5 } from "@/utils/md5";
 
 interface User {
   id: number; fullName: string; email: string; phone: string;
@@ -107,11 +108,11 @@ export default function AdminUsersPage() {
             {filteredUsers.map((user) => (
               <div key={user.id} className="user-row">
                 <div className="user-avatar">
-                  {user.avatar ? (
-                    <img src={user.avatar} alt={user.fullName} className="avatar-img" />
-                  ) : (
-                    <div className="avatar-placeholder">{getInitials(user.fullName)}</div>
-                  )}
+                  <img
+                    src={user.avatar || `https://www.gravatar.com/avatar/${md5(user.email.trim().toLowerCase())}?d=identicon`}
+                    alt={user.fullName}
+                    className="avatar-img"
+                  />
                 </div>
                 <div className="user-info">
                   <span className="user-name">{user.fullName || "Unnamed User"}</span>

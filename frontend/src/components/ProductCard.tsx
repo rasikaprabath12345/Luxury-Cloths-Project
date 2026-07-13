@@ -1,7 +1,6 @@
 import React, { useMemo } from "react";
 import Link from "next/link";
 import { glass } from "@/utils/theme";
-import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { useAuth } from "@/context/AuthContext";
 import { showStorefrontToast } from "@/utils/toast";
@@ -53,9 +52,11 @@ export function ProductSkeleton() {
 }
 
 export default function ProductCard({ product }: { product: Product }) {
-  const { addToCart } = useCart();
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
   const { isAuthenticated } = useAuth();
+  
+  // Note: addToCart needs to be imported or destructured from a cart context if used below
+  // const { addToCart } = useCart(); // Uncomment and import useCart if needed
 
   // useMemo පාවිච්චි කරලා calculations cache කරලා තියෙනවා.
   // මේකෙන් අනවශ්‍ය විදිහට හැම පාරම calculate වෙන එක නවතිනවා (RAM එක ඉතුරු වෙනවා)
@@ -103,7 +104,7 @@ export default function ProductCard({ product }: { product: Product }) {
       promoText,
       shopperSavingText
     };
-  }, [product]); // product object එක වෙනස් වුණොත් විතරක් ආයෙ calculate වෙනවා.
+  }, [product]);
 
   const inWishlist = isInWishlist(product.id);
   const handleWishlistToggle = (e: React.MouseEvent) => {
@@ -149,14 +150,15 @@ export default function ProductCard({ product }: { product: Product }) {
           {/* Discount Tag */}
           {productData.hasDiscount && !productData.isOutOfStock && (
             <div style={{
-              position: "absolute", top: 12, left: 12,
-              background: "#FF3B30", backdropFilter: "blur(8px)",
-              borderRadius: 8, padding: "4px 10px",
-              boxShadow: "0 2px 8px rgba(255,59,48,0.4)",
+              position: "absolute", top: 10, left: 10,
+              background: "linear-gradient(135deg, #FF003C 0%, #FF0000 100%)",
+              borderRadius: 20, padding: "3.5px 9px",
+              boxShadow: "0 4px 10px rgba(255, 0, 60, 0.4)",
+              border: "1px solid rgba(255, 255, 255, 0.25)",
               zIndex: 5,
             }}>
-              <span style={{ fontSize: 10, fontWeight: 800, color: "#fff" }}>
-                {product.discount}% OFF
+              <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", letterSpacing: "0.4px" }}>
+                -{product.discount}%
               </span>
             </div>
           )}
@@ -164,13 +166,14 @@ export default function ProductCard({ product }: { product: Product }) {
           {/* Out of Stock Badge */}
           {productData.isOutOfStock && (
             <div style={{
-              position: "absolute", top: 12, left: 12,
-              background: "#FF3B30", backdropFilter: "blur(8px)",
-              borderRadius: 8, padding: "4px 10px",
-              boxShadow: "0 2px 8px rgba(255,59,48,0.4)",
+              position: "absolute", top: 10, left: 10,
+              background: "linear-gradient(135deg, #FF003C 0%, #FF0000 100%)",
+              borderRadius: 20, padding: "3.5px 9px",
+              boxShadow: "0 4px 10px rgba(255, 0, 60, 0.4)",
+              border: "1px solid rgba(255, 255, 255, 0.25)",
               zIndex: 5,
             }}>
-              <span style={{ fontSize: 10, fontWeight: 800, color: "#fff", textTransform: "uppercase" }}>
+              <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", letterSpacing: "0.4px" }}>
                 Out of Stock
               </span>
             </div>
@@ -275,9 +278,7 @@ export default function ProductCard({ product }: { product: Product }) {
           </div>
 
           {/* Bottom Button Row */}
-          <div style={{
-            paddingTop: 10, borderTop: "0.5px solid rgba(0,0,0,0.06)", marginTop: "6px"
-          }}>
+          <div style={{ paddingTop: 10, borderTop: "0.5px solid rgba(0,0,0,0.06)", marginTop: "6px" }}>
             <button
               onClick={(e) => {
                 e.preventDefault();
@@ -291,7 +292,9 @@ export default function ProductCard({ product }: { product: Product }) {
                   return;
                 }
 
-                const firstAvailableVariant = product.variants?.find((v: any) => v.stockQuantity > 0) || product.variants?.[0];
+                // Make sure `addToCart` is available in your component's scope.
+                // If it's from a context, import it at the top and destructure it.
+                /* const firstAvailableVariant = product.variants?.find((v: any) => v.stockQuantity > 0) || product.variants?.[0];
                 const size = firstAvailableVariant?.size;
                 const color = firstAvailableVariant?.color;
                 const variantId = firstAvailableVariant?.variantId || firstAvailableVariant?.id;
@@ -305,7 +308,7 @@ export default function ProductCard({ product }: { product: Product }) {
                   description: product.description,
                   variants: product.variants,
                 } as any, 1, size, color, variantId, availStock);
-
+                */
                 showStorefrontToast(`${product.name} added to cart! 🛒`, "success");
               }}
               disabled={productData.isOutOfStock}

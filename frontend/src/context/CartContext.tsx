@@ -1,5 +1,6 @@
 "use client";
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { useAuth } from "./AuthContext";
 
 export interface Product {
   id: number;
@@ -37,34 +38,80 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
+  const { user, isLoading: authLoading } = useAuth();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
+  const [loadedUserId, setLoadedUserId] = useState<number | null | undefined>(undefined);
 
   useEffect(() => {
-    const savedCart = localStorage.getItem("cart");
+    if (authLoading) return;
+
+    const key = user ? `cart_${user.id}` : "cart";
+    const savedCart = localStorage.getItem(key);
+    let itemsToSet: CartItem[] = [];
+
     if (savedCart) {
       try {
         const parsed = JSON.parse(savedCart);
         const hasLegacy = Array.isArray(parsed) && parsed.some((item: any) => !item.variantId);
-        if (hasLegacy) {
-          localStorage.removeItem("cart");
-          setCartItems([]);
-        } else {
-          setCartItems(parsed);
+        if (!hasLegacy) {
+          itemsToSet = parsed;
         }
       } catch (error) {
         console.error("Failed to parse cart:", error);
+      }
+    }
+
+    // Merge logic: If user just logged in, merge guest cart into user cart
+    if (user) {
+      const guestCart = localStorage.getItem("cart");
+      if (guestCart) {
+        try {
+          const parsedGuest = JSON.parse(guestCart);
+          if (Array.isArray(parsedGuest) && parsedGuest.length > 0) {
+            const merged = [...itemsToSet];
+            parsedGuest.forEach((gItem: CartItem) => {
+              const exist = merged.find(
+                (item) => item.id === gItem.id && item.size === gItem.size && item.color === gItem.color
+              );
+              if (exist) {
+                exist.quantity = (exist.quantity || 1) + (gItem.quantity || 1);
+              } else {
+                merged.push(gItem);
+              }
+            });
+            itemsToSet = merged;
+          }
+        } catch (error) {
+          console.error("Failed to parse guest cart:", error);
+        }
         localStorage.removeItem("cart");
       }
     }
+
+    setCartItems(itemsToSet);
+    setLoadedUserId(user ? user.id : null);
     setIsLoaded(true);
-  }, []);
+  }, [user, authLoading]);
 
   useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem("cart", JSON.stringify(cartItems));
+    const currentUserId = user ? user.id : null;
+    if (isLoaded && !authLoading && loadedUserId === currentUserId) {
+      const key = user ? `cart_${user.id}` : "cart";
+      localStorage.setItem(key, JSON.stringify(cartItems));
     }
-  }, [cartItems, isLoaded]);
+  }, [cartItems, isLoaded, user, authLoading, loadedUserId]);
+
+  useEffect(() => {
+    const handleLogout = () => {
+      setCartItems([]);
+      setLoadedUserId(undefined);
+    };
+    window.addEventListener("luxury-logout", handleLogout);
+    return () => {
+      window.removeEventListener("luxury-logout", handleLogout);
+    };
+  }, []);
 
   const addToCart = (
     product: Product,

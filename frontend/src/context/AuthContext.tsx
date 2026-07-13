@@ -2,6 +2,18 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { signIn as nextAuthSignIn, signOut as nextAuthSignOut, useSession } from "next-auth/react";
 import { authAPI } from "@/lib/api";
+import { md5 } from "@/utils/md5";
+
+function getAvatar(avatar: string | undefined | null, email: string, googleImage?: string | null): string {
+    if (avatar && avatar.trim() !== "") {
+        return avatar;
+    }
+    if (googleImage && googleImage.trim() !== "") {
+        return googleImage;
+    }
+    const cleanEmail = (email || "").trim().toLowerCase();
+    return `https://www.gravatar.com/avatar/${md5(cleanEmail)}?d=identicon`;
+}
 
 export interface User {
     id: number;
@@ -40,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     // මේකෙන් අපි බලනවා session එක දැනටමත් sync කරලා ඉවරද කියලා
-    const [isSessionSynced, setIsSessionSynced] = useState(false); 
+    const [isSessionSynced, setIsSessionSynced] = useState(false);
     const { data: session, status } = useSession();
 
     // Sync NextAuth session (Google Sign-In) to local state & localStorage
@@ -55,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     fullName: (session as any).fullName || session.user?.name || "",
                     email: session.user?.email || "",
                     role: ((session as any).role || "customer").toLowerCase() as "admin" | "customer",
-                    avatar: (session as any).avatar || session.user?.image || "",
+                    avatar: getAvatar((session as any).avatar || session.user?.image, session.user?.email || "", session.user?.image),
                 };
                 setUser(userData);
                 setToken((session as any).backendToken);
@@ -75,16 +87,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setIsSessionSynced(false);
             }
         };
-        
+
         syncGoogleSession();
-        
-    // මෙතනට status සහ isSessionSynced කියන දෙකත් දාන්න ඕනේ
+
+        // මෙතනට status සහ isSessionSynced කියන දෙකත් දාන්න ඕනේ
     }, [session, status, isSessionSynced]);
 
     // Initialize auth from localStorage on mount
     useEffect(() => {
         let isMounted = true; // Cleanup function එකක් පාවිච්චි කරලා අනවශ්‍ය API calls නවත්තන්න
-        
+
         const initializeAuth = async () => {
             try {
                 const savedUser = localStorage.getItem("luxury_user");
@@ -113,32 +125,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
 
         initializeAuth();
-        
+
         return () => {
             isMounted = false;
         };
     }, []);
-
-    // Get Profile (මේ function එක dependency array වලට දාන්න අමාරු නිසා React.useCallback පාවිච්චි කරන එක හොඳයි, හැබැයි දැනට මේ විදිහටම තියමු)
-    const getProfile = async () => {
-        try {
-            const response = await authAPI.getProfile();
-            const userData: User = {
-                id: response.data.id,
-                fullName: response.data.fullName,
-                email: response.data.email,
-                phone: response.data.phone,
-                avatar: response.data.avatar,
-                role: response.data.role.toLowerCase(),
-                createdAt: response.data.createdAt,
-            };
-            setUser(userData);
-            localStorage.setItem("luxury_user", JSON.stringify(userData));
-        } catch (error: any) {
-            const message = error.response?.data?.message || "Failed to get profile";
-            throw new Error(message);
-        }
-    };
 
     // Register
     const register = async (fullName: string, email: string, password: string) => {
@@ -196,6 +187,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 fullName: data.fullName,
                 email: data.email,
                 role: data.role.toLowerCase(),
+                avatar: getAvatar(data.avatar, data.email, session?.user?.image),
             };
 
             setUser(userData);
@@ -241,6 +233,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setIsSessionSynced(false); // Logout වෙද්දි මේකත් reset කරන්න ඕනේ
             localStorage.removeItem("luxury_user");
             localStorage.removeItem("luxury_token");
+            if (typeof window !== "undefined") {
+                window.dispatchEvent(new Event("luxury-logout"));
+            }
             await nextAuthSignOut({ redirect: false });
         }
     };
@@ -279,6 +274,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    // Get Profile
+    const getProfile = async () => {
+        try {
+            const response = await authAPI.getProfile();
+            const userData: User = {
+                id: response.data.id,
+                fullName: response.data.fullName,
+                email: response.data.email,
+                phone: response.data.phone,
+                avatar: getAvatar(response.data.avatar, response.data.email, session?.user?.image),
+                role: response.data.role.toLowerCase(),
+                createdAt: response.data.createdAt,
+            };
+            setUser(userData);
+            localStorage.setItem("luxury_user", JSON.stringify(userData));
+        } catch (error: any) {
+            const message = error.response?.data?.message || "Failed to get profile";
+            throw new Error(message);
+        }
+    };
+
     // Update Profile
     const updateProfile = async (data: {
         fullName?: string;
@@ -292,7 +308,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 fullName: response.data.user.fullName,
                 email: response.data.user.email,
                 phone: response.data.user.phone,
-                avatar: response.data.user.avatar,
+                avatar: getAvatar(response.data.user.avatar, response.data.user.email, session?.user?.image),
                 role: response.data.user.role.toLowerCase(),
                 createdAt: response.data.user.createdAt,
             };

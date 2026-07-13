@@ -125,6 +125,84 @@ using (var scope = app.Services.CreateScope())
             context.Users.Add(adminUser);
             context.SaveChanges();
         }
+
+        // Sync and fix product variants
+        var productsToFix = context.Products.Include(p => p.Variants).ToList();
+        foreach (var p in productsToFix)
+        {
+            if (!string.IsNullOrEmpty(p.Sizes))
+            {
+                var sizesList = p.Sizes.Split(',')
+                    .Select(s => s.Trim())
+                    .Where(s => !string.IsNullOrEmpty(s))
+                    .ToList();
+
+                // If sizes list contains actual sizes (not just "Free Size" or empty)
+                if (sizesList.Any() && !sizesList.Any(s => s.Equals("Free Size", StringComparison.OrdinalIgnoreCase)))
+                {
+                    var newVariants = new List<backend.Models.ProductVariant>();
+                    var freeSizeVariant = p.Variants.FirstOrDefault(v => v.Size.Equals("Free Size", StringComparison.OrdinalIgnoreCase));
+                    int defaultStock = freeSizeVariant?.StockQuantity ?? 100;
+
+                    foreach (var size in sizesList)
+                    {
+                        if (!p.Variants.Any(v => v.Size.Equals(size, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            var newV = new backend.Models.ProductVariant
+                            {
+                                ProductId = p.Id,
+                                Size = size,
+                                Color = "Default",
+                                StockQuantity = defaultStock,
+                                LowStockThreshold = 5
+                            };
+                            context.ProductVariants.Add(newV);
+                            newVariants.Add(newV);
+                        }
+                    }
+
+                    // Save new variants first
+                    if (newVariants.Any())
+                    {
+                        context.SaveChanges();
+                        foreach (var nv in newVariants)
+                        {
+                            context.StockMovements.Add(new backend.Models.StockMovement
+                            {
+                                ProductVariantId = nv.Id,
+                                Type = "StockIn",
+                                Quantity = nv.StockQuantity,
+                                PreviousStock = 0,
+                                NewStock = nv.StockQuantity,
+                                Reason = "Database initialization sync for size variant",
+                                CreatedAt = DateTime.UtcNow
+                            });
+                        }
+                        context.SaveChanges();
+                    }
+
+                    // Now handle the "Free Size" variant cleanup
+                    if (freeSizeVariant != null)
+                    {
+                        // Check if it is referenced in OrderItems
+                        bool isReferenced = context.OrderItems.Any(oi => oi.ProductVariantId == freeSizeVariant.Id);
+                        if (!isReferenced)
+                        {
+                            // Remove stock movements first to avoid FK constraints
+                            var movements = context.StockMovements.Where(sm => sm.ProductVariantId == freeSizeVariant.Id);
+                            context.StockMovements.RemoveRange(movements);
+                            context.ProductVariants.Remove(freeSizeVariant);
+                        }
+                        else
+                        {
+                            // Otherwise just deactivate it (set stock to 0) so it doesn't show up in stock counts
+                            freeSizeVariant.StockQuantity = 0;
+                        }
+                        context.SaveChanges();
+                    }
+                }
+            }
+        }
     }
     catch (Exception ex)
     {

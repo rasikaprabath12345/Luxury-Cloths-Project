@@ -5,7 +5,7 @@ import { ordersAPI } from "@/lib/api";
 import { showToast } from "@/lib/adminUtils";
 import Link from "next/link";
 
-interface OrderItem { id: number; productName: string; quantity: number; price: number; }
+interface OrderItem { id: number; productName: string; quantity: number; price: number; productImageUrl?: string; }
 interface Order {
   id: number; orderDate: string; totalAmount: number; status: string; items: OrderItem[];
   firstName?: string; lastName?: string; email?: string; phone?: string;
@@ -14,6 +14,24 @@ interface Order {
 }
 
 const STATUS_OPTIONS = ["Pending", "Approved", "Shipped", "Delivered", "Cancelled"];
+
+const getAllowedStatusOptions = (currentStatus: string) => {
+  const status = currentStatus?.toLowerCase();
+  switch (status) {
+    case "pending":
+      return ["Pending", "Approved", "Cancelled"];
+    case "approved":
+      return ["Approved", "Shipped", "Cancelled"];
+    case "shipped":
+      return ["Shipped", "Delivered", "Cancelled"];
+    case "delivered":
+      return ["Delivered"];
+    case "cancelled":
+      return ["Cancelled"];
+    default:
+      return STATUS_OPTIONS;
+  }
+};
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -147,9 +165,12 @@ export default function AdminOrdersPage() {
                         value={order.status}
                         onChange={(e) => { e.stopPropagation(); handleStatusChange(order.id, e.target.value); }}
                         onClick={(e) => e.stopPropagation()}
+                        disabled={order.status?.toLowerCase() === "delivered" || order.status?.toLowerCase() === "cancelled"}
                         className="status-select"
                       >
-                        {STATUS_OPTIONS.map((s) => (<option key={s} value={s}>{s}</option>))}
+                        {getAllowedStatusOptions(order.status).map((s) => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
                       </select>
                       <svg className={`chevron ${isExpanded ? "rotated" : ""}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6"/></svg>
                     </div>
@@ -182,6 +203,13 @@ export default function AdminOrdersPage() {
                           <div className="items-list">
                             {order.items?.map((item) => (
                               <div key={item.id} className="item-row">
+                                <div className="item-thumb-wrap">
+                                  {item.productImageUrl ? (
+                                    <img src={item.productImageUrl} alt={item.productName} className="item-thumb" />
+                                  ) : (
+                                    <div className="item-thumb-placeholder">🖼</div>
+                                  )}
+                                </div>
                                 <span className="item-name">{item.productName}</span>
                                 <span className="item-qty">×{item.quantity}</span>
                                 <span className="item-price">{formatCurrency(item.price * item.quantity)}</span>
@@ -351,7 +379,10 @@ export default function AdminOrdersPage() {
         .details-link:hover { text-decoration: underline; }
 
         .items-list { display: flex; flex-direction: column; gap: 8px; }
-        .item-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #ffffff; border: 1px solid var(--admin-border); border-radius: 8px; font-size: 13.5px; }
+        .item-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #ffffff; border: 1px solid var(--admin-border); border-radius: 8px; font-size: 13.5px; gap: 10px; }
+        .item-thumb-wrap { flex-shrink: 0; width: 60px; height: 60px; border-radius: 8px; overflow: hidden; border: 1px solid var(--admin-border); background: #f8fafc; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+        .item-thumb { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .item-thumb-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #cbd5e1; }
         .item-name { flex: 1; color: var(--admin-text-main); font-weight: 600; }
         .item-qty { color: var(--admin-text-muted); min-width: 40px; text-align: center; font-weight: 500; }
         .item-price { font-family: var(--font-display); color: var(--admin-text-main); min-width: 80px; text-align: right; font-weight: 700; }
