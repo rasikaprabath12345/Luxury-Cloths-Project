@@ -4541,11 +4541,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\ASUS\\Downloads\\New folder (2)\\Luxury-Cloths-Project\\backend\\backend.csproj",
+      "projectUniqueName": "D:\\my project\\luxsury cloths\\New folder (2)\\Luxury-Cloths-Project\\backend\\backend.csproj",
       "projectName": "backend",
-      "projectPath": "C:\\Users\\ASUS\\Downloads\\New folder (2)\\Luxury-Cloths-Project\\backend\\backend.csproj",
+      "projectPath": "D:\\my project\\luxsury cloths\\New folder (2)\\Luxury-Cloths-Project\\backend\\backend.csproj",
       "packagesPath": "C:\\Users\\ASUS\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\ASUS\\Downloads\\New folder (2)\\Luxury-Cloths-Project\\backend\\obj\\",
+      "outputPath": "D:\\my project\\luxsury cloths\\New folder (2)\\Luxury-Cloths-Project\\backend\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

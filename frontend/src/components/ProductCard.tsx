@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import Link from "next/link";
 import { glass } from "@/utils/theme";
 import { useCart } from "@/context/CartContext";
@@ -6,7 +6,6 @@ import { useWishlist } from "@/context/WishlistContext";
 import { useAuth } from "@/context/AuthContext";
 import { showStorefrontToast } from "@/utils/toast";
 
-// Note: Ensure that we define the Product interface compatible with what's used
 export interface Product {
   id: number;
   name: string;
@@ -58,15 +57,53 @@ export default function ProductCard({ product }: { product: Product }) {
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
   const { isAuthenticated } = useAuth();
 
-  const hasDiscount = product.discount && product.discount > 0;
-  const originalPrice = product.price;
-  const discountAmount = hasDiscount ? (originalPrice * (product.discount || 0)) / 100 : 0;
-  const finalPrice = originalPrice - discountAmount;
+  // useMemo පාවිච්චි කරලා calculations cache කරලා තියෙනවා.
+  // මේකෙන් අනවශ්‍ය විදිහට හැම පාරම calculate වෙන එක නවතිනවා (RAM එක ඉතුරු වෙනවා)
+  const productData = useMemo(() => {
+    const hasDiscount = product.discount && product.discount > 0;
+    const originalPrice = product.price;
+    const discountAmount = hasDiscount ? (originalPrice * (product.discount || 0)) / 100 : 0;
+    const finalPrice = originalPrice - discountAmount;
 
-  // Stock check — if variants exist and all have 0 stock, mark as out of stock
-  const isOutOfStock = product.variants && product.variants.length > 0
-    ? product.variants.every(v => v.stockQuantity <= 0)
-    : false;
+    const isOutOfStock = product.variants && product.variants.length > 0
+      ? product.variants.every(v => v.stockQuantity <= 0)
+      : false;
+
+    const isChoice = product.isChoice ?? false;
+    const isSale = product.isSale ?? false;
+
+    const ratingVal = (product.rating !== undefined && product.rating !== null && product.rating > 0)
+      ? product.rating
+      : (4.0 + (product.id * 7) % 10 / 10);
+    const rating = ratingVal.toFixed(1);
+    const ratingNum = parseFloat(rating);
+
+    const soldCount = (product.soldCount !== undefined && product.soldCount !== null && product.soldCount > 0)
+      ? product.soldCount
+      : ((product.id * 17) % 90 + 10) * 10;
+    const totalSoldText = soldCount >= 1000 ? `${(soldCount / 1000).toFixed(1)}k+` : `${soldCount}+`;
+
+    const promoOff = Math.round(finalPrice * 0.1);
+    const promoMin = Math.round(originalPrice * 1.5);
+    const shopperSave = Math.round(finalPrice * 0.05);
+
+    const promoText = product.promoText || `LKR${promoOff.toLocaleString(undefined, { minimumFractionDigits: 2 })} off on LKR${promoMin.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+    const shopperSavingText = product.shopperSavingText || `New shoppers save LKR${shopperSave.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+
+    return {
+      hasDiscount,
+      originalPrice,
+      finalPrice,
+      isOutOfStock,
+      isChoice,
+      isSale,
+      rating,
+      ratingNum,
+      totalSoldText,
+      promoText,
+      shopperSavingText
+    };
+  }, [product]); // product object එක වෙනස් වුණොත් විතරක් ආයෙ calculate වෙනවා.
 
   const inWishlist = isInWishlist(product.id);
   const handleWishlistToggle = (e: React.MouseEvent) => {
@@ -85,32 +122,6 @@ export default function ProductCard({ product }: { product: Product }) {
       addToWishlist(product);
     }
   };
-
-  // Split sizes by comma
-  const sizesList = product.sizes ? product.sizes.split(",").map(s => s.trim()) : [];
-
-  // Use database fields if available, otherwise fall back to realistic defaults
-  const isChoice = product.isChoice ?? false;
-  const isSale = product.isSale ?? false;
-
-  const ratingVal = (product.rating !== undefined && product.rating !== null && product.rating > 0)
-    ? product.rating
-    : (4.0 + (product.id * 7) % 10 / 10);
-  const rating = ratingVal.toFixed(1);
-  const ratingNum = parseFloat(rating);
-
-  const soldCount = (product.soldCount !== undefined && product.soldCount !== null && product.soldCount > 0)
-    ? product.soldCount
-    : ((product.id * 17) % 90 + 10) * 10;
-  const totalSoldText = soldCount >= 1000 ? `${(soldCount / 1000).toFixed(1)}k+` : `${soldCount}+`;
-
-  // Promo calculations (in LKR formatting as fallback)
-  const promoOff = Math.round(finalPrice * 0.1);
-  const promoMin = Math.round(originalPrice * 1.5);
-  const shopperSave = Math.round(finalPrice * 0.05);
-
-  const promoText = product.promoText || `LKR${promoOff.toLocaleString(undefined, { minimumFractionDigits: 2 })} off on LKR${promoMin.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
-  const shopperSavingText = product.shopperSavingText || `New shoppers save LKR${shopperSave.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
 
   return (
     <Link href={`/storefront/product/${product.slug}`} style={{ textDecoration: "none", display: "block" }}>
@@ -136,7 +147,7 @@ export default function ProductCard({ product }: { product: Product }) {
             onMouseLeave={e => ((e.currentTarget as HTMLImageElement).style.transform = "scale(1)")}
           />
           {/* Discount Tag */}
-          {hasDiscount && !isOutOfStock && (
+          {productData.hasDiscount && !productData.isOutOfStock && (
             <div style={{
               position: "absolute", top: 12, left: 12,
               background: "#FF3B30", backdropFilter: "blur(8px)",
@@ -151,7 +162,7 @@ export default function ProductCard({ product }: { product: Product }) {
           )}
 
           {/* Out of Stock Badge */}
-          {isOutOfStock && (
+          {productData.isOutOfStock && (
             <div style={{
               position: "absolute", top: 12, left: 12,
               background: "#FF3B30", backdropFilter: "blur(8px)",
@@ -195,13 +206,13 @@ export default function ProductCard({ product }: { product: Product }) {
               overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
               display: "flex", alignItems: "center", gap: "6px"
             }}>
-              {isChoice && (
+              {productData.isChoice && (
                 <span style={{
                   background: "#FFD60A", color: "#000", fontSize: 9, fontWeight: 800,
                   padding: "2px 6px", borderRadius: 4, textTransform: "uppercase", flexShrink: 0
                 }}>Choice</span>
               )}
-              {isSale && (
+              {productData.isSale && (
                 <span style={{
                   background: "#FF2D55", color: "#fff", fontSize: 9, fontWeight: 800,
                   padding: "2px 6px", borderRadius: 4, textTransform: "uppercase", flexShrink: 0
@@ -215,11 +226,11 @@ export default function ProductCard({ product }: { product: Product }) {
             {/* Price display row */}
             <div style={{ display: "flex", alignItems: "baseline", gap: "6px", flexWrap: "wrap", marginTop: "1px" }}>
               <span style={{ fontSize: 16, fontWeight: 800, color: "#FF2D55" }}>
-                LKR {finalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                LKR {productData.finalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
-              {hasDiscount && (
+              {productData.hasDiscount && (
                 <span style={{ fontSize: 11, textDecoration: "line-through", color: "#8E8E93" }}>
-                  LKR {originalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  LKR {productData.originalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               )}
             </div>
@@ -228,15 +239,15 @@ export default function ProductCard({ product }: { product: Product }) {
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <span style={{ color: "#1C1C1E", fontSize: 10, display: "flex", gap: "1px" }}>
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <span key={i}>{i < Math.round(ratingNum) ? "★" : "☆"}</span>
+                  <span key={i}>{i < Math.round(productData.ratingNum) ? "★" : "☆"}</span>
                 ))}
               </span>
               <span style={{ fontSize: 11, fontWeight: 600, color: "#1C1C1E" }}>
-                {rating}
+                {productData.rating}
               </span>
               <span style={{ fontSize: 11, color: "#E5E5EA" }}>|</span>
               <span style={{ fontSize: 11, color: "#8E8E93" }}>
-                {totalSoldText} sold
+                {productData.totalSoldText} sold
               </span>
             </div>
 
@@ -251,13 +262,13 @@ export default function ProductCard({ product }: { product: Product }) {
                   %
                 </span>
                 <span style={{ fontSize: 10, fontWeight: 600, color: "#FF2D55" }}>
-                  {promoText}
+                  {productData.promoText}
                 </span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <span style={{ fontSize: 10, display: "inline-flex", alignItems: "center", height: 14 }}>⚡</span>
                 <span style={{ fontSize: 10, fontWeight: 600, color: "#D19600" }}>
-                  {shopperSavingText}
+                  {productData.shopperSavingText}
                 </span>
               </div>
             </div>
@@ -271,7 +282,7 @@ export default function ProductCard({ product }: { product: Product }) {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (isOutOfStock) return;
+                if (productData.isOutOfStock) return;
                 if (!isAuthenticated) {
                   showStorefrontToast("Please login or signup to add items to your cart.", "info");
                   setTimeout(() => {
@@ -280,7 +291,6 @@ export default function ProductCard({ product }: { product: Product }) {
                   return;
                 }
 
-                // Find first variant with stock > 0
                 const firstAvailableVariant = product.variants?.find((v: any) => v.stockQuantity > 0) || product.variants?.[0];
                 const size = firstAvailableVariant?.size;
                 const color = firstAvailableVariant?.color;
@@ -290,7 +300,7 @@ export default function ProductCard({ product }: { product: Product }) {
                 addToCart({
                   id: product.id,
                   name: product.name,
-                  price: finalPrice,
+                  price: productData.finalPrice,
                   imageUrl: product.imageUrl || product.image || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop",
                   description: product.description,
                   variants: product.variants,
@@ -298,20 +308,20 @@ export default function ProductCard({ product }: { product: Product }) {
 
                 showStorefrontToast(`${product.name} added to cart! 🛒`, "success");
               }}
-              disabled={isOutOfStock}
+              disabled={productData.isOutOfStock}
               style={{
                 width: "100%",
-                background: isOutOfStock ? "#e2e8f0" : "linear-gradient(135deg, #1C1C1E, #3C3C43)",
+                background: productData.isOutOfStock ? "#e2e8f0" : "linear-gradient(135deg, #1C1C1E, #3C3C43)",
                 border: "none", borderRadius: 10, padding: "8px 14px",
                 fontSize: 11, fontWeight: 600,
-                color: isOutOfStock ? "#94a3b8" : "#fff",
-                cursor: isOutOfStock ? "not-allowed" : "pointer",
+                color: productData.isOutOfStock ? "#94a3b8" : "#fff",
+                cursor: productData.isOutOfStock ? "not-allowed" : "pointer",
                 transition: "background 0.2s, transform 0.1s",
-                boxShadow: isOutOfStock ? "none" : "0 2px 8px rgba(0,0,0,0.12)",
+                boxShadow: productData.isOutOfStock ? "none" : "0 2px 8px rgba(0,0,0,0.12)",
               }}
-              onMouseEnter={e => { if (!isOutOfStock) { (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, #007AFF, #5856D6)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 12px rgba(0,122,255,0.3)"; } }}
-              onMouseLeave={e => { if (!isOutOfStock) { (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, #1C1C1E, #3C3C43)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 8px rgba(0,0,0,0.12)"; } }}>
-              {isOutOfStock ? "Sold Out" : "Add to Bag"}
+              onMouseEnter={e => { if (!productData.isOutOfStock) { (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, #007AFF, #5856D6)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 12px rgba(0,122,255,0.3)"; } }}
+              onMouseLeave={e => { if (!productData.isOutOfStock) { (e.currentTarget as HTMLElement).style.background = "linear-gradient(135deg, #1C1C1E, #3C3C43)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 8px rgba(0,0,0,0.12)"; } }}>
+              {productData.isOutOfStock ? "Sold Out" : "Add to Bag"}
             </button>
           </div>
         </div>

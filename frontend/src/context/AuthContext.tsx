@@ -20,7 +20,6 @@ interface AuthContextType {
     isAdmin: boolean;
     token: string | null;
 
-    // Auth methods
     register: (fullName: string, email: string, password: string) => Promise<{ status?: string } | void>;
     login: (email: string, password: string) => Promise<void>;
     googleLogin: () => Promise<void>;
@@ -29,8 +28,6 @@ interface AuthContextType {
     resetPassword: (email: string, token: string, newPassword: string, confirmPassword: string) => Promise<void>;
     verifyEmail: (email: string, code: string) => Promise<void>;
     resendVerification: (email: string) => Promise<void>;
-
-    // Profile methods
     getProfile: () => Promise<void>;
     updateProfile: (data: { fullName?: string; phone?: string; avatar?: string }) => Promise<void>;
     changePassword: (currentPassword: string, newPassword: string, confirmPassword: string) => Promise<void>;
@@ -42,11 +39,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const { data: session } = useSession();
+    // මේකෙන් අපි බලනවා session එක දැනටමත් sync කරලා ඉවරද කියලා
+    const [isSessionSynced, setIsSessionSynced] = useState(false); 
+    const { data: session, status } = useSession();
 
     // Sync NextAuth session (Google Sign-In) to local state & localStorage
     useEffect(() => {
         const syncGoogleSession = async () => {
+            // දැනටමත් sync වෙලා නම් හරි, session එක තාම loading නම් හරි මුකුත් කරන්න එපා
+            if (isSessionSynced || status === "loading") return;
+
             if (session && (session as any).backendToken) {
                 const userData: User = {
                     id: (session as any).backendId,
@@ -60,48 +62,83 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 localStorage.setItem("luxury_user", JSON.stringify(userData));
                 localStorage.setItem("luxury_token", (session as any).backendToken);
 
-                // Fetch latest profile from DB (including uploaded avatar)
+                // එක පාරක් sync කළාට පස්සේ ආයෙත් loop වෙන එක නවත්තන්න මේක true කරනවා
+                setIsSessionSynced(true);
+
                 try {
                     await getProfile();
                 } catch (e) {
                     console.error("Failed to sync profile after Google Login:", e);
                 }
+            } else if (status === "unauthenticated") {
+                // User logout වෙලා නම්, sync state එක reset කරන්න
+                setIsSessionSynced(false);
             }
         };
+        
         syncGoogleSession();
-    }, [session]);
+        
+    // මෙතනට status සහ isSessionSynced කියන දෙකත් දාන්න ඕනේ
+    }, [session, status, isSessionSynced]);
 
     // Initialize auth from localStorage on mount
     useEffect(() => {
+        let isMounted = true; // Cleanup function එකක් පාවිච්චි කරලා අනවශ්‍ය API calls නවත්තන්න
+        
         const initializeAuth = async () => {
             try {
                 const savedUser = localStorage.getItem("luxury_user");
                 const savedToken = localStorage.getItem("luxury_token");
 
-                if (savedUser && savedToken) {
+                if (savedUser && savedToken && isMounted) {
                     setUser(JSON.parse(savedUser));
                     setToken(savedToken);
 
-                    // Verify token is still valid by getting profile
                     try {
                         await getProfile();
                     } catch (error) {
-                        // Token expired or invalid
-                        localStorage.removeItem("luxury_user");
-                        localStorage.removeItem("luxury_token");
-                        setUser(null);
-                        setToken(null);
+                        if (isMounted) {
+                            localStorage.removeItem("luxury_user");
+                            localStorage.removeItem("luxury_token");
+                            setUser(null);
+                            setToken(null);
+                        }
                     }
                 }
             } catch (error) {
                 console.error("Auth initialization error:", error);
             } finally {
-                setIsLoading(false);
+                if (isMounted) setIsLoading(false);
             }
         };
 
         initializeAuth();
+        
+        return () => {
+            isMounted = false;
+        };
     }, []);
+
+    // Get Profile (මේ function එක dependency array වලට දාන්න අමාරු නිසා React.useCallback පාවිච්චි කරන එක හොඳයි, හැබැයි දැනට මේ විදිහටම තියමු)
+    const getProfile = async () => {
+        try {
+            const response = await authAPI.getProfile();
+            const userData: User = {
+                id: response.data.id,
+                fullName: response.data.fullName,
+                email: response.data.email,
+                phone: response.data.phone,
+                avatar: response.data.avatar,
+                role: response.data.role.toLowerCase(),
+                createdAt: response.data.createdAt,
+            };
+            setUser(userData);
+            localStorage.setItem("luxury_user", JSON.stringify(userData));
+        } catch (error: any) {
+            const message = error.response?.data?.message || "Failed to get profile";
+            throw new Error(message);
+        }
+    };
 
     // Register
     const register = async (fullName: string, email: string, password: string) => {
@@ -136,7 +173,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setToken(data.token);
             localStorage.setItem("luxury_token", data.token);
 
-            // Fetch complete profile with avatar
             await getProfile();
         } catch (error: any) {
             const message = typeof error.response?.data === "string"
@@ -190,7 +226,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Google Login
     const googleLogin = async () => {
-        // NextAuth Google provider trigger
         await nextAuthSignIn("google", { callbackUrl: "/" });
     };
 
@@ -203,6 +238,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } finally {
             setUser(null);
             setToken(null);
+            setIsSessionSynced(false); // Logout වෙද්දි මේකත් reset කරන්න ඕනේ
             localStorage.removeItem("luxury_user");
             localStorage.removeItem("luxury_token");
             await nextAuthSignOut({ redirect: false });
@@ -239,27 +275,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const message = typeof error.response?.data === "string"
                 ? error.response.data
                 : error.response?.data?.message || "Failed to reset password";
-            throw new Error(message);
-        }
-    };
-
-    // Get Profile
-    const getProfile = async () => {
-        try {
-            const response = await authAPI.getProfile();
-            const userData: User = {
-                id: response.data.id,
-                fullName: response.data.fullName,
-                email: response.data.email,
-                phone: response.data.phone,
-                avatar: response.data.avatar,
-                role: response.data.role.toLowerCase(),
-                createdAt: response.data.createdAt,
-            };
-            setUser(userData);
-            localStorage.setItem("luxury_user", JSON.stringify(userData));
-        } catch (error: any) {
-            const message = error.response?.data?.message || "Failed to get profile";
             throw new Error(message);
         }
     };
