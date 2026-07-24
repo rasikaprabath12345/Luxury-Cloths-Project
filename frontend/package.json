@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@auth/core": "^0.34.3",
-    "@auth/nextjs": "^0.0.0-380f8d56",
     "axios": "^1.18.0",
     "framer-motion": "^12.40.0",
     "next": "16.2.9",
